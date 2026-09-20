@@ -1170,6 +1170,359 @@ items:
     item-model: "skyblock:pet/pet_emerald"
 
 
+  "skyblock:gui/add_1":
+    material: PAPER
+    name: "<white><bold>Dodaj 1</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/add_1"
+
+  "skyblock:gui/add_10":
+    material: PAPER
+    name: "<white><bold>Dodaj 10</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/add_10"
+
+  "skyblock:gui/add_max":
+    material: PAPER
+    name: "<white><bold>Dodaj maksimum</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/add_max"
+
+  "skyblock:gui/arrow_up":
+    material: PAPER
+    name: "<white><bold>W górę</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/arrow_up"
+
+  "skyblock:gui/back":
+    material: PAPER
+    name: "<white><bold>Wróć</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/back"
+
+  "skyblock:gui/barrel":
+    material: PAPER
+    name: "<white><bold>Beczka</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/barrel"
+
+  "skyblock:gui/book":
+    material: PAPER
+    name: "<white><bold>Książka</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/book"
+
+  "skyblock:gui/buy":
+    material: PAPER
+    name: "<white><bold>Kup</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/buy"
+
+  "skyblock:gui/cancel":
+    material: PAPER
+    name: "<white><bold>Anuluj</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/cancel"
+
+  "skyblock:gui/cart":
+    material: PAPER
+    name: "<white><bold>Koszyk</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/cart"
+
+  "skyblock:gui/chest_closed":
+    material: PAPER
+    name: "<white><bold>Skrzynia</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/chest_closed"
+
+  "skyblock:gui/chest_open":
+    material: PAPER
+    name: "<white><bold>Otwarta skrzynia</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/chest_open"
+
+  "skyblock:gui/coin_bronze":
+    material: PAPER
+    name: "<white><bold>Moneta</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/coin_bronze"
+
+  "skyblock:gui/coin_gold":
+    material: PAPER
+    name: "<white><bold>Moneta</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/coin_gold"
+
+  "skyblock:gui/coin_silver":
+    material: PAPER
+    name: "<white><bold>Moneta</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/coin_silver"
+
+  "skyblock:gui/coins":
+    material: PAPER
+    name: "<white><bold>Monety</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/coins"
+
+  "skyblock:gui/collection":
+    material: PAPER
+    name: "<white><bold>Kolekcja</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/collection"
+
+  "skyblock:gui/confirm":
+    material: PAPER
+    name: "<white><bold>Potwierdź</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/confirm"
+
+  "skyblock:gui/crown_bronze":
+    material: PAPER
+    name: "<white><bold>Korona</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/crown_bronze"
+
+  "skyblock:gui/crown_gold":
+    material: PAPER
+    name: "<white><bold>Korona</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/crown_gold"
+
+  "skyblock:gui/crown_silver":
+    material: PAPER
+    name: "<white><bold>Korona</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/crown_silver"
+
+  "skyblock:gui/down":
+    material: PAPER
+    name: "<white><bold>W dół</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/down"
+
+  "skyblock:gui/gem_pink":
+    material: PAPER
+    name: "<white><bold>Klejnot</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/gem_pink"
+
+  "skyblock:gui/info":
+    material: PAPER
+    name: "<white><bold>Informacja</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/info"
+
+  "skyblock:gui/map_marker":
+    material: PAPER
+    name: "<white><bold>Znacznik</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/map_marker"
+
+  "skyblock:gui/next":
+    material: PAPER
+    name: "<white><bold>Dalej</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/next"
+
+  "skyblock:gui/progress_empty":
+    material: PAPER
+    name: "<white><bold>Postęp</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/progress_empty"
+
+  "skyblock:gui/progress_full":
+    material: PAPER
+    name: "<white><bold>Postęp</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/progress_full"
+
+  "skyblock:gui/quill":
+    material: PAPER
+    name: "<white><bold>Pióro</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/quill"
+
+  "skyblock:gui/remove_1":
+    material: PAPER
+    name: "<white><bold>Usuń 1</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/remove_1"
+
+  "skyblock:gui/remove_10":
+    material: PAPER
+    name: "<white><bold>Usuń 10</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/remove_10"
+
+  "skyblock:gui/remove_max":
+    material: PAPER
+    name: "<white><bold>Usuń maksimum</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/remove_max"
+
+  "skyblock:gui/sack":
+    material: PAPER
+    name: "<white><bold>Worek</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/sack"
+
+  "skyblock:gui/scroll":
+    material: PAPER
+    name: "<white><bold>Zwój</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/scroll"
+
+  "skyblock:gui/sell":
+    material: PAPER
+    name: "<white><bold>Sprzedaj</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/sell"
+
+  "skyblock:gui/shield_admin":
+    material: PAPER
+    name: "<white><bold>Tarcza</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/shield_admin"
+
+  "skyblock:gui/slot":
+    material: PAPER
+    name: "<white><bold>Slot</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/slot"
+
+  "skyblock:gui/slot_active":
+    material: PAPER
+    name: "<white><bold>Slot aktywny</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/slot_active"
+
+  "skyblock:gui/slot_locked":
+    material: PAPER
+    name: "<white><bold>Slot zablokowany</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/slot_locked"
+
+  "skyblock:gui/star_rank":
+    material: PAPER
+    name: "<white><bold>Gwiazda</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/star_rank"
+
+  "skyblock:gui/ticket":
+    material: PAPER
+    name: "<white><bold>Bilet</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/ticket"
+
+  "skyblock:gui/treasure_chest":
+    material: PAPER
+    name: "<white><bold>Skarb</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/treasure_chest"
+
+  "skyblock:gui/up":
+    material: PAPER
+    name: "<white><bold>Do góry</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/up"
+
+  "skyblock:gui/vault":
+    material: PAPER
+    name: "<white><bold>Skarbiec</bold></white>"
+    lore:
+      - "<gray>Ikona interfejsu GUI.</gray>"
+    glow: false
+    item-model: "skyblock:gui/vault"
+
+
 catalog:
   categories:
     weapons:

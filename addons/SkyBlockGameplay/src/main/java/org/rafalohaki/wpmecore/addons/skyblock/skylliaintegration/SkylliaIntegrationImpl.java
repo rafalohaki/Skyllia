@@ -492,6 +492,32 @@ final class SkylliaIntegrationImpl implements SkylliaIntegration {
     }
 
     @Override
+    public boolean multiplyIslandSize(UUID islandId, double factor) {
+        try {
+            Island island = SkylliaAPI.getIslandByIslandId(islandId);
+            if (island == null || !(factor > 0) || !Double.isFinite(factor)) return false;
+            return island.setSize(island.getSize() * factor);
+        } catch (Exception e) {
+            owner.getLogger().warning(
+                    "multiplyIslandSize nie powiodło się dla " + islandId + ": " + e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean addIslandMemberSlots(UUID islandId, int delta) {
+        try {
+            Island island = SkylliaAPI.getIslandByIslandId(islandId);
+            if (island == null) return false;
+            return island.setMaxMembers(island.getMaxMembers() + delta);
+        } catch (Exception e) {
+            owner.getLogger().warning(
+                    "addIslandMemberSlots nie powiodło się dla " + islandId + ": " + e);
+            return false;
+        }
+    }
+
+    @Override
     public boolean setPrivateIsland(UUID islandId, boolean isPrivate) {
         try {
             Island island = SkylliaAPI.getIslandByIslandId(islandId);

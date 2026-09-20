@@ -87,6 +87,23 @@ public interface SkylliaIntegration {
         return false;
     }
 
+    /**
+     * Mnoży promień wyspy przez {@code factor} (perk prestiżu — mutacja trwała
+     * w Skylli, przeżywa restart). {@code false}, gdy wyspy brak albo Skyllia
+     * odrzuciła zmianę (np. limit maksymalnego rozmiaru).
+     */
+    default boolean multiplyIslandSize(UUID islandId, double factor) {
+        return false;
+    }
+
+    /**
+     * Dokłada {@code delta} slotów członków wyspy (perk prestiżu).
+     * {@code false}, gdy wyspy brak.
+     */
+    default boolean addIslandMemberSlots(UUID islandId, int delta) {
+        return false;
+    }
+
     /** AUTHORITATIVE: czy ma warp visit. */
     default boolean hasVisit(UUID islandId) {
         return false;

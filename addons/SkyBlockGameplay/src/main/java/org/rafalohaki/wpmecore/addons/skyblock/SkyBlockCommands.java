@@ -515,6 +515,22 @@ final class SkyBlockCommands {
                     plugin.miniMessage(), LeaderboardService::nameOf, plugin::currentRangeDetail).withIslandResolver(id -> plugin.skyllia() == null ? java.util.Optional.empty() : plugin.skyllia().islandOf(id).map(org.rafalohaki.wpmecore.addons.skyblock.skylliaintegration.IslandView::snapshot))
                     .showTop(sender, 10);
         }, "top");
+
+        // /is prestige — menu prestiżu z modułu; po konsolidacji addonu
+        // SkylliaPrestige jedynym systemem prestiżu jest island.prestige.
+        SkylliaCommands.registerSubCommand(plugin, "skyblockgameplay.use", sender -> {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(Component.text("Tylko w grze.", NamedTextColor.RED));
+                return;
+            }
+            org.rafalohaki.wpmecore.addons.skyblock.island.IslandPrestigeMenu menu =
+                    plugin.islandPrestigeMenu();
+            if (menu == null) {
+                player.sendMessage(Component.text("Prestiż wyspy jest wyłączony.", NamedTextColor.RED));
+                return;
+            }
+            menu.open(player);
+        }, "prestige");
     }
 
     int giveMinion(CommandSender sender, String typeId, int tier) {

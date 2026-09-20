@@ -532,6 +532,16 @@ public final class IslandPrestigeMenu {
                     .append(" szczęścia na kryształy</white>");
             any = true;
         }
+        double sizeDelta = s.sizeStepPercentPerLevel();
+        if (sizeDelta > 0) {
+            sb.append(" <white>+").append(String.format(java.util.Locale.ROOT, "%.0f%%", sizeDelta))
+                    .append(" rozmiaru wyspy</white>");
+            any = true;
+        }
+        if (s.grantsMemberSlot(target)) {
+            sb.append(" <white>+1 slot członka wyspy</white>");
+            any = true;
+        }
         return any ? sb.toString() : "<gray>Perki: bez nowych bonusów na tym poziomie.</gray>";
     }
 

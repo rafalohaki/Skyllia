@@ -7,3 +7,9 @@ database:
     minimum-idle: 1
     queue-capacity: 256
     connection-timeout-ms: 5000
+
+# Perki prestiżu wyspy (SkyBlockGameplay zapisuje poziom do
+# wpme_sb_island_prestige we współdzielonej bazie — ten sam plik co wyżej).
+prestige:
+  # +1 slot minionka co N poziomów prestiżu wyspy; 0 = bonus wyłączony.
+  minion-slots-every-levels: 2

@@ -10,7 +10,6 @@ dependencies {
     compileOnly(project(":api"))
     compileOnly(project(":plugin"))
     compileOnly(project(":database"))
-    compileOnly(project(":addons:SkylliaPrestige"))
     compileOnly(files("libs/wpmecore.jar"))
 }
 

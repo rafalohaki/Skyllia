@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.rafalohaki.wpmecore.api.WpmeAPI;
 import org.rafalohaki.wpmecore.api.util.AddonBootstrap;
@@ -72,7 +73,7 @@ public final class SkylliaMinions extends JavaPlugin {
         this.menu = new MinionMenu(this, menus, miniMessage, service, economy,
                 config, customItems, renderer);
         this.listener = new MinionListener(this, service, renderer, menu, config, miniMessage);
-        wirePrestigeSlots();
+        wirePrestigeSlots(sql);
 
         service.initialize();
         service.startTicking();
@@ -102,13 +103,18 @@ public final class SkylliaMinions extends JavaPlugin {
         }
     }
 
-    /** Sloty +prestiż: jeśli SkylliaPrestige jest na serwerze, dopinamy jego perki. */
-    private void wirePrestigeSlots() {
-        var prestigePlugin = getServer().getPluginManager().getPlugin("SkylliaPrestige");
-        if (prestigePlugin instanceof pl.b2t.skylliaprestige.SkylliaPrestige prestige) {
-            listener.setIslandExtraSlots(prestige.prestige()::minionSlotsFor);
-            getLogger().info("Sloty prestiżu dopięte (SkylliaPrestige).");
+    /**
+     * Sloty +prestiż: poziom wyspy czytamy z {@code wpme_sb_island_prestige}
+     * (współdzielona baza — zapisuje ją SkyBlockGameplay przy zakupie), co ile
+     * poziomów daje slot definiuje {@code prestige.minion-slots-every-levels}.
+     */
+    private void wirePrestigeSlots(@NotNull SqlService sql) {
+        int everyLevels = Math.max(0, getConfig().getInt("prestige.minion-slots-every-levels", 0));
+        if (everyLevels <= 0) {
+            return;
         }
+        listener.setIslandExtraSlots(new PrestigeSlots(sql, everyLevels).resolver());
+        getLogger().info("Sloty prestiżu dopięte (wpme_sb_island_prestige, co " + everyLevels + " poziomy).");
     }
 
     private @Nullable Economy hookEconomy() {

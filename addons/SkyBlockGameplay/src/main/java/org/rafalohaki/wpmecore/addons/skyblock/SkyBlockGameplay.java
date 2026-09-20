@@ -407,7 +407,7 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         if (ecoMigration) {
             getLogger().info("Migracja Eco aktywna: zadania dzienne/sezonowe i karnet obsługują EcoQuests/EcoBattlepass.");
         }
-        if (getConfig().getBoolean("features.minions", true)) {
+        if (getConfig().getBoolean("features.minions", false)) {
             this.minions = new MinionsModule(this, binding.service(), menus, miniMessage,
                     minionsConfig, ledger, skyllia, customItems);
         } else {
@@ -760,7 +760,7 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
             getServer().getPluginManager().registerEvents(dailyRewardListener, this);
         }
         // Perki rang (RankPerks): lot na własnej wyspie.
-        if (getConfig().getBoolean("features.island-fly", true)) {
+        if (getConfig().getBoolean("features.island-fly", false)) {
             this.islandFly = new org.rafalohaki.wpmecore.addons.skyblock.perks.IslandFlyModule(skyllia, miniMessage);
             getServer().getPluginManager().registerEvents(islandFly, this);
         } else {
@@ -812,6 +812,17 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
             if (minions != null) {
                 minions.listener().setIslandExtraSlots(islandPrestige::minionSlotsFor);
             }
+            // Perki wyspy przy awansie: rozmiar rośnie procentowo od bieżącego
+            // (kumulatywnie), slot członka co `extra-members-every-levels`.
+            islandPrestige.setPerkApplier(up -> {
+                double step = prestigeSettings.sizeStepPercentPerLevel();
+                if (step > 0.0D) {
+                    skyllia.multiplyIslandSize(up.islandId(), 1.0D + step / 100.0D);
+                }
+                if (prestigeSettings.grantsMemberSlot(up.level())) {
+                    skyllia.addIslandMemberSlots(up.islandId(), 1);
+                }
+            });
         }
         // Kafel przeglądu w Centrum Wyspy pokazuje tytuł wyspy także bez prestiżu
         // (tytuł może pochodzić z sezonu albo ze zlewu Lotosów).
@@ -1534,6 +1545,11 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
 
     IslandCenterMenu islandCenter() {
         return islandCenter;
+    }
+
+    /** Menu prestiżu wyspy; {@code null}, gdy {@code island.prestige} wyłączone. */
+    IslandPrestigeMenu islandPrestigeMenu() {
+        return islandPrestigeMenu;
     }
 
     IslandCreationCoordinator creationCoordinator() {

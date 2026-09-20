@@ -63,6 +63,12 @@ public final class IslandPrestigeService {
     private final LedgerService ledger;
     private final IslandTitleService titles;
     private final Consumer<PrestigeUp> onPrestigeUp;
+    /**
+     * Mutacje wyspy przy awansie (rozmiar, sloty członków) — dopinane z wtyczki,
+     * bo serwis celowo nie zna Skyllia. Fail-open: wyjątek appliera ląduje
+     * w logu i nie cofa rozliczonego zakupu.
+     */
+    private volatile Consumer<PrestigeUp> perkApplier = up -> { };
     /** Poziom z ostatniego odczytu/zakupu — kafelek w Centrum Wyspy czyta go bez bazy. */
     private final Map<UUID, Integer> levels = new ConcurrentHashMap<>();
     /** Jedno kupno na wyspę naraz; równoległe kliknięcia dostają ten sam wynik. */
@@ -84,6 +90,11 @@ public final class IslandPrestigeService {
 
     public @NotNull IslandPrestige.Settings settings() {
         return settings;
+    }
+
+    /** Dopina mutacje wyspy przy awansie (rozmiar, członkowie); domyślnie no-op. */
+    public void setPerkApplier(@NotNull Consumer<PrestigeUp> perkApplier) {
+        this.perkApplier = perkApplier;
     }
 
     /** Ostatnio widziany poziom prestiżu; pusty, gdy wyspy jeszcze nie czytaliśmy. */
@@ -176,7 +187,14 @@ public final class IslandPrestigeService {
             levels.put(islandId, level + 1);
             return grantTitle(islandId, level + 1).thenApply(appliedTitle -> {
                 if (status == Status.PURCHASED) {
-                    onPrestigeUp.accept(new PrestigeUp(islandId, level + 1, cost, appliedTitle));
+                    PrestigeUp up = new PrestigeUp(islandId, level + 1, cost, appliedTitle);
+                    try {
+                        perkApplier.accept(up);
+                    } catch (RuntimeException failure) {
+                        logger.log(Level.WARNING, "Perki prestiżu nie weszły dla wyspy "
+                                + islandId + " (poziom " + (level + 1) + ")", failure);
+                    }
+                    onPrestigeUp.accept(up);
                 }
                 return new PurchaseResult(status, level + 1, cost, withdrawal.balance());
             });

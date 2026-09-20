@@ -39,20 +39,37 @@ public final class IslandPrestige {
      *                               minionka ({@code 0} = bez bonusu)
      * @param crystalLuckPercentPerLevel bonus do szans na kryształy z rozgrywki
      *                                   (gameplay-drops) za poziom, w procentach
+     * @param sizeStepPercentPerLevel   wzrost rozmiaru wyspy o tyle procent od
+     *                                  bieżącego przy każdym poziomie (0 = bez
+     *                                  bonusu); mutacja przez SkylliaAPI, więc
+     *                                  przeżywa restart
+     * @param extraMembersEveryLevels   co ile poziomów prestiżu wyspa dostaje
+     *                                  +1 slot członka ({@code 0} = bez bonusu)
      */
     public record Settings(int maxLevel, long baseCost, double costMultiplier,
                            @NotNull List<String> titles,
                            int minionSlotsEveryLevels,
-                           double crystalLuckPercentPerLevel) {
+                           double crystalLuckPercentPerLevel,
+                           double sizeStepPercentPerLevel,
+                           int extraMembersEveryLevels) {
 
         public Settings {
             titles = List.copyOf(titles);
         }
 
-        /** Prestiż czysto kosmetyczny: wygodny konstruktor bez perków (testy, stare miejsca). */
+        /** Prestiż bez perków wyspy (testy, stare miejsca). */
         public Settings(int maxLevel, long baseCost, double costMultiplier,
                         @NotNull List<String> titles) {
-            this(maxLevel, baseCost, costMultiplier, titles, 0, 0.0D);
+            this(maxLevel, baseCost, costMultiplier, titles, 0, 0.0D, 0.0D, 0);
+        }
+
+        /** Wariant sprzed perków rozmiaru i członków (testy, stare miejsca). */
+        public Settings(int maxLevel, long baseCost, double costMultiplier,
+                        @NotNull List<String> titles,
+                        int minionSlotsEveryLevels,
+                        double crystalLuckPercentPerLevel) {
+            this(maxLevel, baseCost, costMultiplier, titles,
+                    minionSlotsEveryLevels, crystalLuckPercentPerLevel, 0.0D, 0);
         }
 
         /**
@@ -73,7 +90,9 @@ public final class IslandPrestige {
             return new Settings(maxLevel, baseCost, multiplier,
                     section.getStringList("title-per-level"),
                     Math.max(0, section.getInt("minion-slots-every-levels", 0)),
-                    Math.max(0.0D, section.getDouble("crystal-luck-percent-per-level", 0.0D)));
+                    Math.max(0.0D, section.getDouble("crystal-luck-percent-per-level", 0.0D)),
+                    Math.max(0.0D, section.getDouble("size-percent-per-level", 0.0D)),
+                    Math.max(0, section.getInt("extra-members-every-levels", 0)));
         }
 
         /**
@@ -106,6 +125,11 @@ public final class IslandPrestige {
         /** Mnożnik szans na kryształy z rozgrywki dla poziomu (1.0 = bez bonusu). */
         public double crystalLuckMultiplier(int level) {
             return 1.0 + Math.max(0, level) * (crystalLuckPercentPerLevel / 100.0);
+        }
+
+        /** Czy przy awansie NA {@code level} wyspa dostaje +1 slot członka. */
+        public boolean grantsMemberSlot(int level) {
+            return extraMembersEveryLevels > 0 && level > 0 && level % extraMembersEveryLevels == 0;
         }
     }
 }

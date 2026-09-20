@@ -17,7 +17,6 @@ dependencies {
     compileOnly(project(":hook:fastasyncworldedit"))
     compileOnly(project(":hook:internalworld"))
     compileOnly(project(":hook:canvas"))
-    compileOnly(project(":hook:luminol"))
     compileOnly(project(":hook:essentialsx"))
     compileOnly(project(":hook:luckperms"))
     compileOnly(project(":hook:quickshop"))
@@ -25,15 +24,8 @@ dependencies {
     compileOnly(project(":hook:insights"))
 
     // NMS Version
-    compileOnly(project(":nms:v1_20_R4"))
-    compileOnly(project(":nms:v1_21_R1"))
-    compileOnly(project(":nms:v1_21_R2"))
-    compileOnly(project(":nms:v1_21_R3"))
-    compileOnly(project(":nms:v1_21_R4"))
     compileOnly(project(":nms:v1_21_R5"))
-    compileOnly(project(":nms:v1_21_R6"))
     compileOnly(project(":nms:v1_21_R7"))
-    compileOnly(project(":nms:v26_1"))
     compileOnly(project(":nms:v26_2"))
 }
 java.disableAutoTargetJvm()

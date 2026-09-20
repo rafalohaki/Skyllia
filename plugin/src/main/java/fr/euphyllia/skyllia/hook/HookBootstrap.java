@@ -13,7 +13,6 @@ import fr.euphyllia.skyllia.hook.fastasyncworldedit.FAWESchematicHook;
 import fr.euphyllia.skyllia.hook.insights.InsightsHook;
 import fr.euphyllia.skyllia.hook.internal.InternalSchematicHook;
 import fr.euphyllia.skyllia.hook.luckperms.LuckPermsHook;
-import fr.euphyllia.skyllia.hook.luminol.LuminolHook;
 import fr.euphyllia.skyllia.hook.quickshop.QuickShopHook;
 import fr.euphyllia.skyllia.hook.worldedit.WorldEditSchematicHook;
 import org.jetbrains.annotations.Nullable;
@@ -25,8 +24,7 @@ import java.util.List;
 public class HookBootstrap {
 
     static final List<ServerHook> serverHooks = List.of(
-            new CanvasHook(),
-            new LuminolHook()
+            new CanvasHook()
     );
 
     static final List<PluginHook> pluginHooks = List.of(

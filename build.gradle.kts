@@ -29,7 +29,6 @@ dependencies {
     implementation(project(":hook:fastasyncworldedit"))
     implementation(project(":hook:internalworld"))
     implementation(project(":hook:canvas"))
-    implementation(project(":hook:luminol"))
     implementation(project(":hook:essentialsx"))
     implementation(project(":hook:luckperms"))
     implementation(project(":hook:quickshop"))
@@ -37,15 +36,8 @@ dependencies {
     implementation(project(":hook:insights"))
 
     // NMS Version
-    implementation(project(":nms:v1_20_R4"))
-    implementation(project(":nms:v1_21_R1"))
-    implementation(project(":nms:v1_21_R2"))
-    implementation(project(":nms:v1_21_R3"))
-    implementation(project(":nms:v1_21_R4"))
     implementation(project(":nms:v1_21_R5"))
-    implementation(project(":nms:v1_21_R6"))
     implementation(project(":nms:v1_21_R7"))
-    implementation(project(":nms:v26_1"))
     implementation(project(":nms:v26_2"))
 }
 
@@ -65,8 +57,11 @@ allprojects {
 
     repositories {
         mavenLocal()
+        exclusiveContent {
+            forRepository { maven(paperRepo) }
+            filter { includeGroupByRegex("io\\.papermc.*") }
+        }
         mavenCentral()
-        maven(paperRepo)
         maven(sonatypeRepo)
         maven(engineHubRepo)
         maven(mojang)

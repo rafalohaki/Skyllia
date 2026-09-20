@@ -1,5 +1,9 @@
 package pl.b2t.skylliaprestige;
 
+import fr.euphyllia.skyllia.api.SkylliaAPI;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -22,18 +26,24 @@ public final class SkylliaPrestige extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         service = new PrestigeService(this, loadSettings());
-        PrestigeCommand command = new PrestigeCommand(this);
-        command.hookEconomy();
-        var cmd = getCommand("skyprestige");
-        if (cmd != null) {
-            cmd.setExecutor(command);
-            cmd.setTabCompleter(command);
-        }
+        Economy economy = hookEconomy();
+        SkylliaAPI.registerCommands(new PrestigeCommand(this, economy), "prestige", "prestiz");
         getLogger().info("SkylliaPrestige enabled");
     }
 
     @Override
     public void onDisable() {
+    }
+
+    private Economy hookEconomy() {
+        RegisteredServiceProvider<Economy> rsp =
+                Bukkit.getServicesManager().getRegistration(Economy.class);
+        if (rsp != null) {
+            getLogger().info("Ekonomia: " + rsp.getProvider().getName());
+            return rsp.getProvider();
+        }
+        getLogger().warning("Brak ekonomii Vault - zakup prestizu bedzie zwracal blad");
+        return null;
     }
 
     private PrestigeService.Settings loadSettings() {

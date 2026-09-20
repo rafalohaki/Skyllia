@@ -11,11 +11,7 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
-    VaultUnlocked:
+    Vault:
       load: BEFORE
       required: false
       join-classpath: true
-commands:
-  skyprestige:
-    description: "Prestiz wyspy"
-    aliases: ["prestiz", "isprestige"]

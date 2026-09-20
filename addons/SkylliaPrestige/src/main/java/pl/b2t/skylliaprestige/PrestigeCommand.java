@@ -1,105 +1,94 @@
 package pl.b2t.skylliaprestige;
 
 import fr.euphyllia.skyllia.api.SkylliaAPI;
+import fr.euphyllia.skyllia.api.commands.SubCommandInterface;
 import fr.euphyllia.skyllia.api.skyblock.Island;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 /**
- * /skyprestige — status i zakup poziomu prestiżu wyspy. Płatność leci przez
+ * /is prestige — status i zakup poziomu prestiżu wyspy. Płatność leci przez
  * Vault (konto gracza); przy przejściu na bank wyspy (SkylliaBank) podmiana
  * nastąpi w {@link #charge(Player, long)} bez ruszania stanu wysp.
  */
-public final class PrestigeCommand implements CommandExecutor, TabCompleter {
+public final class PrestigeCommand implements SubCommandInterface {
 
     private final SkylliaPrestige plugin;
+    private final MiniMessage mm = MiniMessage.miniMessage();
     private Economy economy;
 
-    PrestigeCommand(SkylliaPrestige plugin) {
+    PrestigeCommand(SkylliaPrestige plugin, Economy economy) {
         this.plugin = plugin;
-    }
-
-    void hookEconomy() {
-        RegisteredServiceProvider<Economy> rsp =
-                Bukkit.getServicesManager().getRegistration(Economy.class);
-        if (rsp != null) {
-            economy = rsp.getProvider();
-            plugin.getLogger().info("Ekonomia: " + economy.getName());
-        }
+        this.economy = economy;
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
-                             @NotNull String label, String @NotNull [] args) {
+    public void onExecute(@NotNull Plugin plugin, @NotNull CommandSender sender, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cKomenda tylko dla graczy.");
-            return true;
+            sender.sendMessage(mm.deserialize("<red>Komenda tylko dla graczy."));
+            return;
         }
         Island island = SkylliaAPI.getIslandByPlayerId(player.getUniqueId());
         if (island == null) {
-            player.sendMessage("§cNie masz wyspy.");
-            return true;
+            player.sendMessage(mm.deserialize("<red>Nie masz wyspy."));
+            return;
         }
         if (!island.getOwner().getMojangId().equals(player.getUniqueId())) {
-            player.sendMessage("§cTylko właściciel wyspy może zarządzać prestiżem.");
-            return true;
+            player.sendMessage(mm.deserialize("<red>Tylko właściciel wyspy może zarządzać prestiżem."));
+            return;
         }
 
-        PrestigeService service = plugin.prestige();
+        PrestigeService service = this.plugin.prestige();
         int level = service.levelOf(island);
         PrestigeService.Settings settings = service.settings();
 
         if (args.length == 0 || !args[0].equalsIgnoreCase("kup")) {
-            sendStatus(player, island, service, level, settings);
-            return true;
+            sendStatus(player, service, level, settings);
+            return;
         }
 
         if (level >= settings.maxLevel()) {
-            player.sendMessage("§cOsiągnięto maksymalny poziom prestiżu.");
-            return true;
+            player.sendMessage(mm.deserialize("<red>Osiągnięto maksymalny poziom prestiżu."));
+            return;
         }
         long cost = settings.costFor(level + 1);
         if (!charge(player, cost)) {
-            player.sendMessage("§cBrakuje środków. Koszt poziomu " + (level + 1) + ": §e" + cost + "§c monet.");
-            return true;
+            player.sendMessage(mm.deserialize(
+                    "<red>Brakuje środków. Koszt poziomu " + (level + 1) + ": <yellow>" + cost + "</yellow> monet."));
+            return;
         }
         boolean ok = service.recordLevel(island, level, level + 1, cost);
         if (!ok) {
             refund(player, cost);
-            player.sendMessage("§cNie udało się zapisać poziomu — środki zwrócone.");
-            return true;
+            player.sendMessage(mm.deserialize("<red>Nie udało się zapisać poziomu — środki zwrócone."));
+            return;
         }
         int newLevel = level + 1;
         String title = settings.titleFor(newLevel);
-        player.sendMessage("§aPrestiż wyspy wzrósł do poziomu §e" + newLevel + "§a" +
-                (title != null ? " — tytuł: §6" + title : ""));
-        return true;
+        player.sendMessage(mm.deserialize("<green>Prestiż wyspy wzrósł do poziomu <yellow>" + newLevel + "</yellow>" +
+                (title != null ? " — tytuł: <gold>" + title : "")));
     }
 
-    private void sendStatus(Player player, Island island, PrestigeService service,
-                            int level, PrestigeService.Settings s) {
-        player.sendMessage("§6§lPrestiż wyspy");
-        player.sendMessage("§7Poziom: §e" + level + "§7/§e" + s.maxLevel());
+    private void sendStatus(Player player, PrestigeService service, int level,
+                            PrestigeService.Settings s) {
+        player.sendMessage(mm.deserialize("<gold><bold>Prestiż wyspy"));
+        player.sendMessage(mm.deserialize("<gray>Poziom: <yellow>" + level + "</yellow>/<yellow>" + s.maxLevel()));
         String title = s.titleFor(level);
-        if (title != null) player.sendMessage("§7Tytuł: §6" + title);
-        player.sendMessage("§7Dodatkowe sloty minionów: §a+" + s.extraMinionSlots(level));
-        player.sendMessage("§7Szczęście kryształów: §a+" + (int) (s.crystalLuckPercentPerLevel() * level) + "%");
+        if (title != null) player.sendMessage(mm.deserialize("<gray>Tytuł: <gold>" + title));
+        player.sendMessage(mm.deserialize("<gray>Dodatkowe sloty minionów: <green>+" + s.extraMinionSlots(level)));
+        player.sendMessage(mm.deserialize("<gray>Szczęście kryształów: <green>+" + (int) (s.crystalLuckPercentPerLevel() * level) + "%"));
         if (level < s.maxLevel()) {
             long cost = s.costFor(level + 1);
-            player.sendMessage("§7Koszt poziomu " + (level + 1) + ": §e" + cost + " monet");
-            player.sendMessage("§8Użyj /skyprestige kup aby kupić.");
+            player.sendMessage(mm.deserialize("<gray>Koszt poziomu " + (level + 1) + ": <yellow>" + cost + " monet"));
+            player.sendMessage(mm.deserialize("<dark_gray>Użyj /is prestige kup aby kupić."));
         } else {
-            player.sendMessage("§aMaksymalny poziom osiągnięty.");
+            player.sendMessage(mm.deserialize("<green>Maksymalny poziom osiągnięty."));
         }
     }
 
@@ -113,8 +102,8 @@ public final class PrestigeCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
-                                                @NotNull String label, String @NotNull [] args) {
+    public @NotNull List<String> onTabComplete(@NotNull Plugin plugin, @NotNull CommandSender sender,
+                                               @NotNull String[] args) {
         if (args.length == 1) return List.of("kup");
         return List.of();
     }

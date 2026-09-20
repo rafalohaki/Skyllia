@@ -547,7 +547,7 @@ recipes:
     category: minions
     name: "<gray><bold>Minionek Bruku</bold></gray>"
     result-command: "ecopets give %player% cobblestone"
-    icon: COBBLESTONE
+    icon: "custom:skyblock:pet/cobblestone"
     result-amount: 1
     cost-money: 6000
     required-items:
@@ -560,7 +560,7 @@ recipes:
     category: minions
     name: "<yellow><bold>Minionek Pszenicy</bold></yellow>"
     result-command: "ecopets give %player% wheat"
-    icon: WHEAT
+    icon: "custom:skyblock:pet/wheat"
     result-amount: 1
     cost-money: 20000
     required-items:
@@ -573,7 +573,7 @@ recipes:
     category: minions
     name: "<gold><bold>Minionek Dębu</bold></gold>"
     result-command: "ecopets give %player% oak"
-    icon: OAK_LOG
+    icon: "custom:skyblock:pet/oak"
     result-amount: 1
     cost-money: 25000
     # F27: bursztyn -> cytryn. Bursztyn był tu „kryształem z kuźni” z listy
@@ -596,7 +596,7 @@ recipes:
     category: minions
     name: "<aqua><bold>Minionek Diamentu</bold></aqua>"
     result-command: "ecopets give %player% diamond"
-    icon: DIAMOND
+    icon: "custom:skyblock:pet/diamond"
     result-amount: 1
     cost-money: 1250000
     required-items:
@@ -611,7 +611,7 @@ recipes:
     category: minions
     name: "<yellow><bold>Minionek Piasku</bold></yellow>"
     result-command: "ecopets give %player% sand"
-    icon: SAND
+    icon: "custom:skyblock:pet/sand"
     result-amount: 1
     cost-money: 13000
     required-items:
@@ -624,7 +624,7 @@ recipes:
     category: minions
     name: "<dark_gray><bold>Minionek Węgla</bold></dark_gray>"
     result-command: "ecopets give %player% coal"
-    icon: COAL
+    icon: "custom:skyblock:pet/coal"
     result-amount: 1
     cost-money: 48000
     required-items:
@@ -637,7 +637,7 @@ recipes:
     category: minions
     name: "<red><bold>Minionek Redstone</bold></red>"
     result-command: "ecopets give %player% redstone"
-    icon: REDSTONE
+    icon: "custom:skyblock:pet/redstone"
     result-amount: 1
     cost-money: 60000
     required-items:
@@ -650,7 +650,7 @@ recipes:
     category: minions
     name: "<blue><bold>Minionek Lapisu</bold></blue>"
     result-command: "ecopets give %player% lapis"
-    icon: LAPIS_LAZULI
+    icon: "custom:skyblock:pet/lapis"
     result-amount: 1
     cost-money: 62000
     required-items:
@@ -663,7 +663,7 @@ recipes:
     category: minions
     name: "<gold><bold>Minionek Miedzi</bold></gold>"
     result-command: "ecopets give %player% copper"
-    icon: COPPER_INGOT
+    icon: "custom:skyblock:pet/copper"
     result-amount: 1
     cost-money: 72000
     required-items:
@@ -676,7 +676,7 @@ recipes:
     category: minions
     name: "<white><bold>Minionek Kwarcu</bold></white>"
     result-command: "ecopets give %player% quartz"
-    icon: QUARTZ
+    icon: "custom:skyblock:pet/quartz"
     result-amount: 1
     cost-money: 81000
     required-items:
@@ -689,7 +689,7 @@ recipes:
     category: minions
     name: "<white><bold>Minionek Żelaza</bold></white>"
     result-command: "ecopets give %player% iron"
-    icon: IRON_INGOT
+    icon: "custom:skyblock:pet/iron"
     result-amount: 1
     cost-money: 140000
     required-items:
@@ -702,7 +702,7 @@ recipes:
     category: minions
     name: "<yellow><bold>Minionek Złota</bold></yellow>"
     result-command: "ecopets give %player% gold"
-    icon: GOLD_INGOT
+    icon: "custom:skyblock:pet/gold"
     result-amount: 1
     cost-money: 190000
     required-items:
@@ -715,7 +715,7 @@ recipes:
     category: minions
     name: "<green><bold>Minionek Szmaragdu</bold></green>"
     result-command: "ecopets give %player% emerald"
-    icon: EMERALD
+    icon: "custom:skyblock:pet/emerald"
     result-amount: 1
     cost-money: 1030000
     required-items:

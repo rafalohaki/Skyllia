@@ -62,52 +62,52 @@ final class PomocDialog {
                             "<font:wpme:icons>\uE001</font> <yellow>/is</yellow> — teleport na własną wyspę; <white>/is help</white> — wszystkie podkomendy",
                             "<font:wpme:icons>\uE018</font> <yellow>/is panel</yellow> — Centrum Wyspy: bank, członkowie, prestiż, tytuł",
                             "<font:wpme:icons>\uE001</font> <yellow>/is invite <nick></yellow> — zaproszenie członka; <white>/is kick</white> — wyrzucenie",
-                            "<gray>Wyspa startuje na y=63; dom ustawia się sam przy pierwszym lądowaniu.</gray>")),
+                            "<white>Wyspa startuje na y=63; dom ustawia się sam przy pierwszym lądowaniu.</white>")),
             new Topic("OneBlock i prestiż", "Fazy bloku, kamienie, zlew monet",
                     List.of(
                             "<font:wpme:icons>\uE019</font> <yellow>/wyspa oneblock info</yellow> — faza, postęp i kamienie milowe",
                             "<font:wpme:icons>\uE011</font> <yellow>/wyspa oneblock nagrody</yellow> — odbiór nagród za kamienie",
                             "<font:wpme:icons>\uE010</font> <yellow>/is panel</yellow> → Prestiż — zlew monet z banku wyspy za tytuł",
-                            "<gray>Prestiż kosztuje coraz więcej (×1,6 za poziom) — to zlew dla bogatych wysp.</gray>")),
+                            "<white>Prestiż kosztuje coraz więcej (×1,6 za poziom) — to zlew dla bogatych wysp.</white>")),
             new Topic("Monety i handel", "Sklep, aukcje, bank, wycena",
                     List.of(
                             "<font:wpme:icons>\uE002</font> <yellow>/sklep</yellow> — sprzedaż surowców i zakupy za monety",
                             "<font:wpme:icons>\uE017</font> <yellow>/ah</yellow> — dom aukcyjny: handel z innymi graczami (podatek 5%)",
                             "<font:wpme:icons>\uE010</font> <yellow>/bank</yellow> — wspólny bank wyspy; depozyt liczy się do rankingu",
                             "<font:wpme:icons>\uE002</font> <yellow>/wartosc</yellow> — cena przedmiotu trzymanego w ręce wg cennika",
-                            "<gray>Monety z banku wyspy zasilają prestiż i ranking sezonu.</gray>")),
+                            "<white>Monety z banku wyspy zasilają prestiż i ranking sezonu.</white>")),
             new Topic("Zadania i sezon", "Dzienne zadania, punkty, karnet",
                     List.of(
                             "<font:wpme:icons>\uE00D</font> <yellow>/zadania</yellow> — dzienne zadania wyspy z nagrodami i punktami sezonu",
                             "<font:wpme:icons>\uE00E</font> <yellow>/sezon</yellow> — punkty sezonowe, questy i TOP-10 wysp",
                             "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> — karnet sezonowy: 75 poziomów nagród",
                             "<font:wpme:icons>\uE011</font> <yellow>/nagroda</yellow> — codzienna nagroda i seria logowań",
-                            "<gray>15 zadań dnia wyspy w tygodniu = Złoty Lotos dla właściciela.</gray>")),
+                            "<white>15 zadań dnia wyspy w tygodniu = Złoty Lotos dla właściciela.</white>")),
             new Topic("Kuźnia i pety", "Talizmany, ulepszenia, minionki",
                     List.of(
                             "<font:wpme:icons>\uE00A</font> <yellow>/kuznia</yellow> — talizmany, ulepszenia i pety za monety",
                             "<font:wpme:icons>\uE00D</font> <yellow>/pets</yellow> — twoje pety: aktywacja i odbiór surowców",
                             "<font:wpme:icons>\uE009</font> <yellow>/narzedzia</yellow> — sklep magicznych narzędzi (różdżki)",
-                            "<gray>Minionki kupuje się w kuźni — przepis wymaga m.in. bloków z oneblocka.</gray>")),
+                            "<white>Minionki kupuje się w kuźni — przepis wymaga m.in. bloków z oneblocka.</white>")),
             new Topic("Rozrywka", "Gierki, ryby, konkursy wędkarskie",
                     List.of(
                             "<font:wpme:icons>\uE007</font> <yellow>/gierki</yellow> — centrum gier: ruletka i skrzynki (tytuły, bez strat)",
                             "<font:wpme:icons>\uE01A</font> <yellow>Ryby</yellow> — konkurs wędkarski co 2 h (20 min); wędka u rybaka Barnaby na spawnie",
                             "<font:wpme:icons>\uE00D</font> <yellow>/emf shop</yellow> — skup złowionych ryb; <white>/emf journal</white> — dziennik gatunków",
-                            "<gray>W konkursie wygrywa największa ryba — nagrody dla TOP-3.</gray>")),
+                            "<white>W konkursie wygrywa największa ryba — nagrody dla TOP-3.</white>")),
             new Topic("Rangi i perki", "Co daje ranga, lot, sklep www",
                     List.of(
                             "<font:wpme:icons>\uE004</font> <yellow>/latanie</yellow> — lot na własnej wyspie (perk od rangi SVIP/EVIP)",
                             "<font:wpme:icons>\uE000</font> <yellow>Rangi sieciowe</yellow> — VIP/SVIP/EVIP działają na całej sieci; wyższa ranga zawiera perki niższej",
                             "<font:wpme:icons>\uE002</font> <yellow>Sklep:</yellow> <white>2b2t.pl/sklep</white> — rangi i bonusy za złotówki",
-                            "<gray>VIP ⊃ weteran: kupując rangę dostajesz też perki progu stażu.</gray>")),
+                            "<white>VIP ⊃ weteran: kupując rangę dostajesz też perki progu stażu.</white>")),
             new Topic("Kontakt i zasady", "Zgłoszenia, wiadomości, spawn",
                     List.of(
                             "<font:wpme:icons>\uE005</font> <yellow>/spawn</yellow> — powrót na plac spawnu",
                             "<font:wpme:icons>\uE000</font> <yellow>/msg <nick></yellow> — prywatna wiadomość; <white>/reply</white> — odpowiedź",
                             "<font:wpme:icons>\uE000</font> <yellow>/report <nick></yellow> — zgłoszenie gracza do administracji",
                             "<font:wpme:icons>\uE018</font> <yellow>/menu</yellow> — wszystkie okna gry w jednym miejscu",
-                            "<gray>Bieżący cel widzisz na tablicy po prawej stronie ekranu.</gray>")));
+                            "<white>Bieżący cel widzisz na tablicy po prawej stronie ekranu.</white>")));
 
     private final SchedulerService scheduler;
     private final MiniMessage miniMessage;
@@ -140,8 +140,8 @@ final class PomocDialog {
                 .build();
         DialogBase base = DialogBase.builder(Component.text("Pomoc SkyBlock", NamedTextColor.GOLD))
                 .body(body(List.of(
-                        "<gray>Wybierz temat, żeby zobaczyć komendy i opis.</gray>",
-                        "<dark_gray>Tekstowa wersja na czacie: /pomoc tekst</dark_gray>")))
+                        "<white>Wybierz temat, żeby zobaczyć komendy i opis.</white>",
+                        "<gray>Tekstowa wersja na czacie: /pomoc tekst</gray>")))
                 .canCloseWithEscape(true)
                 .afterAction(DialogBase.DialogAfterAction.CLOSE)
                 .build();

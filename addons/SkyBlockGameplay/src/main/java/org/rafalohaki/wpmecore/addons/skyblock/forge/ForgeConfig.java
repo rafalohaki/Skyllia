@@ -72,6 +72,7 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                               @Nullable String resultMinionType,
                               int resultAmount, long costMoney,
                               @Nullable Material icon,
+                              @Nullable String iconCustomItemId,
                               @NotNull List<ForgeIngredient> ingredients,
                               @Nullable String resultCommand) {
         /** Receptura z wyrobem-przedmiotem (bez komendy) — stary kształt, używany przez testy. */
@@ -80,7 +81,7 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                            @Nullable String resultMinionType, int resultAmount, long costMoney,
                            @Nullable Material icon, @NotNull List<ForgeIngredient> ingredients) {
             this(id, category, name, resultCustomItemId, resultMaterial, resultMinionType,
-                    resultAmount, costMoney, icon, ingredients, null);
+                    resultAmount, costMoney, icon, null, ingredients, null);
         }
     }
 
@@ -298,8 +299,16 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
          * wyglądałyby wtedy identycznie, więc mogą sobie ikonę wskazać.
          */
         String iconKey = section.getString("icon");
-        Material icon = iconKey == null || iconKey.isBlank()
-                ? null : SCHEMA.material(iconKey, path + ".icon");
+        Material icon = null;
+        String iconCustomItemId = null;
+        if (iconKey != null && !iconKey.isBlank()) {
+            if (iconKey.startsWith(CUSTOM_PREFIX)) {
+                iconCustomItemId = iconKey.substring(CUSTOM_PREFIX.length());
+                SCHEMA.requireKnownCustomItem(customItems, iconCustomItemId, path + ".icon");
+            } else {
+                icon = SCHEMA.material(iconKey, path + ".icon");
+            }
+        }
 
         long costMoney = section.getLong("cost-money", -1L);
         if (costMoney < 0L) {
@@ -318,7 +327,7 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
 
         ForgeRecipe recipe = new ForgeRecipe(id, category, SCHEMA.string(section, path, "name"),
                 resultCustomId, resultMaterial, resultMinionType, resultAmount, costMoney,
-                icon, List.copyOf(ingredients), resultCommand);
+                icon, iconCustomItemId, List.copyOf(ingredients), resultCommand);
         if (ForgeRequirements.consumesItsOwnResult(recipe)) {
             throw SCHEMA.fail(path, "receptura nie może zużywać własnego wyrobu — kuźnia wydaje go "
                     + "przed zabraniem składników, więc świeży egzemplarz zostałby zabrany");

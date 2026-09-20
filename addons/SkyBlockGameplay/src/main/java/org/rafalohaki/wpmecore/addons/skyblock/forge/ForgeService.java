@@ -275,6 +275,12 @@ public class ForgeService {
     @Nullable ItemStack resultStack(@NotNull ForgeConfig.ForgeRecipe recipe) {
         if (recipe.resultCommand() != null) {
             // Wyrób-komenda nie ma przedmiotu: ikona służy tylko do wyświetlenia w menu.
+            if (recipe.iconCustomItemId() != null && customItems != null) {
+                ItemStack custom = customItems.create(recipe.iconCustomItemId()).orElse(null);
+                if (custom != null) {
+                    return custom;
+                }
+            }
             return new ItemStack(recipe.icon() == null ? Material.PAPER : recipe.icon());
         }
         String minionType = recipe.resultMinionType();

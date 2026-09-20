@@ -2185,7 +2185,7 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         String[] parts = message.substring(1).trim().split("\\s+");
         return parts.length == 2
                 && ISLAND_COMMANDS.contains(parts[0].toLowerCase(Locale.ROOT))
-                && parts[1].equalsIgnoreCase("panel");
+                && (parts[1].equalsIgnoreCase("panel") || parts[1].equalsIgnoreCase("centrum"));
     }
 
     /**

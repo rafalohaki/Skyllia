@@ -375,9 +375,9 @@ class SkyBlockProgressiveObjectiveServiceTest {
         assertTrue(seasonStep.contains("500 pkt"), "linia mówi, co dają punkty: " + seasonStep);
     }
 
-    /** Migracja Eco: w ogonie weterana liczą się pety z kuźni, nie minionki wyspy. */
+    /** Migracja Eco: w ogonie weterana liczą się minionki z kuźni. */
     @Test
-    void veteranTailInEcoModeCountsPets() {
+    void veteranTailInEcoModeCountsMinions() {
         lenient().when(ledger.playerBalance(any())).thenReturn(30_000L);
         lenient().when(quests.hasCompletedToday(any())).thenReturn(true);
         service.bindForgeEntryCost(() -> 6_000L);
@@ -390,7 +390,7 @@ class SkyBlockProgressiveObjectiveServiceTest {
 
         String objective = service.resolveObjective(playerId);
 
-        assertTrue(objective.contains("Wykuj kolejnego peta"), objective);
+        assertTrue(objective.contains("Wykuj kolejnego minionka"), objective);
         assertTrue(objective.contains("3/13"), objective);
     }
 

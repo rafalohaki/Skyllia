@@ -99,7 +99,7 @@ class ShippedForgeConfigContractTest {
      * miał recepturę, więc dodanie typu bez drogi zdobycia zatrzyma budowanie.
      */
     private static String petTypeOf(String command) {
-        if (command == null || !command.startsWith("ecopets give ")) {
+        if (command == null || !command.startsWith("minionki daj ")) {
             return null;
         }
         String[] parts = command.trim().split("\\s+");
@@ -110,8 +110,8 @@ class ShippedForgeConfigContractTest {
     void everyShippedMinionTypeIsObtainableFromTheForge() throws IOException {
         ForgeConfig config = shippedConfig();
 
-        // Migracja Eco: typ może wychodzić jako przedmiot minionka albo jako pet z komendy
-        // `ecopets give %player% <typ>` — obie drogi liczą się jako „zdobywalny w kuźni”.
+        // Typ wychodzi jako przedmiot minionka (`result-item: minion:<typ>`) albo
+        // z komendy `minionki daj %player% <typ>` — obie drogi są „zdobywalne w kuźni”.
         Set<String> craftable = config.recipes().values().stream()
                 .map(recipe -> recipe.resultMinionType() != null ? recipe.resultMinionType()
                         : petTypeOf(recipe.resultCommand()))

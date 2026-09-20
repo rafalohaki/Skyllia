@@ -1,3 +1,5 @@
+import java.util.concurrent.TimeUnit
+
 plugins {
     id("java-library")
     id("java")
@@ -42,6 +44,12 @@ dependencies {
 }
 
 allprojects {
+    // SNAPSHOT-y (dev-bundle Folia) trzymamy w cache — rewalidacja
+    // maven-metadata.xml przy każdym buildzie łapie rate-limit 429.
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor(30, TimeUnit.DAYS)
+        resolutionStrategy.cacheDynamicVersionsFor(30, TimeUnit.DAYS)
+    }
     version = "3.0-" + (System.getenv("GITHUB_RUN_NUMBER") ?: getGitCommitHash())
     description = "Plugin Skyblock on Folia";
 
@@ -61,11 +69,20 @@ allprojects {
             forRepository { maven(paperRepo) }
             filter { includeGroupByRegex("io\\.papermc.*") }
         }
-        mavenCentral()
-        maven(sonatypeRepo)
+        // Mirror Maven Central zamiast mavenCentral(): repo.maven.apache.org
+        // i repo1.maven.org mają wspólny rate-limit (429 dla tego IP). Aliyun
+        // public mirror zasila już pluginManagement w settings.gradle.kts.
+        maven("https://maven.aliyun.com/repository/public")
+        // sonatype wyłączone: to proxy Central (repo1) = ten sam 429.
         maven(engineHubRepo)
-        maven(mojang)
-        //maven(jitpack)
+        // com.mojang:* tylko z repozytorium Mojang — sonatype/central
+        // proxy'ują do Central i łapią ten sam rate-limit 429.
+        exclusiveContent {
+            forRepository { maven(mojang) }
+            filter { includeGroup("com.mojang") }
+        }
+        // jitpack dla com.github.* (CMILib itd.) — osobny host, bez 429.
+        maven(jitpack)
         maven(extendedclip)
         maven(theNextLvl)
         maven(euphyRepo)

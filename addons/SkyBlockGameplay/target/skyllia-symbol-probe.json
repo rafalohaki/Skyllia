@@ -1,10 +1,10 @@
 {
-  "pinned_9b1574d": "/Users/devin/pufferhost/skyllia/api/build/libs/api-3.0-2ea841df.jar",
+  "pinned_9b1574d": "/Users/devin/pufferhost/skyllia/api/build/libs/api-3.0-70ff8a83.jar",
   "totalSkylliaClasses": 118,
   "discoveredManagers": {
-    "IslandMemberQuery": "fr.euphyllia.skyllia.api.database.IslandMemberQuery",
+    "SkyblockManager": "ABSENT",
     "SkyblockCache": "ABSENT",
-    "SkyblockManager": "ABSENT"
+    "IslandMemberQuery": "fr.euphyllia.skyllia.api.database.IslandMemberQuery"
   },
   "keyClassesPresentOnPinnedJar": {
     "fr.euphyllia.skyllia.api.SkylliaAPI": true,

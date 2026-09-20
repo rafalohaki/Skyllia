@@ -1065,6 +1065,111 @@ items:
     glow: true
     item-model: "skyblock:talisman/amber_guardian"
 
+  "skyblock:pet/cobblestone":
+    material: PAPER
+    name: "<white><bold>Minionek Bruku</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_cobblestone"
+
+  "skyblock:pet/wheat":
+    material: PAPER
+    name: "<white><bold>Minionek Pszenicy</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_wheat"
+
+  "skyblock:pet/oak":
+    material: PAPER
+    name: "<white><bold>Minionek Dębu</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_oak"
+
+  "skyblock:pet/diamond":
+    material: PAPER
+    name: "<white><bold>Minionek Diamentu</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_diamond"
+
+  "skyblock:pet/sand":
+    material: PAPER
+    name: "<white><bold>Minionek Piasku</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_sand"
+
+  "skyblock:pet/coal":
+    material: PAPER
+    name: "<white><bold>Minionek Węgla</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_coal"
+
+  "skyblock:pet/redstone":
+    material: PAPER
+    name: "<white><bold>Minionek Redstone</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_redstone"
+
+  "skyblock:pet/lapis":
+    material: PAPER
+    name: "<white><bold>Minionek Lazurytu</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_lapis"
+
+  "skyblock:pet/copper":
+    material: PAPER
+    name: "<white><bold>Minionek Miedzi</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_copper"
+
+  "skyblock:pet/quartz":
+    material: PAPER
+    name: "<white><bold>Minionek Kwarcu</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_quartz"
+
+  "skyblock:pet/iron":
+    material: PAPER
+    name: "<white><bold>Minionek Żelaza</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_iron"
+
+  "skyblock:pet/gold":
+    material: PAPER
+    name: "<white><bold>Minionek Złota</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_gold"
+
+  "skyblock:pet/emerald":
+    material: PAPER
+    name: "<white><bold>Minionek Szmaragdu</bold></white>"
+    lore:
+      - "<gray>Ikona podglądowa minionka w kuźni.</gray>"
+    glow: false
+    item-model: "skyblock:pet/pet_emerald"
+
+
 catalog:
   categories:
     weapons:

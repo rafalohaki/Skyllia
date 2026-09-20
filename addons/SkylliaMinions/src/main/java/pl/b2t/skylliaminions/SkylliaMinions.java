@@ -1,11 +1,18 @@
 package pl.b2t.skylliaminions;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import fr.euphyllia.skyllia.api.event.SkyblockDeleteEvent;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -79,6 +86,7 @@ public final class SkylliaMinions extends JavaPlugin {
         service.startTicking();
         getServer().getPluginManager().registerEvents(listener, this);
         getServer().getPluginManager().registerEvents(new IslandDeleteGuard(), this);
+        registerCommands(config, miniMessage);
         getLogger().info("SkylliaMinions enabled");
     }
 
@@ -115,6 +123,58 @@ public final class SkylliaMinions extends JavaPlugin {
         }
         listener.setIslandExtraSlots(new PrestigeSlots(sql, everyLevels).resolver());
         getLogger().info("Sloty prestiżu dopięte (wpme_sb_island_prestige, co " + everyLevels + " poziomy).");
+    }
+
+    /**
+     * `/minionki daj <gracz> <typ>` — konsolowa ścieżka wręczania minionków.
+     * Kuźnia (forge.yml `result-command`) wywołuje ją z konsoli; wcześniej
+     * receptury dawały `ecopets give`, czyli kosmetycznego peta bez produkcji
+     * — minionek musi mieć PDC kontraktu (MinionItem), inaczej nie stawia się
+     * i nie pracuje.
+     */
+    private void registerCommands(@NotNull MinionsConfig config, @NotNull MiniMessage miniMessage) {
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
+                event.registrar().register(Commands.literal("minionki")
+                        .requires(source -> source.getSender().hasPermission("skylliaminions.admin"))
+                        .then(Commands.literal("daj")
+                                .then(Commands.argument("gracz", StringArgumentType.word())
+                                        .then(Commands.argument("typ", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> {
+                                                    config.minions().keySet().forEach(builder::suggest);
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(ctx -> giveMinion(ctx.getSource().getSender(),
+                                                        StringArgumentType.getString(ctx, "gracz"),
+                                                        StringArgumentType.getString(ctx, "typ"),
+                                                        config, miniMessage)))))
+                        .build(), "Wręcz minionka graczowi (kuźnia/admin)", java.util.List.of()));
+    }
+
+    private int giveMinion(@NotNull CommandSender sender, @NotNull String targetName,
+                           @NotNull String typeId, @NotNull MinionsConfig config,
+                           @NotNull MiniMessage miniMessage) {
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target == null) {
+            sender.sendMessage(miniMessage.deserialize(
+                    "<red>Gracz " + targetName + " nie jest online.</red>"));
+            return 0;
+        }
+        MinionsConfig.TypeDef type = config.type(typeId);
+        if (type == null) {
+            sender.sendMessage(miniMessage.deserialize("<red>Nieznany typ minionka: " + typeId
+                    + ". Dostępne: " + String.join(", ", config.minions().keySet()) + "</red>"));
+            return 0;
+        }
+        // Ekwipunek ruszamy tylko na wątku regionu gracza (Folia).
+        target.getScheduler().run(this, task -> {
+            ItemStack item = MinionItem.create(type, 1, false, null, 0, "", miniMessage);
+            target.getInventory().addItem(item)
+                    .values().forEach(leftover ->
+                            target.getWorld().dropItemNaturally(target.getLocation(), leftover));
+            sender.sendMessage(miniMessage.deserialize("<green>Wręczono minionka " + type.id()
+                    + " graczowi " + target.getName() + ".</green>"));
+        }, null);
+        return Command.SINGLE_SUCCESS;
     }
 
     private @Nullable Economy hookEconomy() {

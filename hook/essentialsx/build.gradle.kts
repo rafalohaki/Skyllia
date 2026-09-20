@@ -6,7 +6,9 @@ version = "2.3"
 
 
 repositories {
-    mavenCentral()
+    // Mirror Central — repo.maven.apache.org/repo1 mają wspólny rate-limit
+    // (429 dla tego IP), patrz allprojects.repositories w root build.
+    maven("https://maven.aliyun.com/repository/public")
     maven {
         name = "EssentialsX"
         url = uri("https://repo.essentialsx.net/releases/")

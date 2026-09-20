@@ -247,9 +247,10 @@ public class ForgeService {
         }
         String command = recipe.resultCommand();
         if (command != null) {
-            // Migracja Eco: wyrób to komenda konsoli (pety z EcoPets). Folia: tylko wątek
-            // globalny może wysyłać komendy konsoli. Powtórka po awarii = ponowne `ecopets give`,
-            // które EcoPets odrzuca komunikatem „już ma peta” — bez podwójnego wydania.
+            // Wyrób-komenda: dispatch na wątku globalnym (Folia). Komenda musi być
+            // idempotentna, bo ponowiona operacja PENDING wywoła ją drugi raz —
+            // dlatego minionki idą przez `result-item: minion:<typ>` i paragon
+            // PDC outboxa, a tędy lecą tylko wyroby bez stanu.
             String resolved = command.replace("%player%", player.getName());
             org.bukkit.Bukkit.getGlobalRegionScheduler().run(plugin, task ->
                     org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), resolved));

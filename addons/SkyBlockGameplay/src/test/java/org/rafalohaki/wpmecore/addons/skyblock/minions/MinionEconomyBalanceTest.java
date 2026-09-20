@@ -324,14 +324,14 @@ class MinionEconomyBalanceTest {
         return prices;
     }
 
-    /** Typ minionka z receptury: `result-item: minion:<typ>` albo pet `result-command: ecopets give %player% <typ>`. */
+    /** Typ minionka z receptury: `result-item: minion:<typ>` albo `result-command: minionki daj %player% <typ>`. */
     private static String minionTypeOf(ConfigurationSection recipe) {
         String item = recipe.getString("result-item", "");
         if (item.startsWith("minion:")) {
             return item.substring("minion:".length());
         }
         String command = recipe.getString("result-command", "");
-        if (command.startsWith("ecopets give ")) {
+        if (command.startsWith("minionki daj ")) {
             String[] parts = command.trim().split("\\s+");
             return parts[parts.length - 1];
         }
@@ -343,8 +343,8 @@ class MinionEconomyBalanceTest {
         ConfigurationSection recipes = section(load(FORGE), "recipes");
         for (String id : recipes.getKeys(false)) {
             ConfigurationSection recipe = section(recipes, id);
-            // Migracja Eco: cena wejścia = receptura peta (`ecopets give %player% <typ>`) albo
-            // dawna receptura przedmiotu minionka — ta sama tabela kosztów.
+            // Cena wejścia = receptura minionka (`result-item: minion:<typ>`) albo
+            // komenda `minionki daj` — ta sama tabela kosztów.
             String type = minionTypeOf(recipe);
             if (type != null) {
                 costs.put(type, recipe.getLong("cost-money", 0L));

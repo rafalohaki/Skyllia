@@ -45,8 +45,8 @@ class ForgeEconomyBalanceTest {
 
     static final String CUSTOM_PREFIX = "custom:";
     static final String MINION_PREFIX = "minion:";
-    /** Migracja Eco: pety z kuźni (`result-command: ecopets give %player% <typ>`) dziedziczą ceny minionków. */
-    static final String PET_COMMAND_PREFIX = "ecopets give ";
+    /** Minionki z kuźni (`result-command: minionki daj %player% <typ>`) dziedziczą ceny kontraktu. */
+    static final String PET_COMMAND_PREFIX = "minionki daj ";
 
     /** Typ minionka/peta z receptury albo null, gdy to zwykły wyrób. */
     static String minionTypeOf(org.bukkit.configuration.ConfigurationSection recipes, String id) {

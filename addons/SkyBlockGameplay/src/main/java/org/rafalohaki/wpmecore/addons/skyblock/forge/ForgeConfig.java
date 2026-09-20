@@ -247,8 +247,9 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                     + MAX_RECIPES_PER_CATEGORY + " receptur");
         }
 
-        // Migracja Eco: wyrób może być komendą konsoli (`result-command`, np. pety z EcoPets:
-        // `ecopets give %player% cobblestone`) — wtedy `result-item` nie jest wymagany.
+        // Wyrób może być komendą konsoli (`result-command`) — wtedy `result-item`
+        // nie jest wymagany. Minionki NIE idą tędy: komenda nie jest idempotentna,
+        // więc ich wyrób to `result-item: minion:<typ>` przez outbox.
         String resultCommand = section.getString("result-command");
         if (resultCommand != null && resultCommand.isBlank()) {
             resultCommand = null;

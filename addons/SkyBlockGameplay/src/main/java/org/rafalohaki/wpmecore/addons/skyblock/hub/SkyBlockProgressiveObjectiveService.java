@@ -186,7 +186,7 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
     private volatile java.util.function.Predicate<UUID> oneblockFinished = islandId -> false;
 
     /** Liczba minionków na wyspie (MinionService#countForIsland). */
-    /** Migracja Eco: zamiast minionków na wyspie liczą się pety gracza (EcoPets). */
+    /** Migracja Eco: licznik per-gracz: minionki w ekwipunku + postawione na wyspie. */
     private volatile boolean petMode;
     private volatile java.util.function.ToIntFunction<UUID> petCounter = playerId -> 0;
 
@@ -218,7 +218,7 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
 
     /**
      * Górna granica miejsc gracza: klasyk = sloty minionków wyspy (config + perki
-     * rang), migracja Eco = liczba petów do wykucia w kuźni (EcoPets nie zna
+     * rang), migracja Eco = liczba minionków gracza (ekwipunek + wyspa nie zna
      * slotów). Zero = brak wiedzy → etap weterana nie wypomina minionków.
      */
     private volatile java.util.function.ToIntFunction<UUID> slotLimit = playerId -> 0;
@@ -293,8 +293,8 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
     /**
      * Limit miejsc etapu weterana — ta sama liczba, którą liczy etap 14
      * ({@code N/M}). Produkcja: klasyk = {@code max-minions-per-island} + sloty
-     * z perków rangi, migracja Eco = liczba petów do wykucia w kuźni.
-     * Zero (brak wpięcia) pomija krok z minionkiem/petem.
+     * z perków rangi, migracja Eco = liczba typów minionków do wykucia w kuźni.
+     * Zero (brak wpięcia) pomija krok z minionkiem.
      */
     public void bindSlotLimit(@NotNull java.util.function.ToIntFunction<UUID> limitForPlayer) {
         this.slotLimit = limitForPlayer;
@@ -484,11 +484,11 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
         if (minionCount < 1) {
             checkStageAdvance(playerId, 10, "Bogata wyspa");
             return petMode
-                    ? "<yellow>▶</yellow> <white>Wykuj pierwszego peta</white> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>"
+                    ? "<yellow>▶</yellow> <white>Wykuj pierwszego minionka</white> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>"
                     : "<yellow>▶</yellow> <white>Wykuj pierwszego minionka</white> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>";
         }
         if (player == null || !talismanDetector.test(player)) {
-            checkStageAdvance(playerId, 11, petMode ? "Pierwszy pet" : "Pierwszy minionek");
+            checkStageAdvance(playerId, 11, petMode ? "Pierwszy minionek" : "Pierwszy minionek");
             return "<yellow>▶</yellow> <white>Wykuj talizman</white> <gray>(kopanie, zbiory lub ryby)</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>";
         }
         if (!premiumDetector.test(playerId)) {
@@ -503,7 +503,7 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
         } else if (minionCount < (petMode ? 3 : 5)) {
             checkStageAdvance(playerId, 13, "Karnet premium");
             return petMode
-                    ? "<yellow>▶</yellow> <white>Zbierz 3 pety</white> <gray>(" + minionCount + "/3)</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>"
+                    ? "<yellow>▶</yellow> <white>Zbierz 3 minionki</white> <gray>(" + minionCount + "/3)</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>"
                     : "<yellow>▶</yellow> <white>Rozbuduj wyspę do 5 minionków</white> <gray>(" + minionCount + "/5)</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>";
         }
         // P1-3: ogon weterana. Do 2026-09-10 tablica kończyła się na „Walcz o TOP
@@ -523,7 +523,7 @@ public final class SkyBlockProgressiveObjectiveService implements Listener {
         int limit = slotLimit.applyAsInt(playerId);
         if (limit > 0 && minionCount < limit) {
             return petMode
-                    ? "<yellow>▶</yellow> <white>Wykuj kolejnego peta</white> <gray>(" + minionCount + "/"
+                    ? "<yellow>▶</yellow> <white>Wykuj kolejnego minionka</white> <gray>(" + minionCount + "/"
                             + limit + ")</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>"
                     : "<yellow>▶</yellow> <white>Postaw kolejnego minionka</white> <gray>(" + minionCount + "/"
                             + limit + ")</gray> <dark_gray>—</dark_gray> <yellow>/kuznia</yellow>";

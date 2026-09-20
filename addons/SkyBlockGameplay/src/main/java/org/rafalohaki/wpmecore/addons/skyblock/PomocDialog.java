@@ -83,10 +83,10 @@ final class PomocDialog {
                             "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> — karnet sezonowy: 75 poziomów nagród",
                             "<font:wpme:icons>\uE011</font> <yellow>/nagroda</yellow> — codzienna nagroda i seria logowań",
                             "<white>15 zadań dnia wyspy w tygodniu = Złoty Lotos dla właściciela.</white>")),
-            new Topic("Kuźnia i pety", "Talizmany, ulepszenia, minionki",
+            new Topic("Kuźnia i minionki", "Talizmany, ulepszenia, minionki",
                     List.of(
-                            "<font:wpme:icons>\uE00A</font> <yellow>/kuznia</yellow> — talizmany, ulepszenia i pety za monety",
-                            "<font:wpme:icons>\uE00D</font> <yellow>/pets</yellow> — twoje pety: aktywacja i odbiór surowców",
+                            "<font:wpme:icons>\uE00A</font> <yellow>/kuznia</yellow> — talizmany, ulepszenia i minionki za monety",
+                            "<font:wpme:icons>\uE00D</font> <yellow>Minionek</yellow> — postaw na wyspie, a kliknięcie otwiera zarządzanie i odbiór surowców",
                             "<font:wpme:icons>\uE009</font> <yellow>/narzedzia</yellow> — sklep magicznych narzędzi (różdżki)",
                             "<white>Minionki kupuje się w kuźni — przepis wymaga m.in. bloków z oneblocka.</white>")),
             new Topic("Rozrywka", "Gierki, ryby, konkursy wędkarskie",

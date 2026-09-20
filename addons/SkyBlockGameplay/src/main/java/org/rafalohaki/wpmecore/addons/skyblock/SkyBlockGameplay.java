@@ -854,8 +854,9 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         // 4) Limit miejsc i zlew Złotych Lotosów dla ogona weterana: minionki liczą
         //    sloty wyspy (config + perki rangi), migracja Eco — liczbę petów z kuźni.
         long forgePetTypes = forgeConfig.recipes().values().stream()
-                .filter(recipe -> recipe.resultCommand() != null
-                        && recipe.resultCommand().startsWith("ecopets give "))
+                .filter(recipe -> recipe.resultMinionType() != null
+                        || (recipe.resultCommand() != null
+                                && recipe.resultCommand().startsWith("minionki daj ")))
                 .count();
         this.progressiveObjectives.bindSlotLimit(playerId -> {
             if (ecoMigration) {
@@ -879,11 +880,41 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
             return false;
         });
         if (ecoMigration) {
-            // Migracja Eco: cele przewodnika liczą pety gracza (%ecopets_total_pets% przez PAPI).
+            // Przewodnik liczy minionki gracza dwojako: sztuki w ekwipunku
+            // (PDC `wpme:minion_item` — kontrakt MinionItem) + postawione na
+            // jego wyspie. Postawione pisze SkylliaMinions do współdzielonej
+            // wpme_sb_minions — odczyt JDBC trzymamy w 30 s cache, odświeżanym
+            // poza wątkiem regionu (odczyt w resolveObjective biegnie na wątku
+            // gracza, więc ekwipunek tam ruszać wolno).
+            MinionDao sharedMinionDao = new MinionDao(binding.service());
+            java.util.Map<java.util.UUID, long[]> placedStamp = new java.util.concurrent.ConcurrentHashMap<>();
+            java.util.Map<java.util.UUID, Integer> placedCache = new java.util.concurrent.ConcurrentHashMap<>();
             this.progressiveObjectives.enablePetMode(playerId -> {
                 org.bukkit.entity.Player online = getServer().getPlayer(playerId);
-                return online == null ? 0
-                        : org.rafalohaki.wpmecore.addons.skyblock.hub.PapiValues.parseInt(online, "%ecopets_total_pets%", 0);
+                if (online == null) {
+                    return 0;
+                }
+                int held = 0;
+                for (org.bukkit.inventory.ItemStack item : online.getInventory().getContents()) {
+                    if (MinionItem.isMinionItem(item)) {
+                        held += Math.max(1, item.getAmount());
+                    }
+                }
+                java.util.UUID islandId = skyllia.islandOf(playerId)
+                        .map(org.rafalohaki.wpmecore.addons.skyblock.skylliaintegration.IslandView::islandId)
+                        .orElse(null);
+                if (islandId == null) {
+                    return held;
+                }
+                long[] stamp = placedStamp.get(playerId);
+                long now = System.currentTimeMillis();
+                if (stamp == null || now - stamp[0] >= 30_000) {
+                    placedStamp.put(playerId, new long[]{now});
+                    sharedMinionDao.findByIsland(islandId)
+                            .thenAccept(list -> placedCache.put(playerId, list.size()))
+                            .exceptionally(failure -> null);
+                }
+                return held + placedCache.getOrDefault(playerId, 0);
             });
         }
         this.progressiveObjectives.bindTalismanDetector(player -> java.util.List.of(

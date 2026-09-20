@@ -64,7 +64,7 @@ class PomocDialogContentTest {
         // komend — inaczej dialog „gubi" komendę, którą obiecuje czat.
         List<String> advertised = List.of("/is", "/spawn", "/menu", "/sklep",
                 "/ah", "/zadania", "/nagroda", "/sezon", "/przepustka",
-                "/kuznia", "/pets", "/bank", "/narzedzia", "/latanie",
+                "/kuznia", "/bank", "/narzedzia", "/latanie",
                 "/gierki", "/emf shop", "/wyspa oneblock");
         String allLines = PomocDialog.TOPICS.stream()
                 .flatMap(t -> t.lines().stream())

@@ -59,12 +59,12 @@ public final class MinionItem {
         }
         item.editMeta(meta -> {
             meta.displayName(noItalic(miniMessage.deserialize(type.name()
-                    + " <dark_gray>Tier " + tier + "</dark_gray>")));
+                    + " <dark_gray>Poziom " + tier + "</dark_gray>")));
             meta.lore(List.of(
                     noItalic(miniMessage.deserialize(
                             "<gray>Postaw na swojej wyspie, aby pracował automatycznie.</gray>")),
                     noItalic(miniMessage.deserialize(
-                            "<gray>Podniesienie zachowuje tier, ulepszenia i urobek.</gray>"))
+                            "<gray>Podniesienie zachowuje poziom, ulepszenia i urobek.</gray>"))
             ));
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             pdc.set(KEY_MINION_ITEM, PersistentDataType.STRING, TAG);

@@ -76,7 +76,7 @@ public class MinionDisplayRenderer implements MinionService.CycleObserver {
         Location base = new Location(world, record.x(), record.y(), record.z());
         cleanupStale(world, base.getChunk(), record.minionId());
         MinionsConfig.TypeDef type = config.type(record.typeId());
-        String displayName = type != null ? type.name() : "<white>Minion</white>";
+        String displayName = type != null ? type.name() : "<white>Minionek</white>";
 
         ItemStack head = minionHead(type);
         ItemDisplay body = world.spawn(base.clone().add(0, 0.3, 0), ItemDisplay.class, display -> {
@@ -163,7 +163,7 @@ public class MinionDisplayRenderer implements MinionService.CycleObserver {
             displays = active.get(record.minionId());
         }
         MinionsConfig.TypeDef type = config.type(record.typeId());
-        String displayName = type != null ? type.name() : "<white>Minion</white>";
+        String displayName = type != null ? type.name() : "<white>Minionek</white>";
         if (displays != null && displays.hologram.isValid()) {
             displays.hologram.text(statusText(record, displayName, storageFull));
         }
@@ -223,14 +223,14 @@ public class MinionDisplayRenderer implements MinionService.CycleObserver {
     private @NotNull Component statusText(@NotNull MinionRecord record,
                                           @NotNull String displayName, boolean storageFull) {
         StringBuilder text = new StringBuilder(displayName)
-                .append("\n<gray>Tier ").append(record.tier()).append("</gray>");
+                .append("\n<gray>Poziom ").append(record.tier()).append("</gray>");
         long now = System.currentTimeMillis();
         if (MinionFuel.isActive(record.fuelExpiresAt(), now)) {
             text.append("\n<gold>Paliwo: ")
                     .append(MinionFuel.remainingSeconds(record.fuelExpiresAt(), now))
-                    .append("s</gold>");
+                    .append(" s</gold>");
         }
-        text.append(storageFull ? "\n<red>Magazyn pełny!</red>" : "\n<green>Pracuje...</green>");
+        text.append(storageFull ? "\n<red>Magazyn pełny!</red>" : "\n<green>Pracuje…</green>");
         return miniMessage.deserialize(text.toString()).decoration(TextDecoration.ITALIC, false);
     }
 }

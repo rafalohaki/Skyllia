@@ -9,6 +9,7 @@ dependencies {
     compileOnly(project(":api"))
     compileOnly(project(":plugin"))
     compileOnly(project(":database"))
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 }
 
 java {

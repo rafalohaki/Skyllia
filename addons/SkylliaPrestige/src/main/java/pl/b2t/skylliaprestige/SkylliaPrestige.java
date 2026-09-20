@@ -22,6 +22,13 @@ public final class SkylliaPrestige extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         service = new PrestigeService(this, loadSettings());
+        PrestigeCommand command = new PrestigeCommand(this);
+        command.hookEconomy();
+        var cmd = getCommand("skyprestige");
+        if (cmd != null) {
+            cmd.setExecutor(command);
+            cmd.setTabCompleter(command);
+        }
         getLogger().info("SkylliaPrestige enabled");
     }
 

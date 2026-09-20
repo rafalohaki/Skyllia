@@ -12,8 +12,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * Ekspansja PlaceholderAPI: {@code %skyblock_board_<tablica>_<numer>%} oraz
- * {@code %skyblock_island_title%}.
+ * Ekspansja PlaceholderAPI: {@code %skyblock_board_<tablica>_<numer>%},
+ * {@code %skyblock_island_title%} oraz {@code %skyblock_island_badge%}
+ * (tytuł w odzace «TYTUŁ» albo pusty — do TAB suffix).
  *
  * <p>Jeden token tablicy to jeden wiersz (wg {@code leaderboards.entries}). Numeracja od 1;
  * wiersze ponad liczbę wyników są puste, a tablica bez wyników ma w pierwszym
@@ -40,6 +41,8 @@ public final class SkyBlockSeasonExpansion extends PlaceholderExpansion {
     private static final String BOARD_PREFIX = "board_";
     /** Token tytułu wyspy: {@code %skyblock_island_title%}. */
     static final String TITLE_TOKEN = "island_title";
+    /** Token odzaki wyspy: {@code %skyblock_island_badge%}. */
+    static final String BADGE_TOKEN = "island_badge";
 
     private final String version;
     private final LeaderboardPlaceholders boards;
@@ -94,6 +97,13 @@ public final class SkyBlockSeasonExpansion extends PlaceholderExpansion {
         String token = params.toLowerCase(Locale.ROOT);
         if (token.equals(TITLE_TOKEN)) {
             return player == null ? "" : titleOf(player);
+        }
+        if (token.equals(BADGE_TOKEN)) {
+            if (player == null) {
+                return "";
+            }
+            String title = titleOf(player);
+            return title.isEmpty() ? "" : " §8«§6" + title + "§8»";
         }
         if (!token.startsWith(BOARD_PREFIX)) {
             return null;

@@ -531,6 +531,34 @@ final class SkyBlockCommands {
             }
             menu.open(player);
         }, "prestige");
+
+        // /is menu — Centrum Wyspy (jak gołe /menu)
+        SkylliaCommands.registerSubCommand(plugin, "skyblockgameplay.use", sender -> {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(Component.text("Tylko w grze.", NamedTextColor.RED));
+                return;
+            }
+            try {
+                if (plugin.skyllia() != null
+                        && plugin.skyllia().islandOf(player.getUniqueId()).isPresent()
+                        && plugin.islandCenter() != null) {
+                    plugin.islandCenter().open(player);
+                } else {
+                    plugin.mainMenu().open(player);
+                }
+            } catch (Exception e) {
+                plugin.mainMenu().open(player);
+            }
+        }, "menu");
+
+        // /is wartosc — cennik przedmiotu w ręce (jak /wartosc)
+        SkylliaCommands.registerSubCommand(plugin, "skyblockgameplay.use", sender -> {
+            if (sender instanceof Player player) {
+                wartosc(player);
+            } else {
+                sender.sendMessage(Component.text("Tylko w grze.", NamedTextColor.RED));
+            }
+        }, "wartosc", "cena", "ilewarto");
     }
 
     int giveMinion(CommandSender sender, String typeId, int tier) {

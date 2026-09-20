@@ -28,6 +28,7 @@ include("addons:SkylliaIslandValue")
 include("addons:SkylliaBackup")
 include("addons:SkylliaPrestige")
 include("addons:SkylliaMinions")
+include("addons:SkylliaPerks")
 //include("addons:SkylliaExtra")
 // Hook
 include("hook:worldedit")

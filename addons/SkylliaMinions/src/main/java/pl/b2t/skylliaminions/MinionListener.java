@@ -55,10 +55,10 @@ public final class MinionListener implements Listener {
         this.miniMessage = miniMessage;
     }
 
-    /** Bonusowe sloty z rangi gracza (permisja skylliaminions.extra.N). */
+    /** Bonusowe sloty z rangi gracza (permisja skyblockgameplay.minions.extra.N (ta sama co w RankPerks)). */
     private static int extraSlots(@NotNull Player player) {
         for (int n = 10; n >= 1; n--) {
-            if (player.hasPermission("skylliaminions.extra." + n)) {
+            if (player.hasPermission("skyblockgameplay.minions.extra." + n)) {
                 return n;
             }
         }

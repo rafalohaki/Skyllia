@@ -1,0 +1,13 @@
+name: SkylliaPerks
+main: pl.b2t.skylliaperks.SkylliaPerks
+version: ${version}
+api-version: 1.21.4
+folia-supported: true
+authors:
+  - 2b2t.pl
+dependencies:
+  server:
+    Skyllia:
+      load: BEFORE
+      required: true
+      join-classpath: true

@@ -1,0 +1,9 @@
+# Baza współdzielona z SkyBlockGameplay (izolowany SQLite) — ta sama tabela
+# wpme_sb_minions, więc migracja danych nie jest potrzebna.
+database:
+  jdbc-url: 'jdbc:sqlite:plugins/SkyBlockGameplay/skyblock-gameplay.db?busy_timeout=5000&foreign_keys=on&journal_mode=WAL&synchronous=FULL'
+  pool:
+    maximum-pool-size: 2
+    minimum-idle: 1
+    queue-capacity: 256
+    connection-timeout-ms: 5000

@@ -1,0 +1,256 @@
+schema-version: 1
+
+# Kontrakt balansowy minionków — pilnowany przez bramkę budowania
+# (MinionEconomyBalanceTest), nie przez runtime. Do 2026-08-30 te trzy liczby
+# były stałymi w kodzie testu, więc nikt poza deweloperem nie mógł ich ruszyć.
+balance:
+  # Dopuszczalne pasmo zwrotu pełnej inwestycji (receptura w kuźni + wszystkie
+  # ulepszenia) liczone po cenach skupu ze sklepu. Reguła całej ekonomii celuje
+  # w 50 h; przy bonusie na 20 % przychodu wychodzi ~42 h, więc pasmo zostaje.
+  payback-hours-min: 30.0
+  payback-hours-max: 80.0
+  # F27 (FUEL-1): pasmo wyżej obowiązuje TAKŻE przy stale podpiętym paliwie.
+  # Do tej fali nikt nie policzył paliwa w zwrocie, a paliwo jest mnożnikiem
+  # przychodu, nie ozdobą: przy dawnej cenie bursztynu (27 110 coins-eq/szt.)
+  # minionek diamentu zwracał się z paliwem w 28,0 h, a szmaragdu w 28,4 h —
+  # OBA poniżej deklarowanego progu 30 h. To nie jest nowa reguła, tylko
+  # nieegzekwowana: bramka liczyła zwrot bez paliwa, bo słowo `fuels` w
+  # MinionEconomyBalanceTest nie występowało.
+  #
+  # Warunek jest jednostronny — tylko dolny próg. Paliwo na tanim minionku jest
+  # czystą stratą (bruk: 648 coins/h przyrostu przy 11 667 coins/h kosztu) i tak
+  # ma być; górnego pasma nie stosujemy, bo „zwrot nigdy” nie jest nadużyciem.
+  #
+  # MINION-2/3: górny udział kryształu bonusowego w przychodzie minionka na T5.
+  # Bonus ma być dodatkiem, nie głównym źródłem — przy 3 % cytrynu bruk T5
+  # zarabiał 5 400 coins/h na kryształach przy 360 coins/h z bruku (15×) i
+  # zwracał się w 3 h zamiast 50. Wzór na szansę:
+  #   bonus-chance[%] = 100 × udział × sell(surowiec) × primary-amount
+  #                     / sell(bonus-drop)
+  # (interwał się skraca, więc ta sama szansa działa na każdym tierze).
+  # T4 dostaje połowę udziału z T5.
+  bonus-share-max: 0.20
+
+settings:
+  max-minions-per-island: 5
+  tick-interval-seconds: 1
+  adjacent-chest-scan-radius: 1
+  default-storage-slots: 2
+  slots-per-tier-increase: 2
+
+# ── Paliwa (F27) ───────────────────────────────────────────────────────────
+# Bursztyn Kuźni jest JEDYNYM paliwem. Trzy paliwa waniliowe wypadły
+# 2026-09-01, każde z własnego powodu — i oba powody to reguły, które już tu
+# stały, tylko nikt ich do paliwa nie przyłożył.
+#
+#  * COAL i COAL_BLOCK łamały MINION-1 wprost: `minion_coal` produkuje COAL,
+#    a `compact-mappings: COAL → COAL_BLOCK` niżej robi z dziewięciu sztuk
+#    blok. Minionek węgla na T5 daje 327 sztuk/h, czyli 36 bloków/h, czyli
+#    291 godzin paliwa ×1,20 na godzinę pracy — przy zapotrzebowaniu wyspy
+#    5 godzin paliwa na godzinę. Jeden minionek węgla napędzał całą wyspę,
+#    za darmo i bez końca. Dokładnie ta pętla, dla której MINION-1 powstała.
+#
+#  * LAVA_BUCKET nie da się wycenić jako paliwa, bo jego cena należy do innego
+#    poddziału: to WSAD GENERATORA (`shop.utility.lava_bucket buy: 400`,
+#    `generator.balance` liczy generator „za wiadro lawy”). 400 monet dawało
+#    24 h ×1,25, czyli 539 964 monet przyrostu na minionku diamentu T5 —
+#    pętla monety→paliwo→monety o krotności 1350×. Podniesienie ceny wiadra
+#    zepsułoby generator, więc wiadro przestaje być paliwem.
+#
+# Zostaje bursztyn, którego cenę ustala kuźnia (`forge.yml:amber_catalyst_fuel`)
+# i którego dodatkowym źródłem są skrzynie. Żaden minionek go nie produkuje —
+# ani jako surowca, ani jako `bonus-drop` (dąb dostał perydot w F14).
+fuels:
+  amber_catalyst:
+    custom-item: "skyblock:crystal/amber"
+    duration-seconds: 43200
+    speed-multiplier: 1.50
+
+compact-mappings:
+  COAL: COAL_BLOCK
+  IRON_INGOT: IRON_BLOCK
+  COPPER_INGOT: COPPER_BLOCK
+  GOLD_INGOT: GOLD_BLOCK
+  REDSTONE: REDSTONE_BLOCK
+  LAPIS_LAZULI: LAPIS_BLOCK
+  DIAMOND: DIAMOND_BLOCK
+  EMERALD: EMERALD_BLOCK
+  NETHERITE_INGOT: NETHERITE_BLOCK
+  WHEAT: HAY_BLOCK
+  SLIME_BALL: SLIME_BLOCK
+
+# Koszty ulepszeń wynikają z reguły, nie z wyczucia: każdy poziom kosztuje
+# około 50 godzin przychodu, który odblokowuje, licząc po cenach skupu ze
+# sklepu. Tę samą regułę stosuje cena wejścia w kuźni (forge.yml), więc każdy
+# minionek zwraca się w podobnym czasie i żaden typ nie jest matematycznie
+# lepszy od pozostałych. Zmieniając interwał albo cenę skupu — przelicz koszty.
+#
+# MINION-1: żaden minionek NIE MOŻE dropić ani produkować paliwa minionków.
+# Dąb dawał `skyblock:crystal/amber` (12 h, ×1,50 — najlepsze paliwo w grze,
+# bez ceny w sklepie): ~16 amberu/h to 192 minionko-godziny premium na godzinę,
+# czyli pętla „minionek napędza sam siebie”. Dąb dostał perydot, który pasuje
+# tematycznie (plony) i ma cenę skupu, więc bramka parytetu potrafi go w ogóle
+# policzyć.
+#
+# F27: reguła obejmuje teraz także `primary-item` i jego odpowiednik z
+# `compact-mappings` — to tamtędy przechodził minionek węgla (COAL i
+# COAL_BLOCK były paliwami). Bursztyn pochodzi z kuźni i ze skrzyń; skrzynia
+# nie jest minionkiem, a jej klucze wymagają surowego wolframu i umbry, których
+# ŻADEN minionek nie produkuje — pętla jest przerwana konstrukcyjnie, nie
+# wyceną.
+minions:
+  cobblestone:
+    name: "<gray>Minionek Bruku</gray>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGMxNzU0ODUxZTM2N2U4YmViYTJhNmQ4ZjdjMmZlZGU4N2FlNzkzYWM1NDZiMGYyOTlkNjczMjE1YjI5MyJ9fX0="
+    primary-item: COBBLESTONE
+    primary-amount: 1
+    tiers:
+      1: { interval: 30.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 25.0, storage-slots: 4, upgrade-cost: { money: 1200, items: 64 } }
+      3: { interval: 20.0, storage-slots: 6, upgrade-cost: { money: 1800, items: 128 } }
+      4: { interval: 15.0, storage-slots: 8, upgrade-cost: { money: 3000, items: 256 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.02 }
+      5: { interval: 10.0, storage-slots: 10, upgrade-cost: { money: 6000, items: 512 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.04 }
+
+  diamond:
+    name: "<aqua>Minionek Diamentu</aqua>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTFlZDlhYmY1MWZlNGVhODRjZmNiMjcyOTdmMWJjNTRjZDM4MmVkZjg1ZTdiZDZlNzVlY2NhMmI4MDY2MTEifX19"
+    primary-item: DIAMOND
+    primary-amount: 1
+    tiers:
+      1: { interval: 35.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 28.0, storage-slots: 4, upgrade-cost: { money: 320000, items: 32 } }
+      3: { interval: 22.0, storage-slots: 6, upgrade-cost: { money: 440000, items: 64 } }
+      4: { interval: 16.0, storage-slots: 8, upgrade-cost: { money: 770000, items: 128 }, bonus-drop: "skyblock:crystal/aquamarine", bonus-chance: 4.16 }
+      5: { interval: 12.0, storage-slots: 10, upgrade-cost: { money: 940000, items: 256 }, bonus-drop: "skyblock:crystal/aquamarine", bonus-chance: 8.33 }
+
+  wheat:
+    name: "<yellow>Minionek Pszenicy</yellow>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2IzYzg0ZTRiZGFmNWNjNWY4NTYzMmFjOTI4ZDA1OWZjMmYxZmYwY2M5ZTU5OThmMWZlOGIyMjc4ODFhZGE4NSJ9fX0="
+    primary-item: WHEAT
+    primary-amount: 1
+    tiers:
+      1: { interval: 25.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 20.0, storage-slots: 4, upgrade-cost: { money: 5400, items: 64 } }
+      3: { interval: 16.0, storage-slots: 6, upgrade-cost: { money: 6800, items: 128 } }
+      4: { interval: 12.0, storage-slots: 8, upgrade-cost: { money: 11000, items: 256 }, bonus-drop: "skyblock:crystal/peridot", bonus-chance: 0.05 }
+      5: { interval: 8.0, storage-slots: 10, upgrade-cost: { money: 22000, items: 512 }, bonus-drop: "skyblock:crystal/peridot", bonus-chance: 0.10 }
+
+  oak:
+    name: "<gold>Minionek Dębu</gold>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTRhYWRhNGQ5ZmNlZGE5MDE4NjkxOGQ2Y2EzNWI5YTBlYWQ4ZTRiMTRjOWQ5NDI3MTU3ZWU5YjkzMzlkN2IxIn19fQ=="
+    primary-item: OAK_LOG
+    primary-amount: 1
+    tiers:
+      1: { interval: 28.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 22.0, storage-slots: 4, upgrade-cost: { money: 7000, items: 64 } }
+      3: { interval: 17.0, storage-slots: 6, upgrade-cost: { money: 9600, items: 128 } }
+      4: { interval: 13.0, storage-slots: 8, upgrade-cost: { money: 13000, items: 256 }, bonus-drop: "skyblock:crystal/peridot", bonus-chance: 0.06 }
+      5: { interval: 9.0, storage-slots: 10, upgrade-cost: { money: 25000, items: 512 }, bonus-drop: "skyblock:crystal/peridot", bonus-chance: 0.13 }
+
+  sand:
+    name: "<yellow>Minionek Piasku</yellow>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzkyMGUyZGJhODRjMDVkMDY1MDYwMzliOTRhZDFkODI0OWUxNjAwMWQ5YTNiZDBiZWQ5MjI3MDc2ZTZjYzM3ZSJ9fX0="
+    primary-item: SAND
+    primary-amount: 1
+    tiers:
+      1: { interval: 28.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 23.0, storage-slots: 4, upgrade-cost: { money: 2800, items: 64 } }
+      3: { interval: 18.0, storage-slots: 6, upgrade-cost: { money: 4300, items: 128 } }
+      4: { interval: 13.0, storage-slots: 8, upgrade-cost: { money: 7700, items: 256 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.04 }
+      5: { interval: 9.0, storage-slots: 10, upgrade-cost: { money: 12000, items: 512 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.08 }
+
+  coal:
+    name: "<dark_gray>Minionek Węgla</dark_gray>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzYxYzU3OTc0ZjEwMmQzZGViM2M1M2Q0MmZkZTkwOWU5YjM5Y2NiYzdmNzc2ZTI3NzU3NWEwMmQ1MWExOTk5ZSJ9fX0="
+    primary-item: COAL
+    primary-amount: 1
+    tiers:
+      1: { interval: 30.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 25.0, storage-slots: 4, upgrade-cost: { money: 9600, items: 64 } }
+      3: { interval: 20.0, storage-slots: 6, upgrade-cost: { money: 14000, items: 128 } }
+      4: { interval: 15.0, storage-slots: 8, upgrade-cost: { money: 24000, items: 256 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.16 }
+      5: { interval: 11.0, storage-slots: 10, upgrade-cost: { money: 35000, items: 512 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.32 }
+
+  redstone:
+    name: "<red>Minionek Redstone</red>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTY5YTFmMTE0MTUxYjQ1MjEzNzNmMzRiYzE0YzI5NjNhNTAxMWNkYzI1YTY1NTRjNDhjNzA4Y2Q5NmViZmMifX19"
+    primary-item: REDSTONE
+    primary-amount: 1
+    tiers:
+      1: { interval: 30.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 25.0, storage-slots: 4, upgrade-cost: { money: 12000, items: 48 } }
+      3: { interval: 20.0, storage-slots: 6, upgrade-cost: { money: 18000, items: 96 } }
+      4: { interval: 15.0, storage-slots: 8, upgrade-cost: { money: 30000, items: 192 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.14 }
+      5: { interval: 11.0, storage-slots: 10, upgrade-cost: { money: 44000, items: 384 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.28 }
+
+  lapis:
+    name: "<blue>Minionek Lapisu</blue>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjY1NGI2ZDk0OWE0NmQ4NmVjMDE1NDhjODkyYTU2OGI4Y2RhZDQ2NDZjYjJlMjk2ZDBkZDU4YWY3Nzk0NzEifX19"
+    primary-item: LAPIS_LAZULI
+    primary-amount: 1
+    tiers:
+      1: { interval: 32.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 26.0, storage-slots: 4, upgrade-cost: { money: 14000, items: 48 } }
+      3: { interval: 21.0, storage-slots: 6, upgrade-cost: { money: 18000, items: 96 } }
+      4: { interval: 16.0, storage-slots: 8, upgrade-cost: { money: 29000, items: 192 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.15 }
+      5: { interval: 12.0, storage-slots: 10, upgrade-cost: { money: 41000, items: 384 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.31 }
+
+  copper:
+    name: "<gold>Minionek Miedzi</gold>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjBjNzliMThmOGEwYmQ2ZGM4ZmE4MGU0NjRiMmYyZWViM2E4NzdmY2VlYjZhMjc2Mjg0ZTE4YWRjM2NhNmE2In19fQ=="
+    primary-item: COPPER_INGOT
+    primary-amount: 1
+    tiers:
+      1: { interval: 30.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 25.0, storage-slots: 4, upgrade-cost: { money: 14000, items: 48 } }
+      3: { interval: 20.0, storage-slots: 6, upgrade-cost: { money: 22000, items: 96 } }
+      4: { interval: 15.0, storage-slots: 8, upgrade-cost: { money: 36000, items: 192 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.24 }
+      5: { interval: 11.0, storage-slots: 10, upgrade-cost: { money: 52000, items: 384 }, bonus-drop: "skyblock:crystal/citrine", bonus-chance: 0.48 }
+
+  quartz:
+    name: "<white>Minionek Kwarcu</white>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjJmODAzNjMyNDRhZjFiNGJjZjdkMWMyYjUwNjc3NzJjMGMyNzI3NzI2NjQ0N2VjY2Q0YWY2NmNjNDM0NzM5OCJ9fX0="
+    primary-item: QUARTZ
+    primary-amount: 1
+    tiers:
+      1: { interval: 31.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 25.0, storage-slots: 4, upgrade-cost: { money: 20000, items: 48 } }
+      3: { interval: 20.0, storage-slots: 6, upgrade-cost: { money: 25000, items: 96 } }
+      4: { interval: 15.0, storage-slots: 8, upgrade-cost: { money: 42000, items: 192 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.20 }
+      5: { interval: 11.0, storage-slots: 10, upgrade-cost: { money: 61000, items: 384 }, bonus-drop: "skyblock:crystal/topaz", bonus-chance: 0.40 }
+
+  iron:
+    name: "<white>Minionek Żelaza</white>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTAxODQzZWM0M2YwODhjOTYzZmZjM2UyZjcxYzY2ZTMxNTU5NDNiMTc3YTFhMzU5ODJiMTIwZjZmNjQ4MjJiYyJ9fX0="
+    primary-item: IRON_INGOT
+    primary-amount: 1
+    tiers:
+      1: { interval: 33.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 27.0, storage-slots: 4, upgrade-cost: { money: 30000, items: 32 } }
+      3: { interval: 22.0, storage-slots: 6, upgrade-cost: { money: 38000, items: 64 } }
+      4: { interval: 17.0, storage-slots: 8, upgrade-cost: { money: 60000, items: 128 }, bonus-drop: "skyblock:crystal/onyx", bonus-chance: 0.31 }
+      5: { interval: 13.0, storage-slots: 10, upgrade-cost: { money: 81000, items: 256 }, bonus-drop: "skyblock:crystal/onyx", bonus-chance: 0.62 }
+
+  gold:
+    name: "<yellow>Minionek Złota</yellow>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzNiYzk2NWQ1NzljM2M2MDM5ZjBhMTdlYjdjMmU2ZmFmNTM4YzdhNWRlOGU2MGVjN2E3MTkzNjBkMGE4NTdhOSJ9fX0="
+    primary-item: GOLD_INGOT
+    primary-amount: 1
+    tiers:
+      1: { interval: 34.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 28.0, storage-slots: 4, upgrade-cost: { money: 40000, items: 32 } }
+      3: { interval: 23.0, storage-slots: 6, upgrade-cost: { money: 49000, items: 64 } }
+      4: { interval: 17.0, storage-slots: 8, upgrade-cost: { money: 97000, items: 128 }, bonus-drop: "skyblock:crystal/onyx", bonus-chance: 0.43 }
+      5: { interval: 13.0, storage-slots: 10, upgrade-cost: { money: 110000, items: 256 }, bonus-drop: "skyblock:crystal/onyx", bonus-chance: 0.87 }
+
+  emerald:
+    name: "<green>Minionek Szmaragdu</green>"
+    head-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDA1Mzg1MTUyN2M0YzllZjMwYTYxZmIwNjdlYmNlOTU3YzcyNmUxNjg3ZjhiNTMwZmI0YTZiZWViYTQzOGJkIn19fQ=="
+    primary-item: EMERALD
+    primary-amount: 1
+    tiers:
+      1: { interval: 35.0, storage-slots: 2, upgrade-cost: { money: 0, items: 0 } }
+      2: { interval: 28.0, storage-slots: 4, upgrade-cost: { money: 260000, items: 32 } }
+      3: { interval: 22.0, storage-slots: 6, upgrade-cost: { money: 350000, items: 64 } }
+      4: { interval: 16.0, storage-slots: 8, upgrade-cost: { money: 610000, items: 128 }, bonus-drop: "skyblock:crystal/opal", bonus-chance: 2.85 }
+      5: { interval: 12.0, storage-slots: 10, upgrade-cost: { money: 750000, items: 256 }, bonus-drop: "skyblock:crystal/opal", bonus-chance: 5.71 }

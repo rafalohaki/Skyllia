@@ -27,6 +27,7 @@ include("addons:SkylliaAcidRain")
 include("addons:SkylliaIslandValue")
 include("addons:SkylliaBackup")
 include("addons:SkylliaPrestige")
+include("addons:SkylliaMinions")
 //include("addons:SkylliaExtra")
 // Hook
 include("hook:worldedit")

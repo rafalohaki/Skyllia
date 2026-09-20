@@ -1,0 +1,25 @@
+name: SkylliaMinions
+main: pl.b2t.skylliaminions.SkylliaMinions
+version: ${version}
+api-version: 1.21.4
+folia-supported: true
+authors:
+  - 2b2t.pl
+dependencies:
+  server:
+    Skyllia:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    WpmeCore:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    Vault:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    SkylliaPrestige:
+      load: BEFORE
+      required: false
+      join-classpath: true

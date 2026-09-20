@@ -577,7 +577,7 @@ final class SkyBlockCommands {
         ItemStack item = MinionItem.create(type, tier, false, null, 0L, "", plugin.miniMessage());
         player.getInventory().addItem(item).values().forEach(
                 stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
-        player.sendMessage(Component.text("Wydano minionka " + typeId + " Tier " + tier + ".",
+        player.sendMessage(Component.text("Wydano minionka " + typeId + " (poziom " + tier + ").",
                 NamedTextColor.GREEN));
         return Command.SINGLE_SUCCESS;
     }

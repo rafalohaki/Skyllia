@@ -122,7 +122,7 @@ public class MinionMenu {
             if (index >= unlocked) {
                 menu.decoration(slot, Ui.item(Material.GRAY_DYE, miniMessage,
                         "<dark_gray>Zablokowany slot</dark_gray>",
-                        java.util.List.of("<gray>Odblokujesz na wyższym tierze.</gray>"), false));
+                        java.util.List.of("<gray>Odblokujesz na wyższym poziomie.</gray>"), false));
                 continue;
             }
             if (index < orderedKeys.size()) {
@@ -139,7 +139,7 @@ public class MinionMenu {
         long now = System.currentTimeMillis();
         boolean fuelActive = MinionFuel.isActive(record.fuelExpiresAt(), now);
         String fuelName = fuelActive
-                ? "<gold>Paliwo: " + MinionFuel.remainingSeconds(record.fuelExpiresAt(), now) + "s</gold>"
+                ? "<gold>Paliwo: " + MinionFuel.remainingSeconds(record.fuelExpiresAt(), now) + " s</gold>"
                 : "<gray>Brak aktywnego paliwa</gray>";
         menu.set(FUEL_SLOT, Ui.item(fuelActive ? Material.LAVA_BUCKET : Material.BUCKET, miniMessage,
                 fuelName,
@@ -160,16 +160,16 @@ public class MinionMenu {
         MinionsConfig.TierDef next = config.tier(record.typeId(), record.tier() + 1);
         if (next == null) {
             menu.decoration(UPGRADE_SLOT, Ui.item(Material.NETHER_STAR, miniMessage,
-                    "<gold>Maksymalny tier</gold>", java.util.List.of(), true));
+                    "<gold>Maksymalny poziom</gold>", java.util.List.of(), true));
         } else {
             menu.set(UPGRADE_SLOT, Ui.item(Material.EXPERIENCE_BOTTLE, miniMessage,
-                    "<green>Ulepsz do Tier " + next.tier() + "</green>",
+                    "<green>Ulepsz do poziomu " + next.tier() + "</green>",
                     java.util.List.of(
                             "<gray>Koszt: <white>" + Ui.money(next.upgradeCostMoney())
                                     + "</white> z konta wyspy</gray>",
                             "<gray>+ <white>" + next.upgradeCostItems() + " x "
                                     + itemNames.vanillaLabel(type.primaryItem()) + "</white> z ekwipunku</gray>",
-                            "<gray>Nowy cykl: <white>" + next.intervalSeconds() + "s</white></gray>"),
+                            "<gray>Nowy cykl: <white>" + next.intervalSeconds() + " s</white></gray>"),
                     true), upgradeClick(minionId, menu));
         }
 
@@ -182,7 +182,7 @@ public class MinionMenu {
         // Slot 49: podnieś minionka
         menu.set(PICKUP_SLOT, Ui.item(Material.ARMOR_STAND, miniMessage,
                 "<red>Podnieś minionka</red>",
-                java.util.List.of("<gray>Zwraca przedmiot z zachowaniem tieru i ulepszeń.</gray>"),
+                java.util.List.of("<gray>Zwraca przedmiot z zachowaniem poziomu i ulepszeń.</gray>"),
                 false), pickUpClick(minionId));
     }
 
@@ -200,9 +200,9 @@ public class MinionMenu {
                     MinionItem.applyHeadTexture(meta, type.headTexture()));
         }
         return Ui.decorate(head, miniMessage,
-                type.name() + " <dark_gray>Tier " + record.tier() + "</dark_gray>",
+                type.name() + " <dark_gray>Poziom " + record.tier() + "</dark_gray>",
                 java.util.List.of(
-                        "<gray>Cykl co: <white>" + tier.intervalSeconds() + "s</white></gray>",
+                        "<gray>Cykl co: <white>" + tier.intervalSeconds() + " s</white></gray>",
                         "<gray>Wygenerowano łącznie: <white>"
                                 + record.totalGenerated() + "</white></gray>",
                         "<gray>Sloty magazynu: <white>" + tier.storageSlots() + "</white></gray>"),
@@ -370,7 +370,7 @@ public class MinionMenu {
                                             }
                                             if (service.setTier(minionId, next.tier())) {
                                                 viewer.sendMessage(miniMessage.deserialize(
-                                                        "<green>Ulepszono do Tier " + next.tier() + "!</green>"));
+                                                        "<green>Ulepszono do poziomu " + next.tier() + "!</green>"));
                                             }
                                             if (menu != null) {
                                                 renderSlots(viewer, minionId, menu);
@@ -384,7 +384,7 @@ public class MinionMenu {
                 removeMaterial(viewer, primary, next.upgradeCostItems());
                 if (service.setTier(minionId, next.tier())) {
                     viewer.sendMessage(miniMessage.deserialize(
-                            "<green>Ulepszono do Tier " + next.tier() + "!</green>"));
+                            "<green>Ulepszono do poziomu " + next.tier() + "!</green>"));
                 }
                 if (menu != null) {
                 renderSlots(viewer, minionId, menu);

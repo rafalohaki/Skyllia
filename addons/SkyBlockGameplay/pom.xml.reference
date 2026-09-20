@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.rafalohaki</groupId>
+        <artifactId>WpmeCore-addons-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>SkyBlockGameplay</artifactId>
+    <packaging>jar</packaging>
+
+    <name>SkyBlockGameplay</name>
+    <description>Ledger, daily quests, shop, island bank UX and component/PDC wands for Skyllia.</description>
+
+    <repositories>
+        <!-- PlaceholderAPI artifacts (provided scope). -->
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.helpch.at/releases</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- PlaceholderAPI: provided at runtime. Soft-dep — the season leaderboard
+             rows are published as %skyblock_board_*% so FancyHolograms can draw them. -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>${placeholderapi.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- EvenMoreFish API: EMFFishCaughtEvent dla punktów sezonowych za ryby. -->
+        <dependency>
+            <groupId>com.oheers.evenmorefish</groupId>
+            <artifactId>even-more-fish-api</artifactId>
+            <version>2.4.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.rafalohaki</groupId>
+            <artifactId>WpmeCore-API</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.folia</groupId>
+            <artifactId>folia-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.euphyllia.skyllia</groupId>
+            <artifactId>api</artifactId>
+            <version>3.0-163</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Właściwości ekonomii: cała przestrzeń (narzędzie × poziom Fortuny ×
+             świat) zamiast jednego punktu — patrz shared/FortuneYield.java. -->
+        <dependency>
+            <groupId>net.jqwik</groupId>
+            <artifactId>jqwik</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockbukkit.mockbukkit</groupId>
+            <artifactId>mockbukkit-v26.1.2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+</project>

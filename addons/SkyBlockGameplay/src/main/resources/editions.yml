@@ -1,0 +1,46 @@
+# editions.yml — nazwane edycje sezonów. Publiczne etykiety gdy enabled.
+#
+# Edycja zastępuje gołe „S{n}” w nagłówkach /sezon, GUI i komunikatach
+# zamknięcia, dopóki jej okno trwa. Rozstrzyganie: półotwarte zawieranie
+# [start 00:00Z, end+1d 00:00Z); gdy moment trafia jednocześnie w EVENT
+# i REGULAR — wygrywa EVENT; brak kandydata → legacy arytmetyka kalendarza.
+#
+# Daty ISO YYYY-MM-DD; start WŁĄCZNIE, end = dzień KOŃCOWY WŁĄCZNIE
+# (loader robi półotwarty interwał UTC). Fail-closed: zły slug, duplikat,
+# nieznany typ, odwrócone daty albo nachodzące edycje tego samego typu
+# = SEVERE przy starcie i powrót do zachowania legacy.
+#
+# display-name: bez MiniMessage tagów ('<'), escapów ('&'), znaków nowej
+# linii i znaków sterujących; maks. 48 znaków — nazwa ląduje w szablonach
+# operatora, więc walidacja jest fail-closed.
+#
+# Nazewnictwo: REGULAR „Sezon {Wiosenny|Letni|Jesienny|Zimowy} {Rok}”,
+# EVENT „Sezon {Wakacyjny|Szkolny|Feryjny|Bożonarodzeniowy|Wielkanocny}
+# {Rok}”; edycja całego roku szkolnego: „RRRR/RR”. Rok = rok STARTU okna.
+
+editions:
+  enabled: false            # false = legacy epoch-math (zachowanie jak dziś)
+  list:
+    - slug: lato-2026                    # ^[a-z0-9-]{2,64}$ unikalny
+      display-name: "Sezon Letni 2026"   # bez tagów MiniMessage; ≤48 znaków
+      type: REGULAR                      # REGULAR | EVENT
+      start: "2026-06-01"
+      end: "2026-08-31"                  # dzień włącznie
+      # quest-pack: wakacyjne            # opcjonalny slug paka questów (≤64 znaków);
+                                         # questa z tym pakem aktywne tylko w oknie edycji
+    - slug: wakacje-2026
+      display-name: "Sezon Wakacyjny 2026"
+      type: EVENT
+      start: "2026-06-27"
+      end: "2026-08-31"
+    # Pierwsza edycja eventowa z własnym pakietem questów (config.yml:
+    # season.quests.definitions.* z „pack: jesienny-event-2026”). EVENT nie może
+    # nachodzić na inny EVENT — okno EVENT może natomiast leżeć w środku sezonu
+    # REGULAR, i tak jest w kalendarzu produkcyjnym: „szkolny-2026-27” kończy się
+    # 2026-10-31 (koniec rankingu i karnetu), a „Jesienne Żniwa” trwają 03–16.10.
+    - slug: jesienny-event-2026
+      display-name: "Jesienne Żniwa 2026"
+      type: EVENT
+      start: "2026-10-03"
+      end: "2026-10-16"
+      quest-pack: jesienny-event-2026

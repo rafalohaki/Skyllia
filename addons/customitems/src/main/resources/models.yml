@@ -1,0 +1,1420 @@
+# Reviewed model catalog for /modele.
+# Stable custom-item ids live under items; stable client asset ids use
+# mystical_armors:<path>. Never reuse an id for unrelated content.
+schema: 1
+
+items:
+  mystical_core_abyss:
+    material: PAPER
+    name: "<dark_purple><bold>Set Otchłani</bold></dark_purple>"
+    lore:
+      - "<gray>Wykuty z ciszy pod najniższą warstwą świata.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/abyss"
+
+  mystical_abyss_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Otchłani</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_purple>Otchłań</dark_purple></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/abyss_helmet"
+    equipment-asset: "mystical_armors:equipment/abyss"
+
+  mystical_abyss_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Otchłani</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_purple>Otchłań</dark_purple></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/abyss_chestplate"
+    equipment-asset: "mystical_armors:equipment/abyss"
+
+  mystical_abyss_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Otchłani</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_purple>Otchłań</dark_purple></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/abyss_leggings"
+    equipment-asset: "mystical_armors:equipment/abyss"
+
+  mystical_abyss_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Otchłani</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_purple>Otchłań</dark_purple></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/abyss_boots"
+    equipment-asset: "mystical_armors:equipment/abyss"
+
+  mystical_core_aquamarine:
+    material: PAPER
+    name: "<aqua><bold>Set Akwamarynu</bold></aqua>"
+    lore:
+      - "<gray>Chłód głębin zamknięty w nethericie.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/aquamarine"
+
+  mystical_aquamarine_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Akwamarynu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <aqua>Akwamaryn</aqua></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/aquamarine_helmet"
+    equipment-asset: "mystical_armors:equipment/aquamarine"
+
+  mystical_aquamarine_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Akwamarynu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <aqua>Akwamaryn</aqua></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/aquamarine_chestplate"
+    equipment-asset: "mystical_armors:equipment/aquamarine"
+
+  mystical_aquamarine_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Akwamarynu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <aqua>Akwamaryn</aqua></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/aquamarine_leggings"
+    equipment-asset: "mystical_armors:equipment/aquamarine"
+
+  mystical_aquamarine_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Akwamarynu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <aqua>Akwamaryn</aqua></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/aquamarine_boots"
+    equipment-asset: "mystical_armors:equipment/aquamarine"
+
+  mystical_core_blood:
+    material: PAPER
+    name: "<dark_red><bold>Set Krwi</bold></dark_red>"
+    lore:
+      - "<gray>Pancerz naznaczony czerwonym rytuałem.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/blood"
+
+  mystical_blood_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Krwi</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_red>Krew</dark_red></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/blood_helmet"
+    equipment-asset: "mystical_armors:equipment/blood"
+
+  mystical_blood_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Krwi</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_red>Krew</dark_red></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/blood_chestplate"
+    equipment-asset: "mystical_armors:equipment/blood"
+
+  mystical_blood_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Krwi</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_red>Krew</dark_red></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/blood_leggings"
+    equipment-asset: "mystical_armors:equipment/blood"
+
+  mystical_blood_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Krwi</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_red>Krew</dark_red></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/blood_boots"
+    equipment-asset: "mystical_armors:equipment/blood"
+
+  mystical_core_flowering:
+    material: PAPER
+    name: "<light_purple><bold>Set Rozkwitu</bold></light_purple>"
+    lore:
+      - "<gray>Żywa ornamentyka pośród ruin i popiołu.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/flowering"
+
+  mystical_flowering_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Rozkwitu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <light_purple>Rozkwit</light_purple></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/flowering_helmet"
+    equipment-asset: "mystical_armors:equipment/flowering"
+
+  mystical_flowering_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Rozkwitu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <light_purple>Rozkwit</light_purple></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/flowering_chestplate"
+    equipment-asset: "mystical_armors:equipment/flowering"
+
+  mystical_flowering_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Rozkwitu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <light_purple>Rozkwit</light_purple></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/flowering_leggings"
+    equipment-asset: "mystical_armors:equipment/flowering"
+
+  mystical_flowering_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Rozkwitu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <light_purple>Rozkwit</light_purple></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/flowering_boots"
+    equipment-asset: "mystical_armors:equipment/flowering"
+
+  mystical_core_forest:
+    material: PAPER
+    name: "<dark_green><bold>Set Pradawnego Lasu</bold></dark_green>"
+    lore:
+      - "<gray>Stare korzenie chronią lepiej niż stal.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/forest"
+
+  mystical_forest_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Pradawnego Lasu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_green>Pradawny Las</dark_green></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/forest_helmet"
+    equipment-asset: "mystical_armors:equipment/forest"
+
+  mystical_forest_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Pradawnego Lasu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_green>Pradawny Las</dark_green></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/forest_chestplate"
+    equipment-asset: "mystical_armors:equipment/forest"
+
+  mystical_forest_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Pradawnego Lasu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_green>Pradawny Las</dark_green></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/forest_leggings"
+    equipment-asset: "mystical_armors:equipment/forest"
+
+  mystical_forest_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Pradawnego Lasu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <dark_green>Pradawny Las</dark_green></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/forest_boots"
+    equipment-asset: "mystical_armors:equipment/forest"
+
+  mystical_core_love:
+    material: PAPER
+    name: "<#ff5f8f><bold>Set Serca</bold></#ff5f8f>"
+    lore:
+      - "<gray>Rzadki wzór dla tych, którzy przetrwali razem.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/love"
+
+  mystical_love_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Serca</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff5f8f>Serce</#ff5f8f></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/love_helmet"
+    equipment-asset: "mystical_armors:equipment/love"
+
+  mystical_love_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Serca</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff5f8f>Serce</#ff5f8f></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/love_chestplate"
+    equipment-asset: "mystical_armors:equipment/love"
+
+  mystical_love_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Serca</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff5f8f>Serce</#ff5f8f></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/love_leggings"
+    equipment-asset: "mystical_armors:equipment/love"
+
+  mystical_love_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Serca</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff5f8f>Serce</#ff5f8f></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/love_boots"
+    equipment-asset: "mystical_armors:equipment/love"
+
+  mystical_core_molten:
+    material: PAPER
+    name: "<#ff7a18><bold>Set Magmy</bold></#ff7a18>"
+    lore:
+      - "<gray>Żar Netheru uwięziony pod powierzchnią pancerza.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/molten"
+
+  mystical_molten_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Magmy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff7a18>Magmowy Rdzeń</#ff7a18></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/molten_helmet"
+    equipment-asset: "mystical_armors:equipment/molten"
+
+  mystical_molten_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Magmy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff7a18>Magmowy Rdzeń</#ff7a18></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/molten_chestplate"
+    equipment-asset: "mystical_armors:equipment/molten"
+
+  mystical_molten_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Magmy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff7a18>Magmowy Rdzeń</#ff7a18></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/molten_leggings"
+    equipment-asset: "mystical_armors:equipment/molten"
+
+  mystical_molten_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Magmy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <#ff7a18>Magmowy Rdzeń</#ff7a18></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/molten_boots"
+    equipment-asset: "mystical_armors:equipment/molten"
+
+  mystical_core_rainbow:
+    material: PAPER
+    name: "<gradient:#ff5fd7:#67e8f9><bold>Set Pryzmatu</bold></gradient>"
+    lore:
+      - "<gray>Widmo kolorów rozszczepione na cztery elementy.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/rainbow"
+
+  mystical_rainbow_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Pryzmatu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gradient:#ff5fd7:#67e8f9>Pryzmat</gradient></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/rainbow_helmet"
+    equipment-asset: "mystical_armors:equipment/rainbow"
+
+  mystical_rainbow_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Pryzmatu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gradient:#ff5fd7:#67e8f9>Pryzmat</gradient></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/rainbow_chestplate"
+    equipment-asset: "mystical_armors:equipment/rainbow"
+
+  mystical_rainbow_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Pryzmatu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gradient:#ff5fd7:#67e8f9>Pryzmat</gradient></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/rainbow_leggings"
+    equipment-asset: "mystical_armors:equipment/rainbow"
+
+  mystical_rainbow_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Pryzmatu</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gradient:#ff5fd7:#67e8f9>Pryzmat</gradient></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/rainbow_boots"
+    equipment-asset: "mystical_armors:equipment/rainbow"
+
+  mystical_core_runic:
+    material: PAPER
+    name: "<blue><bold>Set Runiczny</bold></blue>"
+    lore:
+      - "<gray>Znaki dawnej mocy wyryte w nethericie.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/runic"
+
+  mystical_runic_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Runiczny</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <blue>Runy</blue></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/runic_helmet"
+    equipment-asset: "mystical_armors:equipment/runic"
+
+  mystical_runic_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Runiczny</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <blue>Runy</blue></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/runic_chestplate"
+    equipment-asset: "mystical_armors:equipment/runic"
+
+  mystical_runic_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Runiczny</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <blue>Runy</blue></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/runic_leggings"
+    equipment-asset: "mystical_armors:equipment/runic"
+
+  mystical_runic_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Runiczny</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <blue>Runy</blue></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/runic_boots"
+    equipment-asset: "mystical_armors:equipment/runic"
+
+  mystical_core_sandnite:
+    material: PAPER
+    name: "<gold><bold>Set Piaskowej Nocy</bold></gold>"
+    lore:
+      - "<gray>Pancerz z pogranicza pustyni i ciemności.</gray>"
+      - ""
+      - "<dark_gray>Ikona kolekcji • /modele</dark_gray>"
+    glow: true
+    item-model: "mystical_armors:core/sandnite"
+
+  mystical_sandnite_helmet:
+    material: NETHERITE_HELMET
+    name: "<white><bold>Hełm Piaskowej Nocy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Piaskowa Noc</gold></dark_gray>"
+      - "<gray>Element: <white>Hełm</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/sandnite_helmet"
+    equipment-asset: "mystical_armors:equipment/sandnite"
+
+  mystical_sandnite_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "<white><bold>Napierśnik Piaskowej Nocy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Piaskowa Noc</gold></dark_gray>"
+      - "<gray>Element: <white>Napierśnik</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/sandnite_chestplate"
+    equipment-asset: "mystical_armors:equipment/sandnite"
+
+  mystical_sandnite_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "<white><bold>Nogawice Piaskowej Nocy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Piaskowa Noc</gold></dark_gray>"
+      - "<gray>Element: <white>Nogawice</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/sandnite_leggings"
+    equipment-asset: "mystical_armors:equipment/sandnite"
+
+  mystical_sandnite_boots:
+    material: NETHERITE_BOOTS
+    name: "<white><bold>Buty Piaskowej Nocy</bold></white>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Piaskowa Noc</gold></dark_gray>"
+      - "<gray>Element: <white>Buty</white></gray>"
+      - ""
+      - "<gradient:#f6c453:#ff8a00><bold>LIMITOWANA EDYCJA</bold></gradient>"
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "mystical_armors:armor/sandnite_boots"
+    equipment-asset: "mystical_armors:equipment/sandnite"
+
+  "skyblock:crystal/citrine":
+    material: PAPER
+    name: "<gold><bold>Cytryn Anarchii</bold></gold>"
+    lore:
+      - "<gray>Rzadki kryształ wydobywany ze stoniarek Overworldu.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/citrine_crystal"
+
+  "skyblock:crystal/aquamarine":
+    material: PAPER
+    name: "<aqua><bold>Akwamaryn Głębin</bold></aqua>"
+    lore:
+      - "<gray>Mistyczny kryształ wyławiany z morskich głębin.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/aquamarine_crystal"
+
+  "skyblock:crystal/opal":
+    material: PAPER
+    name: "<light_purple><bold>Opal Astralny</bold></light_purple>"
+    lore:
+      - "<gray>Krystaliczna esencja uwalniana podczas wykopywania lapisu.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/opal_crystal"
+
+  "skyblock:crystal/onyx":
+    material: PAPER
+    name: "<dark_purple><bold>Mroczny Onyks</bold></dark_purple>"
+    lore:
+      - "<gray>Ciemny minerał krystalizujący w stoniarkach w głębinach (Y ≤ 0).</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/onyx_crystal"
+
+  "skyblock:crystal/peridot":
+    material: PAPER
+    name: "<green><bold>Perydot Urodzaju</bold></green>"
+    lore:
+      - "<gray>Zielony kryształ znajdowany podczas zbiorów w pełni dojrzałych plonów.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/peridot_crystal"
+
+  "skyblock:crystal/ruby":
+    material: PAPER
+    name: "<red><bold>Nieskazitelny Rubin</bold></red>"
+    lore:
+      - "<gray>Krwawy kryształ pozyskiwany po pokonaniu groźnych potworów.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/ruby_gem"
+
+  "skyblock:crystal/topaz":
+    material: PAPER
+    name: "<yellow><bold>Surowy Topaz</bold></yellow>"
+    lore:
+      - "<gray>Ognisty kryształ wydobywany w stoniarkach w Netherze.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:crystal/topaz_gem"
+
+  "skyblock:crystal/amber":
+    material: PAPER
+    name: "<gold><bold>Bursztyn Kuźni</bold></gold>"
+    lore:
+      - "<gray>Zastygła żywica doładowana energią kuźni.</gray>"
+      - "<gray>Najwydajniejsze paliwo dla minionków.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec SkyBlock • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:crystal/amber_crystal"
+
+  "skyblock:metal/raw_tungsten":
+    material: PAPER
+    name: "<white><bold>Surowy Wolfram</bold></white>"
+    lore:
+      - "<gray>Ciężka, rzadka ruda metalu ze stoniarek Overworldu.</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec do przetopienia • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/raw_tungsten"
+
+  "skyblock:metal/refined_tungsten":
+    material: PAPER
+    name: "<white><bold>Rafinowany Wolfram</bold></white>"
+    lore:
+      - "<gray>Czysta sztaba wolframu po wytopie w piecu hutniczym.</gray>"
+      - ""
+      - "<white></white><dark_gray> Komponent rzemieślniczy • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/refined_tungsten"
+
+  "skyblock:metal/tungsten_plate":
+    material: PAPER
+    name: "<white><bold>Płyta Wolframowa</bold></white>"
+    lore:
+      - "<gray>Wzmocniona płyta skuta z 4 sztab wolframu.</gray>"
+      - ""
+      - "<white></white><dark_gray> Komponent zaawansowany • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/tungsten_plate"
+
+  "skyblock:metal/raw_umber":
+    material: PAPER
+    name: "<gold><bold>Surowa Umbra</bold></gold>"
+    lore:
+      - "<gray>Rzadka ruda wydobywana ze stoniarek w strefie deepslate (Y ≤ 0).</gray>"
+      - ""
+      - "<white></white><dark_gray> Surowiec do przetopienia • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/raw_umber"
+
+  "skyblock:metal/refined_umber":
+    material: PAPER
+    name: "<gold><bold>Rafinowana Umbra</bold></gold>"
+    lore:
+      - "<gray>Czysta sztaba umbry uzyskana z wytopu surowej rudy.</gray>"
+      - ""
+      - "<white></white><dark_gray> Komponent rzemieślniczy • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/refined_umber"
+
+  "skyblock:metal/umber_plate":
+    material: PAPER
+    name: "<gold><bold>Płyta Umbry</bold></gold>"
+    lore:
+      - "<gray>Odporna płyta wytworzona z 4 sztab rafinowanej umbry.</gray>"
+      - ""
+      - "<white></white><dark_gray> Komponent zaawansowany • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:metal/umber_plate"
+
+  "skyblock:metal/perfect_plate":
+    material: PAPER
+    name: "<gradient:#55ffff:#ffaa00><bold>Płyta Wzmocniona</bold></gradient>"
+    lore:
+      - "<gray>Doskonały stop wolframu, umbry i spoiwa diamentowego.</gray>"
+      - ""
+      - "<white></white><dark_gray> Komponent mistrzowski • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:metal/perfect_plate"
+
+  "skyblock:token/silver_lotus":
+    material: PAPER
+    name: "<gray><bold>Srebrny Lotos</bold></gray>"
+    lore:
+      - "<gray>Cenny żeton przyznawany za wykonywanie zadań dziennych.</gray>"
+      - ""
+      - "<yellow>Waluta wymienna w /shop</yellow>"
+      - "<white></white><dark_gray> Żeton SkyBlock • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:token/silver_lotus"
+
+  "skyblock:token/gold_lotus":
+    material: PAPER
+    name: "<gold><bold>Złoty Lotos</bold></gold>"
+    lore:
+      - "<gray>Prestiżowy żeton za ukończenie tygodniowego wyzwania 15 zadań.</gray>"
+      - ""
+      - "<gold>Aktywuje tor premium karnetu sezonowego (/przepustka)</gold>"
+      - "<white></white><dark_gray> Żeton SkyBlock • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:token/gold_lotus"
+
+  "skyblock:token/diamond_lotus":
+    material: PAPER
+    name: "<aqua><bold>Diamentowy Lotos</bold></aqua>"
+    lore:
+      - "<gray>Legendarne trofeum przyznawane najlepszym wyspom w rankingu sezonu (/nagrody).</gray>"
+      - ""
+      - "<aqua>Najwyższy symbol prestiżu</aqua>"
+      - "<white></white><dark_gray> Trofeum Sezonowe • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:token/diamond_lotus"
+
+  "skyblock:key/skeleton_key":
+    material: PAPER
+    name: "<white><bold>Kościany Klucz</bold></white>"
+    lore:
+      - "<gray>Starożytny klucz upuszczany przez potwory nocy.</gray>"
+      - ""
+      - "<green>Otwiera Skrzynię Nieumarłych na Spawnie</green>"
+      - "<white></white><dark_gray> Klucz do Skrzyni • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:key/skeleton_key"
+
+  "skyblock:key/umber_key":
+    material: PAPER
+    name: "<gold><bold>Klucz Umbry</bold></gold>"
+    lore:
+      - "<gray>Ciężki klucz nabywany za Srebrne Lotosy w sklepie serwerowym.</gray>"
+      - ""
+      - "<gold>Otwiera Skrzynię Podziemi na Spawnie</gold>"
+      - "<white></white><dark_gray> Klucz do Skrzyni • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "skyblock:key/umber_key"
+
+  "skyblock:key/tungsten_key":
+    material: PAPER
+    name: "<gradient:#55ffff:#ffffff><bold>Klucz Wolframowy</bold></gradient>"
+    lore:
+      - "<gray>Tytaniczny klucz wykuty z płyt wzmocnionych i netheritu.</gray>"
+      - ""
+      - "<aqua>Otwiera Skrzynię Tytanów na Spawnie</aqua>"
+      - "<white></white><dark_gray> Klucz do Skrzyni • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:key/tungsten_key"
+
+  "skyblock:weapon/asgard_sword":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Miecz Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/sword"
+
+  "skyblock:weapon/asgard_dagger":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Sztylet Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/dagger"
+
+  "skyblock:weapon/asgard_halberd":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Halabarda Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/halberd"
+
+  "skyblock:weapon/asgard_sickle":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Sierp Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/sickle"
+
+  "skyblock:weapon/asgard_spear":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Włócznia Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/spear"
+
+  "skyblock:weapon/asgard_staff":
+    material: IRON_SWORD
+    name: "<gradient:#f6c453:#ffffff><bold>Kostur Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/staff"
+
+  "skyblock:weapon/asgard_axe":
+    material: IRON_AXE
+    name: "<gradient:#f6c453:#ffffff><bold>Topór Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/axe"
+
+  "skyblock:weapon/asgard_battle_axe":
+    material: IRON_AXE
+    name: "<gradient:#f6c453:#ffffff><bold>Topór Bojowy Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/battle_axe"
+
+  "skyblock:weapon/asgard_blade":
+    material: IRON_AXE
+    name: "<gradient:#f6c453:#ffffff><bold>Ostrze Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/blade"
+
+  "skyblock:weapon/asgard_pickaxe":
+    material: IRON_PICKAXE
+    name: "<gradient:#f6c453:#ffffff><bold>Kilof Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/pickaxe"
+
+  "skyblock:weapon/asgard_shovel":
+    material: IRON_SHOVEL
+    name: "<gradient:#f6c453:#ffffff><bold>Łopata Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/shovel"
+
+  "skyblock:weapon/asgard_hoe":
+    material: IRON_HOE
+    name: "<gradient:#f6c453:#ffffff><bold>Motyka Asgardu</bold></gradient>"
+    lore:
+      - "<white></white><dark_gray> Kolekcja: <gold>Asgard</gold></dark_gray>"
+      - "<gray>Animowany oręż z Asgardu.</gray>"
+      - ""
+      - "<dark_gray>Model kolekcjonerski • 2b2t.pl</dark_gray>"
+    glow: false
+    item-model: "asgard_animated_weapon_set:weapon/hoe"
+
+  "skyblock:weapon/titan_blade":
+    material: NETHERITE_SWORD
+    name: "<gradient:#55ffff:#ffd700><bold>Ostrze Tytana</bold></gradient>"
+    lore:
+      - "<gray>Starożytny miecz nasycony energią zniszczenia Tytanów.</gray>"
+      - ""
+      - "<yellow>✦ Efekt: Potężne cięcia w walce z potworami</yellow>"
+      - "<white></white><dark_gray> Broń Mistrzowska • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:weapon/titan_blade"
+
+  "skyblock:weapon/undead_scythe":
+    material: NETHERITE_HOE
+    name: "<gradient:#a855f7:#1e1b4b><bold>Kosa Nieumarłych</bold></gradient>"
+    lore:
+      - "<gray>Wykuta z kości prastarych potworów i skrystalizowanego mroku.</gray>"
+      - ""
+      - "<dark_purple>✦ Efekt: Żniwa dusz i zwiększony zasięg zamachu</dark_purple>"
+      - "<white></white><dark_gray> Broń Mistrzowska • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:weapon/undead_scythe"
+
+  "skyblock:tool/mystic_pickaxe":
+    material: DIAMOND_PICKAXE
+    name: "<gradient:#38bdf8:#0284c7><bold>Magiczny Kilof Głębin</bold></gradient>"
+    lore:
+      - "<gray>Nasycony energią Akwamarynu i płyt wolframowych.</gray>"
+      - ""
+      - "<aqua>✦ Efekt: Przyspieszone wydobycie i ochrona przed lawą</aqua>"
+      - "<white></white><dark_gray> Narzędzie Mistrzowskie • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:tool/mystic_pickaxe"
+
+  "skyblock:tool/molten_pickaxe":
+    material: NETHERITE_PICKAXE
+    name: "<gradient:#f97316:#dc2626><bold>Piekielny Kilof Przetopu</bold></gradient>"
+    lore:
+      - "<gray>Wykuty w płomieniach podziemi z rafinowanej umbry i cytrynu.</gray>"
+      - ""
+      - "<gold>✦ Efekt: Magiczny ogień i natychmiastowy przetop rud</gold>"
+      - "<white></white><dark_gray> Narzędzie Mistrzowskie • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:tool/molten_pickaxe"
+
+  "skyblock:talisman/harvest_talisman":
+    material: PAPER
+    name: "<gradient:#4ade80:#15803d><bold>Talizman Urodzaju</bold></gradient>"
+    lore:
+      - "<gray>Amulet natury nasycony perydotem i zapachem żyznej ziemi.</gray>"
+      - ""
+      - "<green>✦ Pasywny: 50% szansy na podwójne zbiory plonów na wyspie</green>"
+      - "<green>✦ Pasywny: Przyspieszony wzrost roślin w pobliżu</green>"
+      - "<white></white><dark_gray> Magiczny Talizman • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:talisman/harvest_talisman"
+
+  "skyblock:talisman/miner_talisman":
+    material: PAPER
+    name: "<gradient:#fbbf24:#d97706><bold>Talizman Górnika</bold></gradient>"
+    lore:
+      - "<gray>Wykuty z płyt wolframu i nasycony złotym cytrynem.</gray>"
+      - ""
+      - "<gold>✦ Pasywny: 20% szansy na podwójny drop minerałów na wyspie</gold>"
+      - "<yellow>✦ Pasywny: 5% szansy na odłamek kryształu ze stoniarki</yellow>"
+      - "<white></white><dark_gray> Magiczny Talizman • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:talisman/miner_talisman"
+
+  "skyblock:talisman/fisherman_talisman":
+    material: PAPER
+    name: "<gradient:#60a5fa:#1d4ed8><bold>Talizman Rybaka</bold></gradient>"
+    lore:
+      - "<gray>Perłowy naszyjnik lśniący światłem morskich głębin.</gray>"
+      - ""
+      - "<blue>✦ Pasywny: 25% szansy na podwójny połów ryb na wyspie</blue>"
+      - "<aqua>✦ Pasywny: +50% punktów sezonowych za rzadkie ryby</aqua>"
+      - "<white></white><dark_gray> Magiczny Talizman • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:talisman/fisherman_talisman"
+
+  "skyblock:talisman/amber_guardian":
+    material: PAPER
+    name: "<gradient:#f59e0b:#b45309><bold>Amulet Bursztynowego Strażnika</bold></gradient>"
+    lore:
+      - "<gray>Tarcza pradawnego bursztynu zamknięta w płycie wzmocnionej.</gray>"
+      - ""
+      - "<gold>✦ Pasywny: 15% redukcji otrzymywanych obrażeń na wyspie</gold>"
+      - "<yellow>✦ Pasywny: Regeneracja przy krytycznym poziomie zdrowia</yellow>"
+      - "<white></white><dark_gray> Magiczny Talizman • 2b2t.pl</dark_gray>"
+    glow: true
+    item-model: "skyblock:talisman/amber_guardian"
+
+catalog:
+  categories:
+    weapons:
+      slot: 10
+      fallback-material: NETHERITE_SWORD
+      icon-item: "skyblock:weapon/titan_blade"
+      name: "<red><bold>Bronie</bold></red>"
+      translation-key: wpme.models.category.weapons
+      lore:
+        - "<white></white> <gray>Miecze, kosy bojowe i oręż mistrzowski.</gray>"
+      groups:
+        - skyblock_weapons
+
+    tools:
+      slot: 11
+      fallback-material: NETHERITE_PICKAXE
+      icon-item: "skyblock:tool/mystic_pickaxe"
+      name: "<aqua><bold>Narzędzia</bold></aqua>"
+      translation-key: wpme.models.category.tools
+      lore:
+        - "<white></white> <gray>Kilofy, siekiery i narzędzia specjalne.</gray>"
+      groups:
+        - skyblock_tools
+
+    decorations:
+      slot: 12
+      fallback-material: PAINTING
+      name: "<yellow><bold>Dekoracje</bold></yellow>"
+      translation-key: wpme.models.category.decorations
+      lore:
+        - "<white></white> <gray>Meble, ozdoby i elementy świata.</gray>"
+      groups: []
+
+    sets:
+      slot: 13
+      fallback-material: ENDER_CHEST
+      icon-item: mystical_core_abyss
+      name: "<gold><bold>Sety</bold></gold>"
+      translation-key: wpme.models.category.sets
+      lore:
+        - "<white></white> <gray>Kompletne kolekcje wydawane bezpiecznie jako zestaw.</gray>"
+      groups:
+        - abyss
+        - aquamarine
+        - blood
+        - flowering
+        - forest
+        - love
+        - molten
+        - rainbow
+        - runic
+        - sandnite
+
+    armor:
+      slot: 14
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<blue><bold>Zbroje</bold></blue>"
+      translation-key: wpme.models.category.armor
+      lore:
+        - "<white></white> <gray>Pojedyncze elementy pancerza i warianty.</gray>"
+      groups: []
+
+    accessories:
+      slot: 15
+      fallback-material: TOTEM_OF_UNDYING
+      icon-item: "skyblock:talisman/amber_guardian"
+      name: "<light_purple><bold>Akcesoria & Talizmany</bold></light_purple>"
+      translation-key: wpme.models.category.accessories
+      lore:
+        - "<white></white> <gray>Magiczne talizmany i dodatki pasywne.</gray>"
+      groups:
+        - skyblock_talismans
+
+    skyblock_resources:
+      slot: 16
+      fallback-material: AMETHYST_SHARD
+      icon-item: "skyblock:crystal/citrine"
+      name: "<gradient:#55ffff:#ffaa00><bold>Surowce SkyBlock</bold></gradient>"
+      translation-key: wpme.models.category.skyblock_resources
+      lore:
+        - "<white></white> <gray>Kryształy, metale, żetony i klucze do skrzyń.</gray>"
+      groups:
+        - skyblock_crystals
+        - skyblock_metals
+        - skyblock_tokens
+        - skyblock_keys
+
+  groups:
+    abyss:
+      slot: 10
+      icon-item: mystical_core_abyss
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<dark_purple><bold>Set Otchłani</bold></dark_purple>"
+      translation-key: wpme.models.group.abyss
+      lore:
+        - "<white></white> <gray>Wykuty z ciszy pod najniższą warstwą świata.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_abyss_helmet
+        - mystical_abyss_chestplate
+        - mystical_abyss_leggings
+        - mystical_abyss_boots
+
+    aquamarine:
+      slot: 11
+      icon-item: mystical_core_aquamarine
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<aqua><bold>Set Akwamarynu</bold></aqua>"
+      translation-key: wpme.models.group.aquamarine
+      lore:
+        - "<white></white> <gray>Chłód głębin zamknięty w nethericie.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_aquamarine_helmet
+        - mystical_aquamarine_chestplate
+        - mystical_aquamarine_leggings
+        - mystical_aquamarine_boots
+
+    blood:
+      slot: 12
+      icon-item: mystical_core_blood
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<dark_red><bold>Set Krwi</bold></dark_red>"
+      translation-key: wpme.models.group.blood
+      lore:
+        - "<white></white> <gray>Pancerz naznaczony czerwonym rytuałem.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_blood_helmet
+        - mystical_blood_chestplate
+        - mystical_blood_leggings
+        - mystical_blood_boots
+
+    flowering:
+      slot: 13
+      icon-item: mystical_core_flowering
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<light_purple><bold>Set Rozkwitu</bold></light_purple>"
+      translation-key: wpme.models.group.flowering
+      lore:
+        - "<white></white> <gray>Żywa ornamentyka pośród ruin i popiołu.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_flowering_helmet
+        - mystical_flowering_chestplate
+        - mystical_flowering_leggings
+        - mystical_flowering_boots
+
+    forest:
+      slot: 14
+      icon-item: mystical_core_forest
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<dark_green><bold>Set Pradawnego Lasu</bold></dark_green>"
+      translation-key: wpme.models.group.forest
+      lore:
+        - "<white></white> <gray>Stare korzenie chronią lepiej niż stal.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_forest_helmet
+        - mystical_forest_chestplate
+        - mystical_forest_leggings
+        - mystical_forest_boots
+
+    love:
+      slot: 15
+      icon-item: mystical_core_love
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<#ff5f8f><bold>Set Serca</bold></#ff5f8f>"
+      translation-key: wpme.models.group.love
+      lore:
+        - "<white></white> <gray>Rzadki wzór dla tych, którzy przetrwali razem.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_love_helmet
+        - mystical_love_chestplate
+        - mystical_love_leggings
+        - mystical_love_boots
+
+    molten:
+      slot: 16
+      icon-item: mystical_core_molten
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<#ff7a18><bold>Set Magmy</bold></#ff7a18>"
+      translation-key: wpme.models.group.molten
+      lore:
+        - "<white></white> <gray>Żar Netheru uwięziony pod powierzchnią pancerza.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_molten_helmet
+        - mystical_molten_chestplate
+        - mystical_molten_leggings
+        - mystical_molten_boots
+
+    rainbow:
+      slot: 19
+      icon-item: mystical_core_rainbow
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<gradient:#ff5fd7:#67e8f9><bold>Set Pryzmatu</bold></gradient>"
+      translation-key: wpme.models.group.rainbow
+      lore:
+        - "<white></white> <gray>Widmo kolorów rozszczepione na cztery elementy.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_rainbow_helmet
+        - mystical_rainbow_chestplate
+        - mystical_rainbow_leggings
+        - mystical_rainbow_boots
+
+    runic:
+      slot: 20
+      icon-item: mystical_core_runic
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<blue><bold>Set Runiczny</bold></blue>"
+      translation-key: wpme.models.group.runic
+      lore:
+        - "<white></white> <gray>Znaki dawnej mocy wyryte w nethericie.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_runic_helmet
+        - mystical_runic_chestplate
+        - mystical_runic_leggings
+        - mystical_runic_boots
+
+    sandnite:
+      slot: 21
+      icon-item: mystical_core_sandnite
+      fallback-material: NETHERITE_CHESTPLATE
+      name: "<gold><bold>Set Piaskowej Nocy</bold></gold>"
+      translation-key: wpme.models.group.sandnite
+      lore:
+        - "<white></white> <gray>Pancerz z pogranicza pustyni i ciemności.</gray>"
+        - "<dark_gray>4 elementy • bazowa klasa netherite</dark_gray>"
+      items:
+        - mystical_sandnite_helmet
+        - mystical_sandnite_chestplate
+        - mystical_sandnite_leggings
+        - mystical_sandnite_boots
+
+    skyblock_crystals:
+      slot: 10
+      icon-item: "skyblock:crystal/citrine"
+      fallback-material: AMETHYST_SHARD
+      name: "<light_purple><bold>Kryształy</bold></light_purple>"
+      translation-key: wpme.models.group.skyblock_crystals
+      lore:
+        - "<white></white> <gray>Rzadkie minerały wydobywane z różnych źródeł.</gray>"
+        - "<dark_gray>7 elementów • surowce SkyBlock</dark_gray>"
+      items:
+        - "skyblock:crystal/citrine"
+        - "skyblock:crystal/aquamarine"
+        - "skyblock:crystal/opal"
+        - "skyblock:crystal/onyx"
+        - "skyblock:crystal/peridot"
+        - "skyblock:crystal/ruby"
+        - "skyblock:crystal/topaz"
+
+    skyblock_metals:
+      slot: 11
+      icon-item: "skyblock:metal/raw_tungsten"
+      fallback-material: RAW_IRON
+      name: "<white><bold>Metale</bold></white>"
+      translation-key: wpme.models.group.skyblock_metals
+      lore:
+        - "<white></white> <gray>Rudy, sztaby i płyty rzemieślnicze.</gray>"
+        - "<dark_gray>7 elementów • surowce i komponenty</dark_gray>"
+      items:
+        - "skyblock:metal/raw_tungsten"
+        - "skyblock:metal/refined_tungsten"
+        - "skyblock:metal/tungsten_plate"
+        - "skyblock:metal/raw_umber"
+        - "skyblock:metal/refined_umber"
+        - "skyblock:metal/umber_plate"
+        - "skyblock:metal/perfect_plate"
+
+    skyblock_tokens:
+      slot: 12
+      icon-item: "skyblock:token/silver_lotus"
+      fallback-material: SUNFLOWER
+      name: "<yellow><bold>Żetony</bold></yellow>"
+      translation-key: wpme.models.group.skyblock_tokens
+      lore:
+        - "<white></white> <gray>Waluty i trofea sezonowe.</gray>"
+        - "<dark_gray>3 elementy • żetony SkyBlock</dark_gray>"
+      items:
+        - "skyblock:token/silver_lotus"
+        - "skyblock:token/gold_lotus"
+        - "skyblock:token/diamond_lotus"
+
+    skyblock_keys:
+      slot: 13
+      icon-item: "skyblock:key/skeleton_key"
+      fallback-material: TRIPWIRE_HOOK
+      name: "<green><bold>Klucze</bold></green>"
+      translation-key: wpme.models.group.skyblock_keys
+      lore:
+        - "<white></white> <gray>Klucze otwierające skrzynie na spawnie.</gray>"
+        - "<dark_gray>3 elementy • klucze do skrzyń</dark_gray>"
+      items:
+        - "skyblock:key/skeleton_key"
+        - "skyblock:key/umber_key"
+        - "skyblock:key/tungsten_key"
+
+    skyblock_weapons:
+      slot: 10
+      icon-item: "skyblock:weapon/titan_blade"
+      fallback-material: NETHERITE_SWORD
+      name: "<red><bold>Oręż Mistrzowski</bold></red>"
+      translation-key: wpme.models.group.skyblock_weapons
+      lore:
+        - "<white></white> <gray>Starożytny oręż o potężnych właściwościach.</gray>"
+        - "<dark_gray>7 elementów • broń legendarna i ostrza Asgardu</dark_gray>"
+      items:
+        - "skyblock:weapon/titan_blade"
+        - "skyblock:weapon/undead_scythe"
+        - "skyblock:weapon/asgard_sword"
+        - "skyblock:weapon/asgard_dagger"
+        - "skyblock:weapon/asgard_halberd"
+        - "skyblock:weapon/asgard_spear"
+        - "skyblock:weapon/asgard_sickle"
+
+    skyblock_tools:
+      slot: 10
+      icon-item: "skyblock:tool/mystic_pickaxe"
+      fallback-material: NETHERITE_PICKAXE
+      name: "<aqua><bold>Narzędzia Mistrzowskie</bold></aqua>"
+      translation-key: wpme.models.group.skyblock_tools
+      lore:
+        - "<white></white> <gray>Wzmocnione kilofy i narzędzia górnicze.</gray>"
+        - "<dark_gray>7 elementów • narzędzia mistrzowskie i Asgardu</dark_gray>"
+      items:
+        - "skyblock:tool/mystic_pickaxe"
+        - "skyblock:tool/molten_pickaxe"
+        - "skyblock:weapon/asgard_axe"
+        - "skyblock:weapon/asgard_battle_axe"
+        - "skyblock:weapon/asgard_pickaxe"
+        - "skyblock:weapon/asgard_shovel"
+        - "skyblock:weapon/asgard_hoe"
+
+    skyblock_talismans:
+      slot: 10
+      icon-item: "skyblock:talisman/amber_guardian"
+      fallback-material: TOTEM_OF_UNDYING
+      name: "<light_purple><bold>Magiczne Talizmany</bold></light_purple>"
+      translation-key: wpme.models.group.skyblock_talismans
+      lore:
+        - "<white></white> <gray>Prastare amulety dające bonusy pasywne na wyspie.</gray>"
+        - "<dark_gray>4 elementy • talizmany pasywne</dark_gray>"
+      items:
+        - "skyblock:talisman/harvest_talisman"
+        - "skyblock:talisman/miner_talisman"
+        - "skyblock:talisman/fisherman_talisman"
+        - "skyblock:talisman/amber_guardian"
+

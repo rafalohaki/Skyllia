@@ -1,0 +1,1498 @@
+# SkyBlockGameplay jest warstwą rozgrywki nad Skyllią. Skyllia pozostaje
+# jedynym właścicielem wysp, ról i ochrony; ten plugin prowadzi ekonomię,
+# bank zespołu, sklep, zadania oraz narzędzia.
+
+database:
+  # Osobna baza i pojedyncze połączenie ograniczają domenę awarii. SQLite jest
+  # właściwe dla jednego serwera staging/production; nie współdziel tego pliku
+  # przez NFS ani między kilkoma instancjami.
+  # T3b: trwałość siedzi W URL-u — driver stosuje parametry jako PRAGMAs przy
+  # każdej connections z puli (per-connection PRAGMAs w migratorze giną na
+  # recyklingu połączeń Hikari): journal_mode=WAL + synchronous=FULL.
+  jdbc-url: 'jdbc:sqlite:plugins/SkyBlockGameplay/skyblock-gameplay.db?busy_timeout=5000&foreign_keys=on&journal_mode=WAL&synchronous=FULL'
+  pool:
+    # 2 wystarcza dla ~50 graczy na SQLite (WAL: czytania równoległe, pisze jedno).
+    # Przy migracji na PostgreSQL podnieś do 8-16 (PG dobrze skaluje połączenia).
+    maximum-pool-size: 2
+    minimum-idle: 1
+    # Jawny backpressure: executor SQL nie może rosnąć bez limitu podczas laga DB.
+    queue-capacity: 256
+    connection-timeout-ms: 5000
+    idle-timeout-ms: 0
+    max-lifetime-ms: 0
+
+# ── Kontrakt balansowy całej ekonomii ───────────────────────────────────────
+# F14: sekcja czytana WYŁĄCZNIE przez bramkę budowania (testy *EconomyBalance*),
+# nigdy przez runtime — tak samo jak `balance` w oneblock.yml i minions.yml.
+#
+# Trzy liczby, które dotąd były rozsypane po komentarzach trzech fal (F7, F8)
+# albo nie istniały wcale.
+balance:
+  # Tempo docelowe: ile monet na godzinę ma zarabiać AKTYWNY GRACZ BEZ RANGI,
+  # licząc najlepszy kanał ręczny plus to, co idzie równolegle. Liczba pochodzi
+  # z hub/SkyBlockProgressiveObjectiveService.java:152,158 — przy saldzie
+  # 25 000 coins gracz zamyka etap 10 „Bogata wyspa”. Godzina aktywnej gry ma
+  # dawać jedną bogatą wyspę (wyprowadzenie: F7, rozdział 1).
+  target-coins-per-hour: 25000
+  # Tempo odniesienia: jedna akcja gracza (rozbicie, formowanie, zbiór) na
+  # sekundę. Ta sama konwencja co generator.balance.reference-forms-per-hour.
+  reference-actions-per-hour: 3600
+  # SUFIT NARZĘDZIA, nie przypadek bazowy. Do F13 wszystkie trzy bramki
+  # balansowe liczyły waniliowe łupy BEZ Fortuny, a Fortuna III mnoży drop rudy
+  # 2,20× (formuła ore_drops), lapis i miedź tak samo, redstone i brodawkę
+  # +bonus jednostajny, a marchew/ziemniak/nasiona 2,0× (binomial_with_bonus).
+  # Sufit III jest twardy i sprawdzony na tym serwerze:
+  #   data/minecraft/enchantment/fortune.json -> max_level: 3
+  #   config/canvas-server.yml -> enchant-command.uncap-max-level: false
+  # 0 wyłącza modelowanie Fortuny (stan sprzed F14 — nie używać).
+  fortune-level: 3
+
+economy:
+  # Jednostki są całkowite: Vault zgłasza fractionalDigits=0.
+  starting-balance: 100
+
+menu:
+  title: '<white><font:wpme:icons></font></white> <gold><bold>SkyBlock</bold></gold> <dark_gray>•</dark_gray> <gold><bold>Centrum gry</bold></gold>'
+  external-actions:
+    island:
+      slot: 20
+      material: GRASS_BLOCK
+      name: '<white><font:wpme:icons></font></white> <green><bold>Twoja wyspa</bold></green>'
+      lore:
+        - '<gray>Nie masz jeszcze wyspy? Kliknij, aby ją założyć.</gray>'
+        - '<gray>Masz? Kliknij, aby się na nią przenieść.</gray>'
+      command: 'is'
+      required-plugin: 'Skyllia'
+    team:
+      slot: 24
+      material: PLAYER_HEAD
+      name: '<white><font:wpme:icons></font></white> <gold><bold>Zespół wyspy</bold></gold>'
+      lore:
+        - '<gray>Kto jeszcze gra na Twojej wyspie.</gray>'
+        - '<dark_gray>Zapraszasz komendą /is invite nick</dark_gray>'
+      command: 'is info'
+      required-plugin: 'Skyllia'
+    # F24: sezon nie miał w Centrum gry ŻADNEGO wejścia — ani kafelka, ani
+    # wzmianki w powitaniu, na tablicy bocznej czy w ogłoszeniach na czacie.
+    # Jedyną drogą do /sezon i /przepustka było wpisanie ich na ślepo.
+    # Kafelek uruchamia /sezon (przegląd + wykaz zadań sezonowych), bo to on
+    # odpowiada na pytanie „o co tu chodzi”; sama tabela 28 poziomów siedzi
+    # pod /przepustka, a /sezon do niej odsyła.
+    # Slot 29 jest wolny: 4/11/13/15/22/31/33/40 są zarezerwowane w kodzie
+    # (SkyBlockSettings.RESERVED_MENU_SLOTS), 20 i 24 zajmują kafelki wyżej,
+    # a 30 i 35 nadpisałby SkyBlockMenus.open.
+    season:
+      slot: 29
+      material: NETHER_STAR
+      name: '<white><font:wpme:icons></font></white> <light_purple><bold>Sezon i karnet</bold></light_purple>'
+      lore:
+        - '<gray>Sezon trwa osiem tygodni i ma własny ranking.</gray>'
+        - '<gray>Zadania sezonowe robisz raz na sezon — to rozbieg.</gray>'
+        - '<gray>Dalsze punkty daje łowienie ryb, bez limitu.</gray>'
+        - '<gray>Za punkty rosną poziomy karnetu z nagrodami.</gray>'
+        - '<dark_gray>Sam karnet otworzysz komendą /przepustka</dark_gray>'
+      command: 'sezon'
+      required-plugin: ''
+
+# Plac startowy jest zarządzany jawnie przez SkyBlockGameplay. Dzięki temu
+# wejście z Velocity, /spawn, hologramy i skocznia korzystają z jednego układu
+# współrzędnych zamiast zależeć od zapisanej pozycji ostatniego wylogowania.
+hub:
+  teleport-on-join: true
+  # Blokuje kopanie, stawianie i wylewanie wiader w świecie spawnu. Wyspy leżą
+  # w osobnych wymiarach sky-*, więc dotyczy to wyłącznie hubu. Obejście:
+  # uprawnienie skyblockgameplay.admin.
+  protect-spawn: true
+  disable-hunger: true
+  invulnerable: true
+  heal-on-entry: true
+  spawn:
+    world: world
+    x: 27.5
+    y: 99.0
+    z: 1.5
+    yaw: 90.0
+    pitch: 0.0
+  onboarding:
+    delay-ticks: 40
+    # Pierwsze wejście pokazuje tytuł i krótkie wskazówki. GUI nie wyskakuje
+    # samoczynnie; gracz otwiera je świadomie przez NPC albo /menu.
+    open-menu-on-first-join: false
+    # Natomiast dialog /pomoc otwiera się przy pierwszym wejściu (gdy menu się
+    # nie otworzyło) — nowy gracz dostaje mapę serwera bez szukania komendy.
+    # Przy błędzie klienta fallback wypisuje wersję czatową.
+    open-help-dialog-on-first-join: true
+  # Hologramy huba przeniesione do FancyHolograms 2026-08-31. Sekcji NIE MA
+  # celowo: ConfigUpdater dopisuje kazdy klucz brakujacy wzgledem tego pliku,
+  # wiec zostawienie jej tutaj odtwarzaloby drugi komplet napisow na kazdym
+  # serwerze przy najblizszym starcie. Definicje: plugins/FancyHolograms/holograms.yml
+  jump-pads:
+    arrival-strip:
+      world: world
+      plate-material: LIGHT_WEIGHTED_PRESSURE_PLATE
+      # Pięć pól u stóp schodów na taras, na osi placu (z=1.5). Instalator
+      # stawia płytki tylko w powietrzu nad pełnym blokiem i nigdy nie
+      # nadpisuje dekoracji mapy.
+      blocks:
+        - {x: 21, y: 99, z: -1}
+        - {x: 21, y: 99, z: 0}
+        - {x: 21, y: 99, z: 1}
+        - {x: 21, y: 99, z: 2}
+        - {x: 21, y: 99, z: 3}
+      velocity:
+        x: -2.0
+        y: 0.9
+        z: 0.0
+      cooldown-ms: 1600
+
+island:
+  # ── Prestiż wyspy: powtarzalny zlew monet dla weterana ────────────────────
+  # Po skończeniu 5 petów i pełnej kuźni monety nie miały celu (audyt faz
+  # 2026-09-10: jedynym powtarzalnym zlewem był Klucz Wolframowy o EV 0,64).
+  # Prestiż daje tytuł wyspy (widoczny w Centrum Wyspy i w
+  # `%skyblock_island_title%`) plus małe mechaniczne perki — bez zwrotu monet
+  # i bez punktów sezonowych, więc nie drukuje sam siebie. Koszt
+  # `base-cost × cost-multiplier^(poziom-1)` płaci się z KONTA WYSYP, więc
+  # wpłaty członków mają stały cel: 10 poziomów ≈ 27,5 mln monet (2× pełna
+  # ścieżka kuźni 12,75 mln) — zlew na sezon, nie na wieczór.
+  #
+  # Perki (od 2026-09-20): `minion-slots-every-levels` — +1 slot minionka co
+  # N poziomów (2 → +5 slotów przy 10); `crystal-luck-percent-per-level` —
+  # % bonusu do szans gameplay-drops za poziom (4% × 10 = +40% szans).
+  #
+  # Wysyłany zasób ma `enabled: false` celowo: zlew monet to decyzja per tryb
+  # (prod SkyBlock ma `true` świadomie, patrz wpis `zamierzone` w
+  # scripts/wpme-config-diff-ignore.yml). Brak sekcji = prestiż cichnie
+  # wyłączony (IslandPrestige.Settings.load jest fail-closed), więc zasób musi
+  # nieść sekcję, żeby świeża instalacja nie wstała bez funkcji.
+  prestige:
+    enabled: false
+    max-level: 10
+    base-cost: 250000
+    cost-multiplier: 1.6
+    minion-slots-every-levels: 2
+    crystal-luck-percent-per-level: 4
+    title-per-level:
+      - '<gray>Osada</gray>'
+      - '<white>Wioska</white>'
+      - '<green>Miasto</green>'
+      - '<aqua>Metropolia</aqua>'
+      - '<blue>Forteca</blue>'
+      - '<light_purple>Latarnia</light_purple>'
+      - '<gold>Złota Wyspa</gold>'
+      - '<red>Wulkan</red>'
+      - '<dark_purple>Otchłań</dark_purple>'
+      - 'Legenda Wysp'
+  modes:
+    classic:
+      enabled: true
+    oneblock:
+      enabled: true
+    expedition:
+      enabled: false
+
+  # SKY-1: paste schematów przy tworzeniu wyspy. SkylliaAPI.createIsland NIE
+  # wkleja schematu (robi to tylko własny /is create Skylli) — bez tego każda
+  # wyspa jest void. Szablony JSON Skylli czytane z folderu danych pluginu
+  # Skyllia; nadpisuj per tryb/świat w templates.<tryb>.<świat>.
+  paste:
+    enabled: true
+    templates:
+      classic:
+        sky-overworld: schematics/starter-overworld.json
+        sky-nether: schematics/starter-nether.json
+        sky-end: schematics/starter-end.json
+      oneblock:
+        sky-overworld: schematics/oneblock-overworld.json
+        sky-nether: schematics/starter-nether.json
+        sky-end: schematics/starter-end.json
+
+# ── Eventy rotacyjne ──────────────────────────────────────────────────
+# Timowane okna boostów z ogłoszeniami na czacie — powód do powrotu gracza.
+# Rozkład jest DETERMINISTYCZNY od `epoch` (ISO-8601 UTC): cykl = suma
+# (duration-minutes + gap-minutes) wszystkich pozycji, a pozycja w cyklu
+# liczona jest z zegara — restart serwera nie resetuje harmonogramu i nie
+# ogłasza eventu ponownie. Tick co 10 s, ogłoszenie start/koniec raz.
+# Mnożniki łączą się multiplikatywnie z innymi bonusami (prestiż, weekend).
+events:
+  # Zasób domyślnie off (prod włącza świadomie); brak/zła epoka = wyłączone.
+  enabled: false
+  epoch: '2026-09-20T00:00:00Z'
+  rotation:
+    - id: goraczka-krysztalow
+      name: 'Gorączka Kryształów'
+      duration-minutes: 30
+      gap-minutes: 150
+      # ×2 szans na kryształy z rozgrywki (kopanie/hodowla/łowienie/moby).
+      crystal-luck: 2.0
+      season-points: 1.0
+      announce-start: '<gold><bold>Gorączka Kryształów!</bold></gold> <gray>Przez 30 minut szansa na kryształy jest podwojona — kop, hoduj, walcz i ław.</gray>'
+      announce-end: '<gray>Gorączka Kryształów dobiegła końca.</gray>'
+    - id: sprint-sezonowy
+      name: 'Sprint Sezonowy'
+      duration-minutes: 30
+      gap-minutes: 150
+      crystal-luck: 1.0
+      # ×2 punkty sezonu z każdej nagrody (zadania dnia, ryby, misje).
+      season-points: 2.0
+      announce-start: '<aqua><bold>Sprint Sezonowy!</bold></aqua> <gray>Przez 30 minut punkty sezonu liczą się podwójnie — robimy zadania dnia.</gray>'
+      announce-end: '<gray>Sprint Sezonowy dobiegł końca.</gray>'
+
+# ── Sezony ─────────────────────────────────────────────────────────────
+# Spec: docs/spec/sezony-rankingi.md. Wyspy bez wipe; punkty per gracz.
+# Cykl życia sezonu jest w pełni manualny: reset to wyłącznie komenda operatora
+# `/sezon zamknij --confirm` (snapshot → nagrody raz przez outbox → rollover
+# wewnętrznego season_id → czyste punkty). ZERO auto-zamykania: po minięciu
+# końca sezonu UI pokazuje „sezon wygasł — czeka na zamknięcie”, aż operator
+# zamknie. Publicznie nie ma numerów sezonu: UI i lore kosmetyków pokazują
+# ZAKRES DAT sezonu (format dd.MM.yyyy, np. „01.09 – 27.10.2026”); numeracja
+# S<n> żyje tylko wewnętrznie w DB/PDC i ledgerach (dedupe, kolekcje).
+season:
+  enabled: true
+  # Długość sezonu w dniach; walidator przy starcie: 42..70 (poza zakresem
+  # plugin odmawia startu — fail-closed, SEVERE + disable).
+  length-days: 56
+  # Koniec sezonu = epoch-start + length_days; kolejne sezony przesuwają się
+  # o kolejne wielokrotności długości względem WEWNĘTRZNEGO season_id z DB
+  # (nigdy nie pokazywanego graczom).
+  # epoch-start to dowolny punkt w czasie; zmiana unieważnia licznik sezonów!
+  # Musi być poprawnym ISO-8601 UTC (Instant.parse) — błąd formatu = fail-closed.
+  epoch-start: '2026-09-05T00:00:00Z'
+  # Weekendowy mnożnik punktów sezonowych (sob+nie, Europe/Warsaw). 1.0 = off.
+  # Zmiana wymaga restartu; aktywację ogłaszaj na hologramach/TAB (brak auto-ogłoszenia).
+  weekend-points-multiplier: 1.2
+  # F20: koszt aktywacji toru premium karnetu w Złotych Lotosach z ekwipunku.
+  # Walidacja: 1..64 (stack); poza zakresem → ostrzeżenie i wartość domyślna 6.
+  # Rachunek: sezon 56 dni = 8 tygodni. Darmowe źródła Złotego Lotosa to
+  # tygodniowy kamień milowy zadań (15 zadań = 1 lotos, czyli 8 na sezon),
+  # Skrzynia Podziemi (4 %, ~1,3), Skrzynia Tytanów (8 % × 2 szt., ~0,8)
+  # i kamienie milowe OneBlocka (~3,8, ale dopiero po 5000 bloków i tylko na
+  # wyspie OneBlock). Realnie ~6-9 na wyspie klasycznej. Sześć = sześć
+  # tygodniowych kamieni milowych = ¾ sezonu. Poprzednia wartość 32 to cztery
+  # sezony, czyli tor premium nieosiągalny w sezonie, dla którego istnieje.
+  # Sklep 2b2t.pl NIE ma SKU na Złoty Lotos ani na karnet, więc ta cena nie
+  # chroni żadnego przychodu — jest wyłącznie balansem.
+  pass:
+    premium-lotus-cost: 6
+    # Migracja Eco: id karnetu w EcoBattlepass (plik battlepasses/<id>.yml), któremu zakup
+    # premium za lotosy ustawia tor premium komendą `ecobattlepass setpremium`. Pusty = wyłączone.
+    eco-battlepass-id: battlepass
+  # USUNIĘTE (F29): `season.catch-up.*`, `season.unlock-thresholds`
+  # i `season.slots-per-threshold`. Nie czytał ich żaden kod — te liczby żyją
+  # wyłącznie jako stałe w DefaultSeasonPointService (CATCH_UP_MULTIPLIER,
+  # CATCH_UP_LAST_DAYS, UNLOCK_THRESHOLDS, SLOTS_PER_TIER), a config je tylko
+  # udawał: wpisanie tu innej wartości nie zmieniało niczego w grze.
+  #
+  # Dowód nie jest grepem po literałach (ten sam grep uznał kanoniczne `wpme.*`
+  # za martwe). Bajtkod wdrożonego SkyBlockGameplay-1.0-SNAPSHOT.jar, 340 klas:
+  #   1. zero stałych `unlock-thresholds` / `slots-per-threshold` / `catch-up`;
+  #   2. zero stałych zawierających `unlock-`, `-threshold`, `catch-` — więc
+  #      żadna sklejka (makeConcatWithConstants ani StringBuilder) nie ma
+  #      z czego złożyć tych ścieżek; `-days` istnieje tylko jako `length-days`
+  #      i `retention-days`;
+  #   3. podobne, ŻYWE klucze należą do innych sekcji i nie wolno ich mylić:
+  #      `slots-per-tier-increase` i `storage-slots` (bank), `speed-multiplier`
+  #      (minionki), a `catch-up` w EvenMoreFish/messages.yml to cudzy komunikat;
+  #   4. sekcję `season` czytają dokładnie cztery miejsca (SeasonSchedule.load,
+  #      SeasonLabels.window*, SkyBlockSettings.loadTopRewards oraz osobne
+  #      ścieżki `season.quests` / `season.fish-points` / `season.pass.*`)
+  #      i żadne z nich nie woła getKeys(false) na `season` — klucz w tej sekcji
+  #      nie da się odczytać generycznie.
+  # Poza jarem też nikt ich nie trzyma: ani drugi serwer, ani 2b2tbridge,
+  # ani strona, ani scripts/, ani docs/.
+  #
+  # NIE dopisuj ich z powrotem „na zapas”: ConfigUpdater dosypuje brakujące
+  # klucze z zasobu, więc wpis tutaj wraca na produkcję i znowu udaje pokrętło.
+  # Progi odblokowań mają sens dopiero przy katalogu dłuższym niż jeden tier —
+  # `season.quests.definitions` wysyła PIĘĆ questów, a pierwszy próg (0 pkt)
+  # otwiera osiem slotów. Gdyby progi kiedyś miały być sterowalne z configu,
+  # trzeba je najpierw WCZYTAĆ w DefaultSeasonPointService, a dopiero potem
+  # opisać w tym pliku.
+  # Nagrody za miejsca w TOP 3 rankingu sezonu (wydawane po zamknięciu
+  # edycji przez operatora). rank = miejsce w rankingu, lotus = liczba
+  # Diamentowych Lotosów (skyblock:token/diamond_lotus), coins = monety.
+  # Walidacja: rank dodatni i unikalny, lotus >= 0, coins >= 0; obce klucze
+  # ignorowane. Brak sekcji = wbudowane wartości domyślne jak poniżej.
+  top-rewards:
+    - { rank: 1, lotus: 3, coins: 50000 }
+    - { rank: 2, lotus: 2, coins: 30000 }
+    - { rank: 3, lotus: 1, coins: 15000 }
+    # P2-4: rank 4 = próg sezonu (seasons.threshold-score) dla wysp poza podium.
+    - { rank: 4, lotus: 1, coins: 5000 }
+    # 2026-09-10: głębsze miejsca też coś dostają. TOP 10 = 1 część kolekcji
+    # (cosmetics.yml top-rewards.10), TOP 50 = tytuł wyspy (title-rewards).
+    # Zera w monetach i Lotosach są celowe: nagroda jest kosmetyczna, nie balansowa.
+    - { rank: 10, lotus: 0, coins: 0 }
+    - { rank: 50, lotus: 0, coins: 0 }
+  # Tytuły wyspy za miejsce w rankingu sezonu (MiniMessage, ≤64 znaków).
+  # Nadawane przy odbiorze nagrody (seasons.rewards-claimable), zapisywane
+  # trwale (wpme_sb_island_titles) i widoczne w Centrum Wyspy oraz w placeholdzie
+  # %skyblock_island_title%. Tytuł nie daje żadnych bonusów — to kosmetyk.
+  # Brak sekcji/pusta mapa = żadnych tytułów.
+  title-rewards:
+    10: "<gray>Zasłużony dla wysp</gray>"
+    50: "<gray>Weteran Wysp</gray>"
+  # Punkty sezonowe za ryby z EvenMoreFish (rzadkość → punkty). Sekcja
+  # OBOWIĄZKOWA: muszą być wszystkie cztery rzadkości EMF, wartości > 0;
+  # brak sekcji, brakująca rzadkość albo zła wartość = fail-closed
+  # (SEVERE + disable), bez fallbacku do stałych w kodzie.
+  fish-points:
+    common: 5
+    rare: 15
+    epic: 40
+    legendary: 120
+  # ── Dzienny sufit punktów sezonowych per kanał ────────────────────────────
+  # Po co: ranking sezonowy ruszał wyłącznie wędką (ryby są jedynym źródłem bez
+  # limitu), a po jednorazowych questach gracz nie miał po co wracać. Capujemy
+  # więc każdy kanał, żeby żadnego nie dało się farmić na okrągło.
+  #
+  # Wyprowadzenie (2026-09-10):
+  #   kotwica: legendarna ryba = 120 pkt (season.fish-points.legendary),
+  #   karnet: poziom 28 = 1400 pkt (SeasonPassService), nadwyżka co 500 pkt,
+  #   questy jednorazowe: 43 szt. = 7350 pkt na cały sezon (trzon, bez zmian),
+  #   cel: aktywny dzień ≈ 400–500 pkt → bonusowy poziom ~1 dziennie,
+  #        karnet 28 osiągalny w kilka dni i to nie jednym kanałem.
+  # fish  300 ≈ 2,5 legendarnej ryby na dobę — wędka zostaje najlepsza na
+  #               krótką sesję, ale przestaje być jedyną drogą.
+  # quest 100 = 4 zadania dnia po 25 pkt (EcoQuests woła
+  #               `/sezon admin punkty-dzien`; task-amount: 4 od 2026-09-20,
+  #               wcześniejszy cap 75 odcinał punkty z czwartego zadania —
+  #               gracz widział „+25 pkt sezonu”, a dostawał 0).
+  # 0 albo brak kanału = bez limitu. Wartości są pokrętłem balansu — po pierwszym
+  # tygodniu sezonu zmierz P3-3 i dostrój, nic więcej nie trzeba ruszać.
+  daily-points-caps:
+    fish: 300
+    quest: 100
+  quests:
+    # Wersja schematu katalogu questów; niezgodność = fail-closed (SEVERE + disable).
+    schema-version: 1
+    # Punkty za quest wg trudności; id = klucz definicji poniżej
+    points-default: 100
+    definitions:
+      # Opcjonalny „pack: <slug>” przy definicji (≤64 znaków) wiąże quest
+      # z edycją sezonu o tym samym slugu „quest-pack” w editions.yml;
+      # questa bez klucza są uniwersalne (aktywne w każdej edycji).
+      # Questy pakietowe NIE zajmują slotów odblokowań: są osobną listą
+      # „zadań eventu” bez progów, widoczną tylko w oknie edycji.
+      # Kolejność definicji UNIWERSALNYCH = kolejność slotów odblokowań:
+      # 5 progów × 8 questów (DefaultSeasonPointService.UNLOCK_THRESHOLDS
+      # 0/300/800/1600/3000).
+      # Suma punktów każdego progu musi wystarczyć na odblokowanie następnego
+      # bez punktów z ryb i kopania (próg 0 = 475 ≥ 300, dalej rośnie).
+      # ---- próg 0 pkt: Q1–Q8 (pierwszy tydzień) ----
+      sq_harvest_1:
+        type: BREAK
+        targets: [WHEAT, CARROTS, POTATOES]
+        mature-only: true
+        goal: 64
+        points: 50
+        icon: WHEAT
+        name: '<yellow><bold>Sezonowe zbiory I</bold></yellow>'
+        lore: ['<gray>Zbierz 64 dojrzałych upraw.</gray>']
+      sq_mine_1:
+        type: BREAK
+        targets: [COBBLESTONE, STONE, COAL_ORE, IRON_ORE]
+        goal: 96
+        points: 50
+        icon: IRON_PICKAXE
+        name: '<gray><bold>Górnik sezonu I</bold></gray>'
+        lore: ['<gray>Wykop 96 bloków kamienia lub rud.</gray>']
+      sq_kill_1:
+        type: KILL
+        targets: [ZOMBIE, SKELETON, SPIDER]
+        goal: 24
+        points: 75
+        icon: IRON_SWORD
+        name: '<red><bold>Obrońca wyspy</bold></red>'
+        lore: ['<gray>Pokonaj 24 potwory.</gray>']
+      sq_fish_1:
+        type: FISH
+        targets: ['*']
+        goal: 16
+        points: 75
+        icon: FISHING_ROD
+        name: '<aqua><bold>Rybak sezonu</bold></aqua>'
+        lore: ['<gray>Wyłów 16 ryb.</gray>']
+      sq_craft_1:
+        type: CRAFT
+        targets: [BREAD, OAK_PLANKS, TORCH, LADDER]
+        goal: 32
+        points: 50
+        icon: CRAFTING_TABLE
+        name: '<white><bold>Rzemieślnik I</bold></white>'
+        lore: ['<gray>Stwórz 32 przedmioty.</gray>']
+      sq_wood_1:
+        type: BREAK
+        targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, DARK_OAK_LOG, JUNGLE_LOG, ACACIA_LOG, CHERRY_LOG, MANGROVE_LOG, PALE_OAK_LOG]
+        goal: 64
+        points: 50
+        icon: OAK_LOG
+        name: '<gold><bold>Drwal I</bold></gold>'
+        lore: ['<gray>Zetnij 64 kłody.</gray>']
+      sq_build_1:
+        type: PLACE
+        targets: [COBBLESTONE, STONE, DIRT, OAK_PLANKS, SPRUCE_PLANKS, BIRCH_PLANKS]
+        goal: 128
+        points: 50
+        icon: BRICKS
+        name: '<white><bold>Budowniczy I</bold></white>'
+        lore: ['<gray>Postaw 128 bloków na wyspie.</gray>']
+      sq_cook_1:
+        type: CRAFT
+        targets: [BREAD, MUSHROOM_STEW, BEETROOT_SOUP, PUMPKIN_PIE, COOKIE]
+        goal: 24
+        points: 75
+        icon: PUMPKIN_PIE
+        name: '<gold><bold>Kucharz I</bold></gold>'
+        lore: ['<gray>Przygotuj 24 potrawy na stole rzemieślniczym.</gray>']
+      # ---- próg 300 pkt: Q9–Q16 ----
+      sq_mine_2:
+        type: BREAK
+        targets: [COBBLESTONE, STONE, DEEPSLATE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE]
+        goal: 500
+        points: 150
+        icon: DIAMOND_PICKAXE
+        name: '<aqua><bold>Górnik sezonu II</bold></aqua>'
+        lore: ['<gray>Wykop 500 bloków kamienia lub rud.</gray>']
+      sq_harvest_2:
+        type: BREAK
+        targets: [WHEAT, CARROTS, POTATOES, BEETROOTS]
+        mature-only: true
+        goal: 250
+        points: 150
+        icon: HAY_BLOCK
+        name: '<gold><bold>Sezonowe zbiory II</bold></gold>'
+        lore: ['<gray>Zbierz 250 dojrzałych plonów.</gray>']
+      sq_kill_2:
+        type: KILL
+        targets: [ZOMBIE, SKELETON, SPIDER, CREEPER, ENDERMAN]
+        goal: 100
+        points: 150
+        icon: DIAMOND_SWORD
+        name: '<dark_red><bold>Pogromca potworów II</bold></dark_red>'
+        lore: ['<gray>Pokonaj 100 potworów.</gray>']
+      sq_fish_2:
+        type: FISH
+        targets: ['*']
+        goal: 64
+        points: 150
+        icon: TROPICAL_FISH
+        name: '<aqua><bold>Władca głębin II</bold></aqua>'
+        lore: ['<gray>Wyłów 64 ryby lub skarby.</gray>']
+      sq_craft_2:
+        type: CRAFT
+        targets: [BREAD, TORCH, LADDER, IRON_INGOT, GOLD_INGOT, CHEST, HOPPER]
+        goal: 128
+        points: 125
+        icon: ANVIL
+        name: '<yellow><bold>Mistrz rzemiosła II</bold></yellow>'
+        lore: ['<gray>Wytwórz 128 przedmiotów.</gray>']
+      sq_wood_2:
+        type: BREAK
+        targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, DARK_OAK_LOG, JUNGLE_LOG, ACACIA_LOG, CHERRY_LOG, MANGROVE_LOG, PALE_OAK_LOG]
+        goal: 256
+        points: 100
+        icon: SPRUCE_LOG
+        name: '<gold><bold>Drwal II</bold></gold>'
+        lore: ['<gray>Zetnij 256 kłód.</gray>']
+      sq_plant_1:
+        type: BREAK
+        targets: [SUGAR_CANE, CACTUS, BAMBOO, MELON, PUMPKIN]
+        goal: 200
+        points: 100
+        icon: SUGAR_CANE
+        name: '<green><bold>Plantator I</bold></green>'
+        lore: ['<gray>Zbierz 200 trzcin, kaktusów, bambusów, arbuzów lub dyń.</gray>']
+      sq_ore_1:
+        type: BREAK
+        targets: [COAL_ORE, DEEPSLATE_COAL_ORE, COPPER_ORE, DEEPSLATE_COPPER_ORE, IRON_ORE, DEEPSLATE_IRON_ORE]
+        goal: 128
+        points: 125
+        icon: RAW_IRON
+        name: '<gray><bold>Poszukiwacz rud I</bold></gray>'
+        lore: ['<gray>Wykop 128 rud węgla, miedzi lub żelaza.</gray>']
+      # ---- próg 800 pkt: Q17–Q24 ----
+      sq_mine_3:
+        type: BREAK
+        targets: [COBBLESTONE, STONE, DEEPSLATE, ANDESITE, DIORITE, GRANITE, TUFF]
+        goal: 1500
+        points: 175
+        icon: NETHERITE_PICKAXE
+        name: '<aqua><bold>Górnik sezonu III</bold></aqua>'
+        lore: ['<gray>Wykop 1500 bloków skały.</gray>']
+      sq_harvest_3:
+        type: BREAK
+        targets: [WHEAT, CARROTS, POTATOES, BEETROOTS, NETHER_WART, COCOA]
+        mature-only: true
+        goal: 600
+        points: 175
+        icon: GOLDEN_CARROT
+        name: '<gold><bold>Sezonowe zbiory III</bold></gold>'
+        lore: ['<gray>Zbierz 600 dojrzałych plonów.</gray>']
+      sq_kill_3:
+        type: KILL
+        targets: [CREEPER, ENDERMAN, WITCH, DROWNED, HUSK, STRAY]
+        goal: 60
+        points: 175
+        icon: ENDER_PEARL
+        name: '<dark_purple><bold>Łowca nietypowych</bold></dark_purple>'
+        lore: ['<gray>Pokonaj 60 creeperów, endermanów, wiedźm, topielców, husków lub strayów.</gray>']
+      sq_fish_3:
+        type: FISH
+        targets: [COD, SALMON, PUFFERFISH, TROPICAL_FISH]
+        goal: 120
+        points: 175
+        icon: SALMON
+        name: '<aqua><bold>Ławica</bold></aqua>'
+        lore: ['<gray>Wyłów 120 ryb (bez skarbów).</gray>']
+      sq_craft_3:
+        type: CRAFT
+        targets: [IRON_BLOCK, GOLD_BLOCK, COPPER_BLOCK, LAPIS_BLOCK, REDSTONE_BLOCK, COAL_BLOCK]
+        goal: 32
+        points: 175
+        icon: IRON_BLOCK
+        name: '<white><bold>Sztabkarz</bold></white>'
+        lore: ['<gray>Złóż 32 bloki z surowców.</gray>']
+      sq_ore_2:
+        type: BREAK
+        targets: [GOLD_ORE, DEEPSLATE_GOLD_ORE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, LAPIS_ORE, DEEPSLATE_LAPIS_ORE]
+        goal: 96
+        points: 175
+        icon: RAW_GOLD
+        name: '<yellow><bold>Poszukiwacz rud II</bold></yellow>'
+        lore: ['<gray>Wykop 96 rud złota, redstone lub lapisu.</gray>']
+      sq_build_2:
+        type: PLACE
+        targets: [STONE_BRICKS, BRICKS, GLASS, GLASS_PANE, TERRACOTTA, SMOOTH_STONE, DEEPSLATE_BRICKS, QUARTZ_BLOCK]
+        goal: 512
+        points: 150
+        icon: STONE_BRICKS
+        name: '<white><bold>Architekt I</bold></white>'
+        lore: ['<gray>Postaw 512 bloków wykończeniowych.</gray>']
+      sq_wood_3:
+        type: BREAK
+        targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, DARK_OAK_LOG, JUNGLE_LOG, ACACIA_LOG, CHERRY_LOG, MANGROVE_LOG, PALE_OAK_LOG]
+        goal: 768
+        points: 150
+        icon: DARK_OAK_LOG
+        name: '<gold><bold>Drwal III</bold></gold>'
+        lore: ['<gray>Zetnij 768 kłód.</gray>']
+      # ---- próg 1600 pkt: Q25–Q32 ----
+      sq_mine_4:
+        type: BREAK
+        targets: [COBBLESTONE, STONE, DEEPSLATE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_COAL_ORE, DEEPSLATE_IRON_ORE, DEEPSLATE_GOLD_ORE, DEEPSLATE_DIAMOND_ORE, DEEPSLATE_EMERALD_ORE]
+        goal: 4000
+        points: 225
+        icon: DIAMOND_ORE
+        name: '<aqua><bold>Górnik sezonu IV</bold></aqua>'
+        lore: ['<gray>Wykop 4000 bloków kamienia lub rud.</gray>']
+      sq_harvest_4:
+        type: BREAK
+        targets: [WHEAT, CARROTS, POTATOES, BEETROOTS, NETHER_WART, COCOA]
+        mature-only: true
+        goal: 1500
+        points: 225
+        icon: BEETROOT
+        name: '<gold><bold>Sezonowe zbiory IV</bold></gold>'
+        lore: ['<gray>Zbierz 1500 dojrzałych plonów.</gray>']
+      sq_kill_4:
+        type: KILL
+        targets: [ZOMBIE, SKELETON, SPIDER, CAVE_SPIDER, CREEPER, ENDERMAN, WITCH, DROWNED, HUSK, STRAY, SLIME, PHANTOM, ZOMBIE_VILLAGER]
+        goal: 400
+        points: 225
+        icon: NETHERITE_SWORD
+        name: '<dark_red><bold>Pogromca potworów IV</bold></dark_red>'
+        lore: ['<gray>Pokonaj 400 potworów.</gray>']
+      sq_fish_4:
+        type: FISH
+        targets: ['*']
+        goal: 250
+        points: 225
+        icon: PUFFERFISH
+        name: '<aqua><bold>Władca głębin IV</bold></aqua>'
+        lore: ['<gray>Wyłów 250 ryb lub skarbów.</gray>']
+      sq_craft_4:
+        type: CRAFT
+        targets: [BOOKSHELF, LANTERN, BARREL, FURNACE, BLAST_FURNACE, SMOKER, CHEST, CRAFTING_TABLE]
+        goal: 96
+        points: 200
+        icon: BOOKSHELF
+        name: '<white><bold>Wyposażenie wyspy</bold></white>'
+        lore: ['<gray>Wytwórz 96 mebli i urządzeń.</gray>']
+      sq_gem_1:
+        type: BREAK
+        targets: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE]
+        goal: 48
+        points: 250
+        icon: DIAMOND
+        name: '<aqua><bold>Klejnociarz</bold></aqua>'
+        lore: ['<gray>Wykop 48 rud diamentu lub szmaragdu.</gray>']
+      sq_plant_2:
+        type: BREAK
+        targets: [SUGAR_CANE, CACTUS, BAMBOO, MELON, PUMPKIN, KELP, KELP_PLANT]
+        goal: 1000
+        points: 200
+        icon: MELON
+        name: '<green><bold>Plantator II</bold></green>'
+        lore: ['<gray>Zbierz 1000 roślin z plantacji.</gray>']
+      sq_kill_5:
+        type: KILL
+        targets: [CREEPER]
+        goal: 150
+        points: 200
+        icon: GUNPOWDER
+        name: '<green><bold>Saper</bold></green>'
+        lore: ['<gray>Pokonaj 150 creeperów.</gray>']
+      # ---- próg 3000 pkt: Q33–Q40 (końcówka sezonu) ----
+      sq_mine_5:
+        type: BREAK
+        targets: [COBBLESTONE, STONE, DEEPSLATE, ANDESITE, DIORITE, GRANITE, TUFF, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_COAL_ORE, DEEPSLATE_IRON_ORE, DEEPSLATE_GOLD_ORE, DEEPSLATE_DIAMOND_ORE, DEEPSLATE_EMERALD_ORE]
+        goal: 10000
+        points: 300
+        icon: ANCIENT_DEBRIS
+        name: '<light_purple><bold>Legenda kopalni</bold></light_purple>'
+        lore: ['<gray>Wykop 10000 bloków skały lub rud.</gray>']
+      sq_harvest_5:
+        type: BREAK
+        targets: [WHEAT, CARROTS, POTATOES, BEETROOTS, NETHER_WART, COCOA]
+        mature-only: true
+        goal: 4000
+        points: 300
+        icon: GOLDEN_HOE
+        name: '<light_purple><bold>Żniwiarz sezonu</bold></light_purple>'
+        lore: ['<gray>Zbierz 4000 dojrzałych plonów.</gray>']
+      sq_kill_6:
+        type: KILL
+        targets: [ZOMBIE, SKELETON, SPIDER, CAVE_SPIDER, CREEPER, ENDERMAN, WITCH, DROWNED, HUSK, STRAY, SLIME, PHANTOM, ZOMBIE_VILLAGER]
+        goal: 1000
+        points: 300
+        icon: WITHER_SKELETON_SKULL
+        name: '<light_purple><bold>Legenda areny</bold></light_purple>'
+        lore: ['<gray>Pokonaj 1000 potworów.</gray>']
+      sq_fish_5:
+        type: FISH
+        targets: ['*']
+        goal: 600
+        points: 300
+        icon: HEART_OF_THE_SEA
+        name: '<light_purple><bold>Legenda głębin</bold></light_purple>'
+        lore: ['<gray>Wyłów 600 ryb lub skarbów.</gray>']
+      sq_craft_5:
+        type: CRAFT
+        targets: [DIAMOND_BLOCK, EMERALD_BLOCK, GOLD_BLOCK, IRON_BLOCK]
+        goal: 48
+        points: 300
+        icon: DIAMOND_BLOCK
+        name: '<light_purple><bold>Skarbnik</bold></light_purple>'
+        lore: ['<gray>Złóż 48 bloków z diamentów, szmaragdów, złota lub żelaza.</gray>']
+      sq_wood_4:
+        type: BREAK
+        targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, DARK_OAK_LOG, JUNGLE_LOG, ACACIA_LOG, CHERRY_LOG, MANGROVE_LOG, PALE_OAK_LOG]
+        goal: 3000
+        points: 275
+        icon: CHERRY_LOG
+        name: '<light_purple><bold>Legenda lasu</bold></light_purple>'
+        lore: ['<gray>Zetnij 3000 kłód.</gray>']
+      sq_build_3:
+        type: PLACE
+        targets: [STONE_BRICKS, BRICKS, GLASS, GLASS_PANE, TERRACOTTA, SMOOTH_STONE, DEEPSLATE_BRICKS, DEEPSLATE_TILES, QUARTZ_BLOCK, POLISHED_ANDESITE, POLISHED_DIORITE, POLISHED_GRANITE]
+        goal: 3000
+        points: 275
+        icon: QUARTZ_BLOCK
+        name: '<light_purple><bold>Mistrz budowy</bold></light_purple>'
+        lore: ['<gray>Postaw 3000 bloków wykończeniowych.</gray>']
+      sq_ore_3:
+        type: BREAK
+        targets: [COAL_ORE, COPPER_ORE, IRON_ORE, GOLD_ORE, REDSTONE_ORE, LAPIS_ORE, DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_COAL_ORE, DEEPSLATE_COPPER_ORE, DEEPSLATE_IRON_ORE, DEEPSLATE_GOLD_ORE, DEEPSLATE_REDSTONE_ORE, DEEPSLATE_LAPIS_ORE, DEEPSLATE_DIAMOND_ORE, DEEPSLATE_EMERALD_ORE]
+        goal: 800
+        points: 300
+        icon: EMERALD
+        name: '<light_purple><bold>Król rud</bold></light_purple>'
+        lore: ['<gray>Wykop 800 rud dowolnego rodzaju.</gray>']
+      # ---- pakiet eventu „Jesienne Żniwa 2026” (editions.yml: jesienny-event-2026) ----
+      # Poza slotami: otwarte przez całe okno edycji, znikają po jej końcu.
+      sq_event_jesien_zbiory:
+        type: BREAK
+        targets: [PUMPKIN, CARROTS, POTATOES, BEETROOTS]
+        mature-only: true
+        goal: 200
+        points: 150
+        icon: PUMPKIN
+        pack: jesienny-event-2026
+        name: '<gold><bold>Jesienne żniwa</bold></gold>'
+        lore: ['<gray>Zbierz 200 dyń lub dojrzałych marchewek, ziemniaków i buraków.</gray>']
+      sq_event_jesien_polow:
+        type: FISH
+        targets: [COD, SALMON]
+        goal: 40
+        points: 125
+        icon: SALMON
+        pack: jesienny-event-2026
+        name: '<aqua><bold>Jesienny połów</bold></aqua>'
+        lore: ['<gray>Wyłów 40 dorszy lub łososi.</gray>']
+      sq_event_jesien_opal:
+        type: BREAK
+        targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, DARK_OAK_LOG]
+        goal: 128
+        points: 100
+        icon: SPRUCE_LOG
+        pack: jesienny-event-2026
+        name: '<gold><bold>Zapas na zimę</bold></gold>'
+        lore: ['<gray>Zetnij 128 kłód dębu, świerku, brzozy lub ciemnego dębu.</gray>']
+
+storage:
+  # Postęp i claimy starsze niż ten okres są usuwane przy pełnym starcie.
+  # Finansowy audyt transakcji nie podlega temu czyszczeniu.
+  gameplay-retention-days: 35
+
+bank:
+  amounts: [100, 1000, 10000]
+
+wands:
+  sell:
+    material: BLAZE_ROD
+    name: '<light_purple><bold>Różdżka sprzedaży</bold></light_purple>'
+    lore:
+      - '<gray>Shift+PPM dwa razy sprzedaje zwykłe przedmioty,</gray>'
+      - '<gray>które skupuje sklep serwerowy.</gray>'
+      - '<yellow>Wypłata: 90% ceny sklepowej + bonus Twojej rangi.</yellow>'
+      - '<dark_gray>Przedmioty z components/PDC są pomijane.</dark_gray>'
+    price: 2500
+    uses: 100
+    payout-percent: 90
+  harvest:
+    material: DIAMOND_HOE
+    name: '<aqua><bold>Różdżka zbiorów</bold></aqua>'
+    lore:
+      - '<gray>Zbiera dojrzałą uprawę i sadzi ją ponownie.</gray>'
+      - '<gray>Każde użycie wymaga jednej zwykłej sadzonki.</gray>'
+    price: 1800
+    uses: 250
+
+automation:
+  # UWAGA: nazwy i lore obu automatyzacji są ZASZYTE w kodzie (SkyBlockMenus:
+  # chunkerLore/sellChestLore i nazwy obok), a SkyBlockSettings.automation()
+  # czyta wyłącznie `price`. Klucze `name`/`lore` siedziały tu do 2026-09-10 i
+  # tylko myliły operatora (edycja nic nie zmieniała) — zdjęte z zasobu i z prod.
+  chunker:
+    price: 15000
+  sell-chest:
+    price: 25000
+
+quests:
+  timezone: 'Europe/Warsaw'
+  active-per-day: 3
+  definitions:
+    miner:
+      type: BREAK
+      mode: classic
+
+      targets:
+        - COBBLESTONE
+        - STONE
+        - COAL_ORE
+        - DEEPSLATE_COAL_ORE
+        - IRON_ORE
+        - DEEPSLATE_IRON_ORE
+        - COPPER_ORE
+        - DEEPSLATE_COPPER_ORE
+        - GOLD_ORE
+        - DEEPSLATE_GOLD_ORE
+        - REDSTONE_ORE
+        - DEEPSLATE_REDSTONE_ORE
+        - LAPIS_ORE
+        - DEEPSLATE_LAPIS_ORE
+        - DIAMOND_ORE
+        - DEEPSLATE_DIAMOND_ORE
+        - EMERALD_ORE
+        - DEEPSLATE_EMERALD_ORE
+      goal: 128
+      reward: 200
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: IRON_PICKAXE
+      name: '<gray><bold>Pracowity górnik</bold></gray>'
+      lore:
+        - '<gray>Rozbij 128 bloków kamienia, bruku albo rudy.</gray>'
+        - '<gray>Najszybciej z generatora bruku na własnej wyspie.</gray>'
+    farmer:
+      type: BREAK
+      mode: classic
+
+      targets: [WHEAT, CARROTS, POTATOES, BEETROOTS, NETHER_WART, COCOA]
+      mature-only: true
+      goal: 96
+      reward: 200
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: WHEAT
+      name: '<yellow><bold>Pełne zbiory</bold></yellow>'
+      lore:
+        - '<gray>Zbierz 96 wyrośniętych roślin z pola.</gray>'
+        - '<gray>Pszenica, marchew, ziemniaki, buraki, kakao.</gray>'
+        - '<gray>Wyrośnięta = ma już owoce, nie same łodygi.</gray>'
+    hunter:
+      type: KILL
+      targets: [ZOMBIE, SKELETON, SPIDER, CREEPER, ENDERMAN, SLIME, WITCH, BLAZE]
+      goal: 24
+      reward: 240
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: IRON_SWORD
+      name: '<red><bold>Obrońca wyspy</bold></red>'
+      lore:
+        - '<gray>Pokonaj 24 wrogie stwory na swojej wyspie.</gray>'
+        - '<gray>Wrogie stwory pojawiają się tam, gdzie jest ciemno.</gray>'
+        - '<gray>Zbuduj zamkniętą, nieoświetloną komórkę i czekaj.</gray>'
+    lumberjack:
+      type: BREAK
+      mode: classic
+
+      targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, ACACIA_LOG, DARK_OAK_LOG, MANGROVE_LOG, CHERRY_LOG, PALE_OAK_LOG]
+      goal: 64
+      reward: 180
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: IRON_AXE
+      name: '<gold><bold>Drwal</bold></gold>'
+      lore:
+        - '<gray>Zetnij 64 pnie drzew na swojej wyspie.</gray>'
+        - '<gray>Z liści wypadają sadzonki — sadź je od razu,</gray>'
+        - '<gray>inaczej skończy Ci się drewno.</gray>'
+    fisher:
+      type: FISH
+      targets: [ANY]
+      goal: 16
+      reward: 220
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: FISHING_ROD
+      name: '<aqua><bold>Spokojny połów</bold></aqua>'
+      lore:
+        - '<gray>Złów 16 rzeczy wędką na swojej wyspie.</gray>'
+        - '<gray>Wędkę zrobisz z 3 patyków i 2 nici.</gray>'
+        - '<gray>Wystarczy mały staw z wiadra wody.</gray>'
+    # Zadania trybu OneBlock (pula: tylko wyspy z OneBlockiem; typ ONEBLOCK
+    # karmi sie rozbiciami centrum przez obserwator w OneBlockService —
+    # vanilla nasluch ich nie widzi, bo oneblock anuluje wlasny event).
+    ob-pewny-lup:
+      type: oneblock
+      targets: [ANY]
+      goal: 100
+      reward: 200
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: GRASS_BLOCK
+      mode: oneblock
+      name: '<green><bold>Pewny łup</bold></green>'
+      lore:
+        - '<gray>Rozbij 100 razy blok pod sobą.</gray>'
+        - '<gray>Blok odnawia się sam — nie spadniesz.</gray>'
+    ob-zyla-z-nieba:
+      type: oneblock
+      targets: [COAL_ORE, IRON_ORE, COPPER_ORE, GOLD_ORE, REDSTONE_ORE, LAPIS_ORE, DIAMOND_ORE, EMERALD_ORE, ANCIENT_DEBRIS]
+      goal: 12
+      reward: 240
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: DIAMOND_ORE
+      mode: oneblock
+      name: '<aqua><bold>Żyła z nieba</bold></aqua>'
+      lore:
+        - '<gray>Wykop 12 rud, które wypadną z Twojego bloku.</gray>'
+        - '<gray>Ruda to blok z kolorowymi kropkami — kop dalej,</gray>'
+        - '<gray>aż same się trafią.</gray>'
+    builder:
+      type: PLACE
+      targets: [COBBLESTONE, STONE, DIRT, OAK_PLANKS, SPRUCE_PLANKS, BIRCH_PLANKS, GLASS, BRICKS, STONE_BRICKS]
+      goal: 128
+      reward: 180
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: BRICKS
+      name: '<green><bold>Rozbudowa</bold></green>'
+      lore:
+        - '<gray>Postaw 128 zwykłych bloków: bruk, kamień, ziemię,</gray>'
+        - '<gray>deski, szkło lub cegły. Liczy się każda budowa.</gray>'
+    # CRAFT liczy rzeczywistą liczbę wytworzonych sztuk, także przy shift-clicku,
+    # bo opiera się o paperowe ItemCraftedEvent, a nie o samo kliknięcie.
+    toolsmith:
+      type: CRAFT
+      targets: [WOODEN_PICKAXE, STONE_PICKAXE, IRON_PICKAXE, DIAMOND_PICKAXE]
+      goal: 3
+      reward: 150
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: STONE_PICKAXE
+      name: '<gray><bold>Kowal narzędzi</bold></gray>'
+      lore:
+        - '<gray>Zrób 3 kilofy przy stole rzemieślniczym.</gray>'
+        - '<gray>Kilof to 3 deski lub bruk na górze i 2 patyki pod spodem.</gray>'
+        - '<gray>Bez kilofa kamień nie zostawia po sobie nic.</gray>'
+    nether-slayer:
+      type: KILL
+      targets: [BLAZE, WITHER_SKELETON, MAGMA_CUBE, PIGLIN, ZOMBIFIED_PIGLIN, GHAST]
+      goal: 16
+      reward: 240
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: BLAZE_ROD
+      name: '<red><bold>Wyprawa do Netheru</bold></red>'
+      lore:
+        - '<gray>Pokonaj 16 potworów w Netherze.</gray>'
+        - '<gray>Zbuduj bezpieczny portal i wyrusz na polowanie.</gray>'
+    deep-miner:
+      type: BREAK
+      mode: classic
+      targets: [DEEPSLATE, COBBLED_DEEPSLATE, DEEPSLATE_COAL_ORE, DEEPSLATE_IRON_ORE, DEEPSLATE_GOLD_ORE, DEEPSLATE_DIAMOND_ORE]
+      goal: 64
+      reward: 220
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: DEEPSLATE
+      name: '<dark_gray><bold>Górnik głębin</bold></dark_gray>'
+      lore:
+        - '<gray>Wykop 64 bloki z głębin wyspy (Y ≤ 0).</gray>'
+        - '<gray>Łupek jest twardszy, ale kryje cenne złoża.</gray>'
+    smelter:
+      type: CRAFT
+      targets: [IRON_INGOT, GOLD_INGOT, COPPER_INGOT, GLASS, STONE, SMOOTH_STONE]
+      goal: 48
+      reward: 200
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: FURNACE
+      name: '<gold><bold>Hutnik</bold></gold>'
+      lore:
+        - '<gray>Przetop lub wytwórz 48 sztabek lub materiałów.</gray>'
+        - '<gray>Użyj pieca lub pieca hutniczego.</gray>'
+    expert-fisher:
+      type: FISH
+      targets: [ANY]
+      goal: 24
+      reward: 240
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: COD
+      name: '<aqua><bold>Mistrz wędkarstwa</bold></aqua>'
+      lore:
+        - '<gray>Złów 24 ryby lub skarby wędką z wody.</gray>'
+        - '<gray>Cierpliwość popłaca — skarby przynoszą zysk.</gray>'
+    exotic-lumber:
+      type: BREAK
+      mode: classic
+      targets: [SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, ACACIA_LOG, DARK_OAK_LOG]
+      goal: 48
+      reward: 200
+      reward-items:
+        - "skyblock:token/silver_lotus:1"
+      icon: SPRUCE_LOG
+      name: '<gold><bold>Drwal egzotyczny</bold></gold>'
+      lore:
+        - '<gray>Zetnij 48 pni świerku, brzozy, dżungli lub akacji.</gray>'
+        - '<gray>Zdobądź sadzonki w sklepie lub ze stoniarki.</gray>'
+
+shop:
+  categories:
+    building:
+      items:
+        cobblestone: {material: COBBLESTONE, buy: 4, sell: 1}
+        stone: {material: STONE, buy: 6, sell: 2}
+        stone_bricks: {material: STONE_BRICKS, buy: 8, sell: 2}
+        deepslate: {material: DEEPSLATE, buy: 6, sell: 2}
+        dirt: {material: DIRT, buy: 4, sell: 1}
+        grass_block: {material: GRASS_BLOCK, buy: 4, sell: 1}
+        sand: {material: SAND, buy: 8, sell: 2}
+        gravel: {material: GRAVEL, buy: 8, sell: 2}
+        oak_log: {material: OAK_LOG, buy: 16, sell: 4}
+        spruce_log: {material: SPRUCE_LOG, buy: 16, sell: 4}
+        birch_log: {material: BIRCH_LOG, buy: 16, sell: 4}
+        dark_oak_log: {material: DARK_OAK_LOG, buy: 18, sell: 4}
+        oak_planks: {material: OAK_PLANKS, buy: 5, sell: 1}
+        glass: {material: GLASS, buy: 10, sell: 2}
+        bricks: {material: BRICKS, buy: 12, sell: 3}
+        terracotta: {material: TERRACOTTA, buy: 10, sell: 2}
+        clay_ball: {material: CLAY_BALL, buy: 4, sell: 1}
+        clay: {material: CLAY, buy: 16, sell: 4}
+    farming:
+      items:
+        wheat_seeds: {material: WHEAT_SEEDS, buy: 4, sell: 0}
+        wheat: {material: WHEAT, buy: 10, sell: 3}
+        carrot: {material: CARROT, buy: 12, sell: 1}
+        potato: {material: POTATO, buy: 12, sell: 1}
+        beetroot_seeds: {material: BEETROOT_SEEDS, buy: 4, sell: 0}
+        beetroot: {material: BEETROOT, buy: 10, sell: 3}
+        sugar_cane: {material: SUGAR_CANE, buy: 15, sell: 2}
+        cactus: {material: CACTUS, buy: 14, sell: 2}
+        pumpkin: {material: PUMPKIN, buy: 20, sell: 4}
+        melon_slice: {material: MELON_SLICE, buy: 4, sell: 1}
+        cocoa_beans: {material: COCOA_BEANS, buy: 12, sell: 2}
+        soul_sand: {material: SOUL_SAND, buy: 24, sell: 2}
+        nether_wart: {material: NETHER_WART, buy: 30, sell: 1}
+        bamboo: {material: BAMBOO, buy: 10, sell: 1}
+        sweet_berries: {material: SWEET_BERRIES, buy: 12, sell: 1}
+        oak_sapling: {material: OAK_SAPLING, buy: 20, sell: 0}
+        spruce_sapling: {material: SPRUCE_SAPLING, buy: 25, sell: 0}
+        birch_sapling: {material: BIRCH_SAPLING, buy: 25, sell: 0}
+        red_mushroom: {material: RED_MUSHROOM, buy: 15, sell: 2}
+        brown_mushroom: {material: BROWN_MUSHROOM, buy: 15, sell: 2}
+    ores:
+      items:
+        coal: {material: COAL, buy: 40, sell: 8}
+        raw_iron: {material: RAW_IRON, buy: 90, sell: 20}
+        iron_ingot: {material: IRON_INGOT, buy: 120, sell: 25}
+        copper_ingot: {material: COPPER_INGOT, buy: 60, sell: 12}
+        raw_gold: {material: RAW_GOLD, buy: 140, sell: 28}
+        gold_ingot: {material: GOLD_INGOT, buy: 180, sell: 35}
+        redstone: {material: REDSTONE, buy: 50, sell: 10}
+        lapis: {material: LAPIS_LAZULI, buy: 55, sell: 11}
+        diamond: {material: DIAMOND, buy: 1500, sell: 250}
+        emerald: {material: EMERALD, buy: 1200, sell: 200}
+        quartz: {material: QUARTZ, buy: 70, sell: 14}
+        amethyst_shard: {material: AMETHYST_SHARD, buy: 60, sell: 12}
+        netherite_scrap: {material: NETHERITE_SCRAP, buy: 6000, sell: 1000}
+    drops:
+      items:
+        rotten_flesh: {material: ROTTEN_FLESH, buy: 12, sell: 3}
+        bone: {material: BONE, buy: 20, sell: 5}
+        string: {material: STRING, buy: 20, sell: 5}
+        gunpowder: {material: GUNPOWDER, buy: 32, sell: 8}
+        spider_eye: {material: SPIDER_EYE, buy: 24, sell: 6}
+        ender_pearl: {material: ENDER_PEARL, buy: 180, sell: 40}
+        blaze_rod: {material: BLAZE_ROD, buy: 250, sell: 55}
+        slime_ball: {material: SLIME_BALL, buy: 80, sell: 18}
+        prismarine_shard: {material: PRISMARINE_SHARD, buy: 60, sell: 12}
+        ghast_tear: {material: GHAST_TEAR, buy: 450, sell: 90}
+        magma_cream: {material: MAGMA_CREAM, buy: 90, sell: 20}
+        phantom_membrane: {material: PHANTOM_MEMBRANE, buy: 120, sell: 25}
+        shulker_shell: {material: SHULKER_SHELL, buy: 1800, sell: 300}
+        cod: {material: COD, buy: 24, sell: 6}
+        salmon: {material: SALMON, buy: 28, sell: 7}
+        tropical_fish: {material: TROPICAL_FISH, buy: 48, sell: 12}
+        pufferfish: {material: PUFFERFISH, buy: 40, sell: 10}
+    utility:
+      items:
+        lava_bucket: {material: LAVA_BUCKET, buy: 400, sell: 0}
+        water_bucket: {material: WATER_BUCKET, buy: 100, sell: 0}
+        ice: {material: ICE, buy: 50, sell: 5}
+        packed_ice: {material: PACKED_ICE, buy: 150, sell: 15}
+        obsidian: {material: OBSIDIAN, buy: 120, sell: 20}
+        redstone_torch: {material: REDSTONE_TORCH, buy: 20, sell: 2}
+        hopper: {material: HOPPER, buy: 600, sell: 80}
+        chest: {material: CHEST, buy: 60, sell: 8}
+        torch: {material: TORCH, buy: 4, sell: 0}
+        bone_meal: {material: BONE_MEAL, buy: 8, sell: 1}
+        anvil: {material: ANVIL, buy: 3500, sell: 400}
+        enchanting_table: {material: ENCHANTING_TABLE, buy: 4000, sell: 500}
+        name_tag: {material: NAME_TAG, buy: 800, sell: 50}
+        saddle: {material: SADDLE, buy: 1200, sell: 80}
+        fishing_rod: {material: FISHING_ROD, buy: 50, sell: 10}
+        end_portal_frame:
+          material: END_PORTAL_FRAME
+          buy: 1000
+          sell: 0
+    crystals:
+      items:
+        citrine:
+          material: PAPER
+          custom-item: "skyblock:crystal/citrine"
+          buy: 2500
+          sell: 500
+        aquamarine:
+          material: PAPER
+          custom-item: "skyblock:crystal/aquamarine"
+          buy: 3000
+          sell: 600
+        opal:
+          material: PAPER
+          custom-item: "skyblock:crystal/opal"
+          buy: 3500
+          sell: 700
+        onyx:
+          material: PAPER
+          custom-item: "skyblock:crystal/onyx"
+          buy: 4000
+          sell: 800
+        peridot:
+          material: PAPER
+          custom-item: "skyblock:crystal/peridot"
+          buy: 3000
+          sell: 600
+        ruby:
+          material: PAPER
+          custom-item: "skyblock:crystal/ruby"
+          buy: 5000
+          sell: 1000
+        topaz:
+          material: PAPER
+          custom-item: "skyblock:crystal/topaz"
+          buy: 3500
+        skeleton_key:
+          material: PAPER
+          custom-item: "skyblock:key/skeleton_key"
+          currency-item: "skyblock:token/silver_lotus"
+          price-item-count: 2
+          buy: 0
+          sell: 0
+        umber_key:
+          material: PAPER
+          custom-item: "skyblock:key/umber_key"
+          currency-item: "skyblock:token/silver_lotus"
+          price-item-count: 5
+          buy: 0
+          sell: 0
+  guardrails:
+    recipes:
+      oak_planks:
+        input: OAK_LOG
+        input-count: 1
+        output: OAK_PLANKS
+        output-count: 4
+      smelt_stone:
+        input: COBBLESTONE
+        input-count: 1
+        output: STONE
+        output-count: 1
+      smelt_glass:
+        input: SAND
+        input-count: 1
+        output: GLASS
+        output-count: 1
+      bone_meal:
+        input: BONE
+        input-count: 1
+        output: BONE_MEAL
+        output-count: 3
+
+# Generator bruku i rud — konfiguracja szans na wydropienie danych surowców
+# z generatorów wodno-lawowych na wyspach.
+generator:
+  # F8: sekcja czytana WYŁĄCZNIE przez bramkę budowania
+  # (GeneratorEconomyBalanceTest), nigdy przez runtime — tak samo jak `balance`
+  # w oneblock.yml i minions.yml.
+  balance:
+    # Tempo odniesienia przyjęte w F7: jedno formowanie na sekundę. Wszystkie
+    # liczby „coins/h” w komentarzach niżej są liczone tym tempem.
+    reference-forms-per-hour: 3600
+    # Sufit tempa CAŁEGO generatora: rudy zwykłe + rzadkie + kryształ.
+    # 12 500 = połowa tempa docelowego 25 000 coins/h (oneblock.yml:balance).
+    #
+    # Dlaczego połowa. Generator jest jedynym źródłem bez warunku wstępnego:
+    # kosztuje wiadro lawy, działa od pierwszej minuty, w nieskończoność i pod
+    # autoklikerem. Rozdział endgame'owy OneBlocka (`kres`, 6 000 bloków
+    # progresji) daje 26 129 coins/h, a pierwszy rozdział (`poczatek`) 11 376.
+    # Generator siada na wysokości pierwszego rozdziału, więc przejście całej
+    # progresji OneBlocka podwaja tempo. Zawsze dostępne dno ekonomii nie może
+    # bić treści, do której trzeba dojść.
+    max-coins-per-hour: 12500
+  ores:
+    enabled: true
+    # F8: okno na KAŻDĄ podmianę na rudę, liczone na chunk. Wagi w `rates`
+    # decydują, CO wypadnie; to okno decyduje, JAK CZĘSTO — i to ono, a nie
+    # wagi, trzyma tempo. W wagach nie ma liczby, która mówi „na godzinę”:
+    # przychód generatora to (formowań/s) × (wartość formowania), a pierwszego
+    # czynnika config dotąd w ogóle nie dotykał. Audyt zmierzył ~2 formowania/s
+    # (A3, AUTO-7), a wyspa z zespołem bije w jedną ścianę generatorów kilkoma
+    # parami rąk naraz — każda z nich mnożyła tempo liniowo.
+    #
+    # Wyliczenie: 3600/20 = 180 trafień rudy/h na chunk. Wartość oczekiwana
+    # jednego trafienia po cenach skupu (`shop`) to 1696/45 = 37,69 coins —
+    # lapis liczony razem z Opalem Astralnym, którego dokłada
+    # gameplay-drops.lapis.opal. Daje to 6 784 coins/h z rud. Pozostałe
+    # formowania to bruk: (3600 − 180) × 1 = 3 420 coins/h. Z kryształem
+    # (1 800) całość wychodzi 12 004 coins/h, pod balance.max-coins-per-hour.
+    #
+    # 0 wyłącza okno.
+    #
+    # F14: 20 -> 40. Okno liczy TRAFIENIA, a nie monety, więc nie widziało
+    # Fortuny. Kilof z Fortuną III mnoży drop rudy 2,20× (formuła ore_drops z
+    # waniliowej tabeli łupów), przez co te same 180 trafień/h dawało nie 6 784,
+    # a 14 322 coins/h i cały generator wychodził na 19 542 coins/h — 1,56×
+    # ponad własny sufit z balance.max-coins-per-hour. 3600/40 = 90 trafień/h
+    # daje 7 161 coins/h z rud, 3 510 z bruku i 1 800 z kryształu = 12 471,
+    # czyli tuż pod sufitem 12 500 — przy NAJLEPSZYM narzędziu w grze.
+    ore-cooldown-seconds: 40
+    # AUTO-7: węższe okno WEWNĄTRZ ore-cooldown-seconds, wyłącznie na rudy
+    # RZADKIE (złoto/diament/szmaragd/ancient debris). Liczone na chunk, nie na
+    # blok — inaczej stack generatorów w jednym miejscu mnoży podaż liniowo.
+    #
+    # Wyliczenie z F7: wartość oczekiwana jednego trafienia rzadkiego to
+    # (5×35 + 1,5×250 + 0,5×200)/7 = 92,9 coins, a rzadkie rudy mają dokładać
+    # najwyżej ~10 % docelowego tempa 25 000 coins/h → 27 trafień/h → jedno na
+    # ~134 s, zaokrąglone do 120 s.
+    #
+    # F8: przy ore-cooldown-seconds = 20 to okno już nie wiąże — 180 trafień/h
+    # razy 7/45 udziału rud rzadkich daje 28 rzadkich/h przy limicie 30.
+    # Zostaje jako drugi, węższy strażnik: gdyby ktoś podniósł wagi rud
+    # rzadkich, zadziała bez przeliczania czegokolwiek innego.
+    #
+    # 0 wyłącza cooldown.
+    rare-cooldown-seconds: 120
+    # F8: wag nie ruszamy. One ustawiają SKŁAD trafienia (klimat generatora),
+    # a tempo trzyma ore-cooldown-seconds. Podniesienie wagi drogiej rudy dalej
+    # podnosi wartość oczekiwaną trafienia i wywróci bramkę balansową.
+    rates:
+      COBBLESTONE: 55.0
+      COAL_ORE: 15.0
+      COPPER_ORE: 10.0
+      IRON_ORE: 8.0
+      GOLD_ORE: 5.0
+      REDSTONE_ORE: 3.0
+      LAPIS_ORE: 2.0
+      DIAMOND_ORE: 1.5
+      EMERALD_ORE: 0.5
+      # F27: netheryt nie miał na SkyBlocku ŻADNEGO źródła poza wyspą OneBlock.
+      # Światy wysp Skyllii są puste — `generator = "default"` w worlds.toml to
+      # VoidWorldGen (bajtkod `WorldsManager.registerGenerators`, mapa
+      # default/ocean/bedrock → Void/Ocean/Bedrock), więc `sky-nether` nie ma
+      # ani jednego bloku terenu, a tym samym ani jednej ancient debris.
+      # Skutkiem był zakleszczenie: Płyta Wzmocniona wymaga NETHERITE_INGOT,
+      # a jedyne pozostałe źródło netherytu to Skrzynia Tytanów (6 %), którą
+      # otwiera Klucz Wolframowy — wykuwany właśnie z Płyty Wzmocnionej.
+      # Na wyspie KLASYCZNEJ blokowało to cztery najdroższe pozycje w grze:
+      # Płytę Wzmocnioną (34,1 h), Klucz Wolframowy (44,2 h), Napierśnik
+      # Otchłani (46,6 h), Złoty Lotos (49,0 h) i minionka diamentu (86,8 h).
+      #
+      # Waga 0,4 przy rare-cooldown-seconds: 120 daje 0,79 ancient debris/h,
+      # czyli 5,1 h na jedną sztabkę netherytu (4 odłamki) — dokładnie tyle,
+      # ile ma kosztować składnik pozycji 34-godzinnej.
+      #
+      # Wpływ na sufit tempa jest UJEMNY, nie dodatni: ancient debris nie ma
+      # ceny skupu, a wchodzi do puli rud rzadkich (isRareMaterial), więc
+      # rozcieńcza złoto/diament/szmaragd. Generator schodzi z 12 471 na
+      # 12 408 coins/h przy suficie 12 500.
+      ANCIENT_DEBRIS: 0.4
+  custom-drops:
+    enabled: true
+    # F8: okno na drop z generatora, liczone na chunk — ten sam wzorzec co
+    # ore-cooldown-seconds. 3600/240 = 15 dropów/h, czyli tuż nad tym, co przy
+    # tempie odniesienia dają szanse niżej (0,1 + 0,3 = 0,4 % × 3600 = 14,4).
+    # Przy normalnej grze okno nie zmienia więc nic; przy szybszym kopaniu
+    # trzyma sufit, zamiast mnożyć go liniowo.
+    #
+    # 0 wyłącza okno.
+    cooldown-seconds: 240
+    # Szansa procentowa (np. 0.1 = 0.1%) na dodatkowy drop w Overworldzie (Y > 0)
+    #
+    # F8: kryształ ma cenę skupu (cytryn 500, onyks 800, topaz 700), więc jest
+    # przychodem, a nie dekoracją — i nie policzyła go dotąd żadna fala. Przy
+    # 0,8 % dawał 0,8 % × 3600 × 500 = 14 400 coins/h, czyli 58 % całego tempa
+    # docelowego z jednej linijki configu. Reguła jest ta sama co przy
+    # minionkach (minions.yml:balance.bonus-share-max): kryształ to najwyżej
+    # ~20 % przychodu swojego źródła, tutaj 0,50 coins na formowanie = 1 800
+    # coins/h = 15 % sufitu generatora.
+    #
+    # Wzór: szansa[%] = 100 × 0,50 / cena skupu ze `shop`.
+    #
+    # Surowce kuźni (raw_tungsten, raw_umber) zostają nietknięte: nie mają ceny
+    # skupu, więc nie są przychodem, a odmierzają tempo łańcucha płyt i kluczy
+    # (jeden Klucz Wolframowy to 32 sztuki surowego wolframu).
+    overworld:
+      "skyblock:crystal/citrine": 0.1
+      "skyblock:metal/raw_tungsten": 0.3
+    # Szansa procentowa na dodatkowy drop w warstwie Deepslate (Y <= 0).
+    # Wypełniaczem jest tu bruk deepslate, którego sklep NIE skupuje, więc ta
+    # warstwa nie ma dochodu z tła — mimo to onyks trzyma ten sam budżet, żeby
+    # nie opłacało się przenosić generatora pod Y=0 wyłącznie dla kryształu.
+    deepslate:
+      "skyblock:crystal/onyx": 0.06
+      "skyblock:metal/raw_umber": 0.2
+    # Szansa procentowa na dodatkowy drop w Netherze. Nether nie ma podmiany
+    # rud (listener robi ją tylko w NORMAL) ani sprzedawalnego wypełniacza
+    # (bazaltu sklep nie skupuje), więc topaz jest tam CAŁYM przychodem
+    # generatora: 0,07 % × 3600 × 700 = 1 764 coins/h.
+    nether:
+      "skyblock:crystal/topaz": 0.07
+
+# Dropy z aktywności rozgrywki (łowienie ryb, zbiory plonów, rudy lapisu, potwory)
+gameplay-drops:
+  enabled: true
+  # F14: sekcja czytana WYŁĄCZNIE przez bramkę budowania
+  # (GameplayDropsEconomyBalanceTest), nigdy przez runtime.
+  balance:
+    # Sufit tempa rolnictwa: plon + perydot, przy tempie odniesienia i przy
+    # Fortunie III. 18 000 = 72 % tempa docelowego. Rolnictwo siada MIĘDZY
+    # generatorem (12 500, warunek wstępny: wiadro lawy) a rozdziałem
+    # endgame'owym OneBlocka (24 400, warunek wstępny: 6 000 bloków), bo
+    # farma to realna inwestycja w budowę, ale nie progresja.
+    max-coins-per-hour: 18000
+  # F14: okno tempa na chunk — dokładnie ten sam wzorzec co
+  # generator.custom-drops.cooldown-seconds, tylko dla dropów z rozgrywki.
+  # Każda z czterech kategorii (farming / lapis / fishing / monsters) ma
+  # WŁASNY licznik na chunk, więc okna nie zjadają się nawzajem.
+  #
+  # Po co, skoro szanse są niskie: bo szansa steruje wartością zdarzenia, a nie
+  # ich liczbą. Przychód to (zdarzeń/s) × (wartość zdarzenia), a pierwszego
+  # czynnika config dotąd tu w ogóle nie dotykał — dokładnie ten sam błąd, który
+  # F8 naprawiła w generatorze. Przy tempie odniesienia okno NIE WIĄŻE
+  # (rolnictwo 3,6 dropu/h przy limicie 15), więc normalna gra go nie widzi;
+  # wiąże dopiero pod autoklikerem i przy ścianie rąk jednej wyspy.
+  #
+  # 3600/240 = 15 dropów/h na chunk i kategorię. 0 wyłącza okno.
+  cooldown-seconds: 240
+  fishing:
+    aquamarine: 1.5    # 1.5% szansy na Akwamaryn Głębin (skyblock:crystal/aquamarine) przy wyłowieniu ryby
+  farming:
+    # F14: 0,8 -> 0,1. Ta sama reguła co przy minionkach
+    # (minions.yml:balance.bonus-share-max) i przy krysztale generatora
+    # (F8): kryształ bonusowy to najwyżej ~20 % przychodu swojego źródła.
+    #
+    # Wzór: szansa[%] = 100 × 0,60 / cena skupu ze `shop` (600 za perydot).
+    #
+    # Przy 0,8 % perydot dawał 4,80 coins na KAŻDY zbiór dojrzałej uprawy —
+    # więcej niż sama pszenica (3,00) — czyli 17 280 coins/h przy tempie
+    # odniesienia, z jednej linijki configu i bez żadnego ogranicznika tempa.
+    # Rekomendację postawiła F8 (rozdział 7), tu jest wykonana.
+    peridot: 0.1
+  lapis:
+    opal: 2.0       # 2.0% szansy na Opal Astralny (skyblock:crystal/opal) przy wykopaniu rudy lapisu
+  monsters:
+    ruby: 0.5       # 0.5% szansy na Nieskazitelny Rubin (skyblock:crystal/ruby) po zabiciu potwora przez gracza
+    skeleton_key: 0.2 # 0.2% szansy na Kościany Klucz (skyblock:key/skeleton_key) po zabiciu potwora przez gracza
+
+# Skrzynie na spawnie obsluguje CrazyCrates (fork crazycrates-wpme), nie ten plugin.
+# Sekcja `crates:` zostala stad wycięta 2026-08-31 razem z CrateKeyListener,
+# CratePreviewMenu i HubCrates — zrodla w reference/skyblock-crates/.
+#
+# NIE PRZYWRACAJ jej samym plikiem na serwerze: ConfigUpdater dopisuje kazdy klucz
+# brakujacy wzgledem TEGO pliku, wiec dopoki sekcji tu nie ma, na serwerze tez jej
+# nie bedzie — a gdyby wrocila, oba tory nasluchiwalyby tego samego klikniecia
+# (my HIGH, CrazyCrates HIGHEST) i gracz dostalby dwa podglady naraz.
+#
+# Definicje skrzyn: de964636/plugins/CrazyCrates/crates/Skyblock*.yml
+
+# Tablice wyników na spawnie. Współrzędne nie są zgadnięte: teren przeanalizowano
+# odczytem regionów świata. Grunt na obu stanowiskach leży równo na Y=79
+# (dirt_path), bryła 80..87 jest pusta, a linia wzroku z oka gracza na spawnie
+# (26.5, 83.6, -0.5) do obu tablic jest wolna od przeszkód. Tablice stoją
+# symetrycznie po 7 kratek od osi z=-0.5, więc nie zasłaniają hologramu
+# Migracja do FancyHolograms: tablice są teraz w pełni rysowane przez FancyHolograms
+# z użyciem tokenów %skyblock_board_*%, bez niepotrzebnych encji Display z kodu.
+leaderboards:
+  enabled: true
+  refresh-seconds: 60
+  # P0-2 (2026-09-05, decyzja właściciela: 5 wierszy): repo i produkcja mają
+  # zgodnie 5 — wcześniejszy komentarz F30 twierdził, że „produkcja ma 10”,
+  # ale oba configi pokazują 5 (prod: config.yml:1047). Tokeny
+  # %skyblock_board_*_6..10% zostają puste z definicji; gdyby tablica miała
+  # urosnąć do 10, zmienić obie strony naraz i sprawdzić monument.
+  entries: 5
+  # Wielkość całej tablicy naraz: tekst, głowy i odstępy między wierszami.
+  # Dopasowana do powierzchni gładkiego piaskowca w ramce monumentu.
+  scale: 1.05
+  boards:
+    season:
+      source: season
+      world: world
+      x: 23.4
+      y: 97.0
+      z: -3.5
+      yaw: -90.0
+      pitch: 0.0
+      billboard: FIXED
+      title: "<gradient:#ffd700:#ff8c00><bold>RANKING SEZONU</bold></gradient>"
+      metric: "punkty"
+    hall-of-fame:
+      source: all-time
+      world: world
+      x: 23.4
+      y: 97.0
+      z: 6.5
+      yaw: -90.0
+      pitch: 0.0
+      billboard: FIXED
+      title: "<gradient:#b39ddb:#7e57c2><bold>HALL OF FAME</bold></gradient>"
+      metric: "wygrane sezony"
+  # Oprawa pod tablicą: podłoga 3x7 i ciemna ściana za plecami. WYŁĄCZONA,
+  # odkąd tablice stoją na monumencie zbudowanym przez autora mapy — kamienna
+  # ściana pluginu dostawiona do gotowej architektury wyglądała jak łata.
+  # Kontrast tekstu zapewnia półprzezroczyste tło samego TextDisplay
+  # (0x62050A10), nie ściana. Reszta ustawień zostaje na wypadek powrotu.
+  #
+  # Plugin podmienia WYŁĄCZNIE goły teren (HubPedestal.EXPENDABLE: powietrze,
+  # ziemia, ścieżka, trawa, żwir, piasek) — nigdy bloku postawionego przez
+  # gracza czy budowniczego. Warstwa pod podłogą zostaje nietknięta.
+  #
+  # F30 (domyka F9/F27): trzy materiały poniżej dociągnięte do produkcji, która
+  # dobrała je pod paletę monumentu. Sekcja jest wyłączona po obu stronach, więc
+  # zmiana jest bezskutkowa w czasie działania — chodzi o to, żeby porównanie
+  # repo↔produkcja przestało co przebieg zgłaszać tę samą nierozstrzygniętą
+  # trójkę. Żaden z nich nie należy do EXPENDABLE, więc podest nadal nie
+  # nadpisuje sam siebie (HubPedestalTest).
+  pedestal:
+    enabled: false
+    floor: ANDESITE
+    wall: STONE_BRICKS
+    accent: SPRUCE_PLANKS
+    light: SHROOMLIGHT
+    # Ile kratek chodnika położyć od tablicy w stronę spawnu. Nadmiar jest
+    # bezpieczny: lista dozwolonych materiałów zatrzyma chodnik na krawędzi
+    # istniejącej budowli, zamiast ją nadpisać.
+    approach: 4
+
+# ── Nagrody sezonowe ────────────────────────────────────────────────────────
+# Kto i kiedy może odebrać nagrodę za TOP 3 wysp.
+#
+# Sam warunek "miejsce w TOP 3" nie wystarcza. Ranking liczy się na żywo, więc
+# dopóki na serwerze jest mniej wysp niż miejsc na podium, KAŻDA wyspa jest
+# w TOP 3 — z wynikiem zero. Bez tych progów limitowany komplet kosmetyki
+# sezonu wyszedłby w pierwszej godzinie po starcie i nigdy już nie byłby
+# limitowany, a roszczenie liczy się per gracz, nie per wyspa, więc mnożyłoby
+# się przez liczbę członków wyspy.
+seasons:
+  # Okno odbioru. Domyślnie ZAMKNIĘTE i takie ma zostać przez cały sezon.
+  # Otwierasz je dopiero wtedy, gdy sezon jest rozstrzygnięty. Pomyłka w stronę
+  # "true" jest nieodwracalna, pomyłka w stronę "false" to jedna linijka.
+  rewards-claimable: false
+  # Najmniejszy dorobek, który w ogóle liczy się jako wynik. Wyspa poniżej progu
+  # nie jest na podium, choćby była jedyna na serwerze.
+  min-score: 1
+  # Ile wysp Z DOROBKIEM musi być w rankingu, żeby podium coś znaczyło.
+  # Liczone są wyspy powyżej min-score, bo puste konto łatwo założyć.
+  min-ranked-islands: 5
+  # P2-4: wyspa poza podium z wynikiem (bank + 500 × zadania) ≥ progu odbiera nagrodę
+  # rank 4 z season.top-rewards i 1 część kolekcji (cosmetics.yml top-rewards.4).
+  # 2 500 = np. 1 500 w banku + 2 zadania. 0 wyłącza próg (tylko podium).
+  threshold-score: 2500
+
+# ── Codzienna nagroda i seria logowań ───────────────────────────────────────
+# Dzień = data UTC. Odbiór automatyczny 2 s po wejściu, ręcznie /nagroda.
+# Kwota = base-coins + per-streak-day × min(seria, streak-cap); przy domyślnych
+# 250 + 50 × 7 = 600 monet od 7. dnia serii. Co 7. dzień serii dodatkowo
+# 1 × custom-item (Srebrny Lotos) przez outbox ekwipunku. Przerwa choćby
+# jednego dnia zeruje serię do 1 — innej kary nie ma.
+# Bonus rangi: węzeł skyblockgameplay.daily.bonus.<pct> (RankPerks), nadawany
+# w LuckPerms z kontekstem server=skyblock (vip 10, svip 20, sponsor 30, legend 50).
+daily-reward:
+  enabled: true
+  base-coins: 250
+  per-streak-day: 50
+  streak-cap: 7
+  custom-item: skyblock:token/silver_lotus
+
+# Poziom wyspy — nasza liczba (Skyllia nie zna poziomu). Liczony z trwałego dorobku:
+#   xp = (bank + 500 × zadania) / score-divisor
+#      + minionki × minion-xp
+#      + indeks rozdziału OneBlocka × chapter-xp
+#      + punkty sezonowe członków × season-point-xp
+# Poziom n wymaga base × n^1.5 xp (n=1 → 500, n=10 → ~15 800, n=100 → 500 000).
+# Awans na poziom n wpłaca reward-per-level × n monet do banku wyspy — raz na poziom
+# (idempotentnie po txId), zapisany poziom nigdy nie spada. Przeliczenie co
+# refresh-seconds dla wysp graczy online oraz na klik w Centrum Wyspy.
+island-level:
+  base: 500
+  max-level: 100
+  score-divisor: 100
+  minion-xp: 250
+  chapter-xp: 500
+  season-point-xp: 2
+  reward-per-level: 200
+  refresh-seconds: 60
+
+# Migracja na pluginy Eco (2026-09-07): zadania dzienne i sezonowe → EcoQuests, karnet →
+# EcoBattlepass, minionki → EcoPets. Gdy true: nasze moduły zadań/questów sezonowych nie
+# rejestrują listenerów ani nie liczą postępu (punkty sezonu przyznaje EcoQuests komendą
+# `sezon admin punkty`), /zadania otwiera Księgę Zadań EcoQuests, /przepustka i /sezon pass
+# otwierają karnet EcoBattlepass, a premium kupuje się przez `/przepustka premium`.
+eco-migration:
+  enabled: true

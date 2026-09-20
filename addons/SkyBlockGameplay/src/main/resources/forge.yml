@@ -1,0 +1,725 @@
+# Kuźnia Mistrzowska & Kantor Wymiany.
+#
+# cost-money jest w CAŁYCH monetach. Ekonomia SkyBlocka nie zna groszy:
+# Ui.money(long) renderuje wartość surowo, a "% 100" w tej metodzie to polska
+# reguła liczby mnogiej (wyjątek 12-14), nie przelicznik jednostek.
+#
+# Prefiks "custom:" wskazuje przedmiot z CustomItems; brak prefiksu oznacza
+# zwykły Material. Nieznany identyfikator wywala plugin przy starcie, a nie
+# przy pierwszym kliknięciu gracza.
+schema-version: 1
+
+# ── Kontrakt zlewu (F17) ───────────────────────────────────────────────────
+# Sekcja czytana WYŁĄCZNIE przez bramkę budowania (ForgeEconomyBalanceTest),
+# nigdy przez runtime — tak samo jak `balance` w oneblock.yml, minions.yml
+# i config.yml.
+#
+# Dwie reguły, bo są dwa rodzaje receptur:
+#
+#  1. Receptura, która NIC NIE ODBLOKOWUJE (klucz, żeton, płyta, kosmetyk) to
+#     czysty zlew. Jej cena nie ma czego zwracać, więc jedynym ogranicznikiem
+#     jest czas gracza: pełny łańcuch (monety wszystkich kroków + składniki po
+#     cenach skupu) nie może przekroczyć 50 h przychodu docelowego, czyli
+#     50 × config.yml:balance.target-coins-per-hour = 1 250 000 coins-eq.
+#     Skąd 50 h: to jedyna reguła cenowa zapisana w tym repo (komentarz przy
+#     minionkach niżej, minions.yml:balance) i jedyna liczba, którą F14 użyła
+#     do walidacji celu 25 000 coins/h.
+#
+#  2. Receptura na MINIONKA odblokowuje przychód, więc rządzi nią zwrot, a nie
+#     sufit — pasmo 30–80 h pilnuje MinionEconomyBalanceTest z minions.yml.
+#     Dlatego minionek diamentu wolno mieć droższy niż 50 h (pełny łańcuch
+#     2 168 836 coins-eq = 86,8 h): zwraca się w 48 h i to jest jego kontrakt.
+balance:
+  # 50 h × 25 000 coins/h. Zmiana target-coins-per-hour w config.yml wymaga
+  # przeliczenia tej liczby — bramka nie zgaduje.
+  max-coins-eq-per-recipe: 1250000
+  # Ile godzin przychodu docelowego odpowiada sufitowi wyżej. Bramka używa jej
+  # tylko w komunikacie błędu, żeby liczba w monetach miała obok siebie tę
+  # w godzinach.
+  max-hours-per-recipe: 50
+
+# ── Zniżka rangowa (F17) ───────────────────────────────────────────────────
+# Jedyna korzyść rangi wpuszczona na tempo rozwoju wyspy (decyzja właściciela
+# 2026-08-31, docs/ranks.yml). Świadomie po stronie ZLEWU, nie kranu:
+# mnożnik przychodu ×1,10 dokłada monety do obiegu i kumuluje się przez
+# minionki (F14, rozdział 6.3), a zniżka nie robi ani jednego, ani drugiego —
+# nie drukuje monet, więc żaden sufit z config.yml nie wymaga przeliczenia.
+#
+# Działa na `cost-money` KAŻDEGO kroku łańcucha (płyty, klucze, wejście
+# minionka), bo każdy krok to osobne kliknięcie w kuźni. NIE działa na
+# ulepszenia tierów minionka (minions.yml) — te płaci wspólny bank wyspy,
+# a zniżka per gracz na koszcie dzielonym znaczyłaby „zaproś sponsora na
+# zastępcę, a cała wyspa kupuje taniej”.
+#
+# LISTA, nie mapa — i to nie jest kwestia gustu: ConfigurationSection traktuje
+# kropkę w kluczu jako separator ścieżki, więc `skyblockgameplay.forge...: 15`
+# wczytałoby się jako zagnieżdżona sekcja, a nie jako jeden węzeł. Ten sam
+# powód, dla którego `required-items` niżej jest listą map.
+#
+# Sprawdzane od najwyższego procentu, wygrywa pierwsze trafienie — legend
+# dziedziczy po sponsorze i ma zapłacić stawkę legendy, nie sponsora.
+# Zakres 1..50; poza nim plugin odmawia startu (literówka 100 zrobiłaby kuźnię
+# darmową). Uprawnienia nadawane z kontekstem `server=skyblock`.
+#
+# Ile to daje: pełna ścieżka rozwoju (5× minionek diamentu + Klucz Wolframowy
+# + Napierśnik Otchłani) to 12 750 000 monet zapłaconych w kuźni = 510 h przy
+# 25 000 coins/h. Zniżka 10 % oszczędza 1 275 000 monet = 51 h, zniżka 15 % —
+# 1 912 500 monet = 76,5 h.
+discounts:
+  - permission: "skyblockgameplay.forge.discount.legend"
+    percent: 15
+  - permission: "skyblockgameplay.forge.discount.sponsor"
+    percent: 10
+  - permission: "skyblockgameplay.forge.discount.svip"
+    percent: 8
+  - permission: "skyblockgameplay.forge.discount.vip"
+    percent: 5
+
+categories:
+  metals:
+    slot: 1
+    icon: IRON_INGOT
+    name: "<white><bold>Hutnictwo & Płyty</bold></white>"
+    lore:
+      - "<gray>Przetapianie surowych metali i kucie płyt wzmocnionych.</gray>"
+  keys:
+    slot: 2
+    icon: TRIPWIRE_HOOK
+    name: "<gold><bold>Klucze do Skrzyń</bold></gold>"
+    lore:
+      - "<gray>Wykucie kluczy do tajemniczych skrzyń na Spawnie.</gray>"
+  gear:
+    slot: 3
+    icon: NETHERITE_SWORD
+    name: "<gradient:#55ffff:#ffd700><bold>Oręż i Ekwipunek</bold></gradient>"
+    lore:
+      - "<gray>Kolekcjonerskie zbroje oraz mistrzowski oręż i narzędzia.</gray>"
+  tokens:
+    slot: 4
+    icon: SUNFLOWER
+    name: "<yellow><bold>Kantor Lotosów</bold></yellow>"
+    lore:
+      - "<gray>Wymiana nadmiarowych kryształów na cenne żetony handlowe.</gray>"
+  catalysts:
+    slot: 5
+    icon: BLAZE_POWDER
+    name: "<light_purple><bold>Katalizatory & Paliwa</bold></light_purple>"
+    lore:
+      - "<gray>Wzmacniacze prędkości dla minionków.</gray>"
+  minions:
+    slot: 6
+    icon: PLAYER_HEAD
+    name: "<aqua><bold>Pety</bold></aqua>"
+    lore:
+      - "<gray>Towarzysze, którzy produkują surowce, gdy grasz.</gray>"
+      - "<dark_gray>Aktywacja i odbiór surowców: /pets.</dark_gray>"
+  talismans:
+    slot: 7
+    icon: TOTEM_OF_UNDYING
+    name: "<gradient:#4ade80:#22c55e><bold>Magiczne Talizmany</bold></gradient>"
+    lore:
+      - "<gray>Prastare amulety dające potężne pasywne bonusy na wyspie.</gray>"
+
+recipes:
+  refined_tungsten:
+    category: metals
+    name: "<white><bold>Rafinowany Wolfram</bold></white>"
+    result-item: "custom:skyblock:metal/refined_tungsten"
+    result-amount: 1
+    # F17: 25 000 -> 12 500. Cały łańcuch metali zszedł o ten sam czynnik 0,5,
+    # bo Płyta Wzmocniona (jego szczyt) musi zmieścić się pod sufitem 50 h RAZEM
+    # z tym, co się z niej kuje: przed zmianą sam jej łańcuch to było 1 703 036
+    # coins-eq (68,1 h), więc Klucz Wolframowy nie miał już gdzie się zmieścić.
+    # Jednakowy czynnik zachowuje wszystkie proporcje drabinki.
+    cost-money: 12500
+    required-items:
+      - item: "custom:skyblock:metal/raw_tungsten"
+        amount: 4
+      - item: "COAL"
+        amount: 8
+
+  tungsten_plate:
+    category: metals
+    name: "<white><bold>Płyta Wolframowa</bold></white>"
+    result-item: "custom:skyblock:metal/tungsten_plate"
+    result-amount: 1
+    # F17: 100 000 -> 50 000 (łańcuch 200 506 -> 100 506 coins-eq, 4,0 h).
+    cost-money: 50000
+    required-items:
+      - item: "custom:skyblock:metal/refined_tungsten"
+        amount: 4
+      - item: "DIAMOND"
+        amount: 1
+
+  refined_umber:
+    category: metals
+    name: "<gold><bold>Rafinowana Umbra</bold></gold>"
+    result-item: "custom:skyblock:metal/refined_umber"
+    result-amount: 1
+    # F17: 50 000 -> 25 000 (łańcuch 50 128 -> 25 128 coins-eq, 1,0 h).
+    cost-money: 25000
+    required-items:
+      - item: "custom:skyblock:metal/raw_umber"
+        amount: 4
+      - item: "COAL"
+        amount: 16
+
+  umber_plate:
+    category: metals
+    name: "<gold><bold>Płyta Umbry</bold></gold>"
+    result-item: "custom:skyblock:metal/umber_plate"
+    result-amount: 1
+    # F17: 200 000 -> 100 000 (łańcuch 401 012 -> 201 012 coins-eq, 8,0 h).
+    cost-money: 100000
+    required-items:
+      - item: "custom:skyblock:metal/refined_umber"
+        amount: 4
+      - item: "DIAMOND"
+        amount: 2
+
+  perfect_plate:
+    category: metals
+    name: "<gradient:#55ffff:#ffaa00><bold>Płyta Wzmocniona</bold></gradient>"
+    result-item: "custom:skyblock:metal/perfect_plate"
+    result-amount: 1
+    # F17: 500 000 -> 250 000. Łańcuch 1 703 036 -> 853 036 coins-eq (34,1 h).
+    # To jest element nośny całego zlewu: siedzi w Kluczu Wolframowym,
+    # Napierśniku Otchłani, Złotym Lotosie i minionku diamentu, więc jedna
+    # zmiana tutaj poprawia cztery pozycje naraz.
+    cost-money: 250000
+    required-items:
+      - item: "custom:skyblock:metal/tungsten_plate"
+        amount: 2
+      - item: "custom:skyblock:metal/umber_plate"
+        amount: 2
+      - item: "NETHERITE_INGOT"
+        amount: 1
+
+  tungsten_key:
+    category: keys
+    name: "<aqua><bold>Klucz Wolframowy</bold></aqua>"
+    result-item: "custom:skyblock:key/tungsten_key"
+    result-amount: 1
+    # F17: 1 000 000 -> 250 000. Pełny łańcuch 2 704 156 -> 1 104 156 coins-eq,
+    # czyli 108,2 h -> 44,2 h gry przy 25 000 coins/h — pod sufitem 50 h.
+    # 108 h to było 2,2× kotwica całej ekonomii (najdroższy zakup w grze
+    # = 50 h, F14 rozdział 0) za klucz do skrzyni, która celowo wypłaca
+    # 0 monet. Sam stosunek „co skrzynia oddaje do tego, co klucz kosztuje”
+    # zmian nie wymagał i się nie zmienił: oczekiwana wartość odtworzeniowa
+    # Skrzyni Tytanów to 0,62 ceny klucza przed zmianą i 0,64 po (obie strony
+    # skalują się razem), a brakującą trzecią część stanowi 17 % tabeli, której
+    # kuźnia nie potrafi wykuć w ogóle — części zbroi Otchłani (9 %),
+    # netherytowe sztabki (6 %) i Diamentowy Lotos (2 %). Zmieniła się SKALA,
+    # nie proporcja, i o skalę tu chodziło.
+    cost-money: 250000
+    required-items:
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "GOLD_INGOT"
+        amount: 32
+
+  umber_key:
+    category: keys
+    name: "<gold><bold>Klucz Umbry</bold></gold>"
+    result-item: "custom:skyblock:key/umber_key"
+    result-amount: 1
+    # F17: 500 000 -> 130 000 (łańcuch 901 812 -> 331 812 coins-eq, 13,3 h).
+    # Ta receptura konkuruje z zakupem w sklepie za 5 Srebrnych Lotosów, czyli
+    # z 5 zadaniami dziennymi = 1,67 doby = 6,7 h gry przy 4 h dziennie.
+    # Konwencja F17 dla dróg płatnych, które mają darmowy odpowiednik:
+    # DWA RAZY tyle godzin, co droga darmowa. 36,1 h to było 5,4× — receptura
+    # była martwa (F14, rozdział 5.1).
+    cost-money: 130000
+    required-items:
+      - item: "custom:skyblock:metal/umber_plate"
+        amount: 1
+      - item: "IRON_INGOT"
+        amount: 32
+
+  skeleton_key:
+    category: keys
+    name: "<white><bold>Kościany Klucz</bold></white>"
+    result-item: "custom:skyblock:key/skeleton_key"
+    result-amount: 1
+    # F17: 100 000 -> 35 000 (łańcuch 102 080 -> 37 080 coins-eq, 1,5 h).
+    # Ta sama konwencja 2× co przy Kluczu Umbry: klucz leci darmo z potworów
+    # (0,2 % przy 675 zabiciach/h = 1,35 klucza/h, czyli 0,74 h na klucz),
+    # więc droga płatna ma kosztować ~1,5 h, a nie 4,1 h.
+    cost-money: 35000
+    required-items:
+      - item: "BONE"
+        amount: 16
+      - item: "custom:skyblock:crystal/ruby"
+        amount: 2
+
+  abyss_helmet_craft:
+    category: gear
+    name: "<dark_purple><bold>Hełm Otchłani</bold></dark_purple>"
+    result-item: "custom:mystical_abyss_helmet"
+    result-amount: 1
+    cost-money: 200000
+    required-items:
+      - item: "NETHERITE_HELMET"
+        amount: 1
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 8
+
+  abyss_chestplate_craft:
+    category: gear
+    name: "<dark_purple><bold>Napierśnik Otchłani</bold></dark_purple>"
+    result-item: "custom:mystical_abyss_chestplate"
+    result-amount: 1
+    cost-money: 300000
+    required-items:
+      - item: "NETHERITE_CHESTPLATE"
+        amount: 1
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 16
+
+  abyss_leggings_craft:
+    category: gear
+    name: "<dark_purple><bold>Nogawice Otchłani</bold></dark_purple>"
+    result-item: "custom:mystical_abyss_leggings"
+    result-amount: 1
+    cost-money: 250000
+    required-items:
+      - item: "NETHERITE_LEGGINGS"
+        amount: 1
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 12
+
+  abyss_boots_craft:
+    category: gear
+    name: "<dark_purple><bold>Buty Otchłani</bold></dark_purple>"
+    result-item: "custom:mystical_abyss_boots"
+    result-amount: 1
+    cost-money: 200000
+    required-items:
+      - item: "NETHERITE_BOOTS"
+        amount: 1
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 8
+
+  aquamarine_chestplate_craft:
+    category: gear
+    name: "<aqua><bold>Napierśnik Akwamarynu</bold></aqua>"
+    result-item: "custom:mystical_aquamarine_chestplate"
+    result-amount: 1
+    cost-money: 300000
+    required-items:
+      - item: "NETHERITE_CHESTPLATE"
+        amount: 1
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/aquamarine"
+        amount: 16
+
+  titan_blade_craft:
+    category: gear
+    name: "<gradient:#55ffff:#ffd700><bold>Ostrze Tytana</bold></gradient>"
+    result-item: "custom:skyblock:weapon/titan_blade"
+    result-amount: 1
+    cost-money: 200000
+    required-items:
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+      - item: "custom:skyblock:crystal/topaz"
+        amount: 4
+      - item: "NETHERITE_SWORD"
+        amount: 1
+
+  undead_scythe_craft:
+    category: gear
+    name: "<gradient:#a855f7:#1e1b4b><bold>Kosa Nieumarłych</bold></gradient>"
+    result-item: "custom:skyblock:weapon/undead_scythe"
+    result-amount: 1
+    cost-money: 150000
+    required-items:
+      - item: "custom:skyblock:metal/umber_plate"
+        amount: 2
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 8
+      - item: "BONE"
+        amount: 32
+
+  mystic_pickaxe_craft:
+    category: gear
+    name: "<gradient:#38bdf8:#0284c7><bold>Magiczny Kilof Głębin</bold></gradient>"
+    result-item: "custom:skyblock:tool/mystic_pickaxe"
+    result-amount: 1
+    cost-money: 100000
+    required-items:
+      - item: "custom:skyblock:metal/tungsten_plate"
+        amount: 2
+      - item: "custom:skyblock:crystal/aquamarine"
+        amount: 6
+      - item: "DIAMOND_PICKAXE"
+        amount: 1
+
+  molten_pickaxe_craft:
+    category: gear
+    name: "<gradient:#f97316:#dc2626><bold>Piekielny Kilof Przetopu</bold></gradient>"
+    result-item: "custom:skyblock:tool/molten_pickaxe"
+    result-amount: 1
+    cost-money: 120000
+    required-items:
+      - item: "custom:skyblock:metal/umber_plate"
+        amount: 2
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 6
+      - item: "DIAMOND_PICKAXE"
+        amount: 1
+
+  harvest_talisman_craft:
+    category: talismans
+    name: "<gradient:#4ade80:#15803d><bold>Talizman Urodzaju</bold></gradient>"
+    result-item: "custom:skyblock:talisman/harvest_talisman"
+    result-amount: 1
+    cost-money: 80000
+    required-items:
+      - item: "custom:skyblock:crystal/peridot"
+        amount: 8
+      - item: "custom:skyblock:metal/refined_tungsten"
+        amount: 4
+      - item: "HAY_BLOCK"
+        amount: 16
+
+  miner_talisman_craft:
+    category: talismans
+    name: "<gradient:#fbbf24:#d97706><bold>Talizman Górnika</bold></gradient>"
+    result-item: "custom:skyblock:talisman/miner_talisman"
+    result-amount: 1
+    cost-money: 100000
+    required-items:
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 8
+      - item: "custom:skyblock:metal/tungsten_plate"
+        amount: 2
+      - item: "DIAMOND"
+        amount: 8
+
+  fisherman_talisman_craft:
+    category: talismans
+    name: "<gradient:#60a5fa:#1d4ed8><bold>Talizman Rybaka</bold></gradient>"
+    result-item: "custom:skyblock:talisman/fisherman_talisman"
+    result-amount: 1
+    cost-money: 90000
+    required-items:
+      - item: "custom:skyblock:crystal/aquamarine"
+        amount: 8
+      - item: "custom:skyblock:metal/refined_umber"
+        amount: 4
+      - item: "PRISMARINE_SHARD"
+        amount: 16
+
+  amber_guardian_craft:
+    category: talismans
+    name: "<gradient:#f59e0b:#b45309><bold>Amulet Bursztynowego Strażnika</bold></gradient>"
+    result-item: "custom:skyblock:talisman/amber_guardian"
+    result-amount: 1
+    cost-money: 100000
+    required-items:
+      - item: "custom:skyblock:crystal/amber"
+        amount: 2
+      - item: "custom:skyblock:metal/tungsten_plate"
+        amount: 2
+      - item: "TOTEM_OF_UNDYING"
+        amount: 1
+
+  silver_lotus_exchange:
+    category: tokens
+    name: "<gray><bold>Wymiana na Srebrny Lotos</bold></gray>"
+    result-item: "custom:skyblock:token/silver_lotus"
+    result-amount: 1
+    # F17: 100 000 -> 25 000 (łańcuch 143 200 -> 68 200 coins-eq, 2,7 h).
+    # Srebrny Lotos leci darmo z każdego zadania dziennego (3 na dobę), czyli
+    # 1,33 h gry na sztukę przy 4 h dziennie — konwencja 2× daje 2,7 h.
+    # Wymagania kryształowe zostają bez zmian: to jedyny zlew kryształów
+    # w grze i cała racja bytu kategorii „Kantor Lotosów”.
+    cost-money: 25000
+    required-items:
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 16
+      - item: "custom:skyblock:crystal/opal"
+        amount: 16
+      - item: "custom:skyblock:crystal/topaz"
+        amount: 16
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 16
+
+  # P2-2 (2026-09-05): zlew Złotego Lotosa po aktywacji premium — weteran zbiera
+  # ~8 lotosów na sezon i nie miał na co ich wydać. Skrzynia Tytanów ma EV 0,64
+  # ceny klucza, więc to świadomy zlew, nie źródło wartości.
+  titan_keys_for_gold_lotus:
+    category: tokens
+    name: "<aqua><bold>Klucze Tytanów za Złote Lotosy</bold></aqua>"
+    result-item: "custom:skyblock:key/tungsten_key"
+    result-amount: 2
+    cost-money: 0
+    required-items:
+      - item: "custom:skyblock:token/gold_lotus"
+        amount: 3
+
+  gold_lotus_exchange:
+    category: tokens
+    name: "<gold><bold>Wymiana na Złoty Lotos</bold></gold>"
+    result-item: "custom:skyblock:token/gold_lotus"
+    result-amount: 1
+    # P0-3 (2026-09-05, decyzja właściciela: ściąć): 100 000 -> 25 000
+    # i wypadła Płyta Wzmocniona ze składników. Pełny łańcuch
+    # 1 225 836 -> 297 800 coins-eq (4 × srebro 68 200 + 25 000), czyli
+    # 49,0 h -> 11,9 h. Płyta (łańcuch 853 036 = 34,1 h) była zabójcą pozycji:
+    # sama zjadała 2/3 sufitu 50 h, a jej miejsce jest w Kluczu Wolframowym
+    # i zbrojach, nie w kantorze.
+    #
+    # Uczciwa uwaga do „~2,7 h/szt.” z decyzji: dosłowne 2,7 h (67 500) jest
+    # niemożliwe bez rozbicia łańcucha kantorowego — sam wsad 4 × srebro to
+    # 272 800 = 10,9 h podłogi. 11,9 h czyta się jako zawór catch-up
+    # (przegapiony tydzień dzienników = jeden wieczór grindu), nie jako
+    # konkurencję dla drogi darmowej (15 zadań/tydzień, limit czasowy).
+    # Komplet na premium tą drogą: 6 × 297 800 = 1 786 800 = 71 h za sezon.
+    #
+    # UWAGA dla następnej fali: Złoty Lotos ma w grze DOKŁADNIE JEDEN zlew —
+    # aktywację toru premium karnetu sezonowego. F20 przeniosła tę cenę
+    # z kodu do `config.yml: season.pass.premium-lotus-cost` i ustawiła 6
+    # (było 32). Powód: sklep 2b2t.pl nie ma SKU ani na Złoty Lotos, ani na
+    # karnet, więc 32 nie chroniło przychodu, tylko czyniło tor premium
+    # nieosiągalnym — 32 tygodniowe kamienie milowe (DailyQuestService:
+    # 15 zadań w tygodniu = 1 Złoty Lotos) to 32 tygodnie, czyli 4 sezony
+    # po 56 dni.
+    cost-money: 25000
+    required-items:
+      - item: "custom:skyblock:token/silver_lotus"
+        amount: 4
+
+  amber_catalyst_fuel:
+    category: catalysts
+    name: "<yellow><bold>Bursztynowy Katalizator Paliwa</bold></yellow>"
+    result-item: "custom:skyblock:crystal/amber"
+    result-amount: 2
+    # F27: 50 000 -> 280 000. Bursztyn jest od 2026-09-01 JEDYNYM paliwem
+    # minionków (minions.yml:fuels), więc jego cena przestała być ceną ozdoby,
+    # a stała się ceną mnożnika przychodu ×1,50 na 12 h.
+    #
+    # Wyprowadzenie — z reguły, która już stała w minions.yml:balance, tylko
+    # nikt nie przyłożył jej do paliwa. Zwrot inwestycji w minionka ma leżeć
+    # w paśmie 30–80 h RÓWNIEŻ przy stale podpiętym paliwie:
+    #     inwestycja / (1,5 × przychód_T5 − cena_paliwa / 12 h) >= 30 h
+    # Wiążący jest minionek diamentu (inwestycja 3 720 000 monet, przychód
+    # 89 994 coins/h): cena >= 12 × (1,5 × 89 994 − 3 720 000/30) = 131 892.
+    # Drugi w kolejce szmaragd wymaga 95 844. Najmniejsza okrągła liczba, która
+    # spełnia oba przy KONSERWATYWNYM liczeniu bramki (samo cost-money, bez
+    # składników) to 140 000 za sztukę, czyli 280 000 za partię dwóch.
+    #
+    # Ile było przedtem: 27 110 coins-eq/szt. dawało minionkowi diamentu zwrot
+    # 28,0 h, a szmaragdowi 28,4 h — oba PONIŻEJ własnego progu 30 h.
+    #
+    # Pełny łańcuch: 284 220 coins-eq = 11,4 h, pod sufitem 50 h. Bursztyn ze
+    # skrzyń (Tytanów 12 % × 8, Podziemi 8 % × 2) jest tym samym ruchem wart
+    # 142 110 coins-eq za sztukę — i to on, a nie kuźnia, jest drogą tanią.
+    cost-money: 280000
+    required-items:
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 8
+      - item: "BLAZE_ROD"
+        amount: 4
+      - item: "LAVA_BUCKET"
+        amount: 1
+
+  # --- Minionki -------------------------------------------------------------
+  # Cena wejścia jest policzona, nie zgadnięta: to około 50 godzin przychodu
+  # danego minionka na 1. poziomie po cenach skupu ze sklepu. Dzięki temu żaden
+  # typ nie jest matematycznie lepszy od pozostałych — wybór to kwestia tego,
+  # jakiego surowca potrzebujesz, a nie tego, który typ szybciej się zwraca.
+  # Każda receptura żąda kryształu ze źródła NIEZALEŻNEGO od minionków
+  # (stoniarka, plony, łowienie, kuźnia), żeby nie powstała pętla, w której
+  # minionek jest potrzebny do zdobycia minionka.
+
+  minion_cobblestone:
+    category: minions
+    name: "<gray><bold>Minionek Bruku</bold></gray>"
+    result-command: "ecopets give %player% cobblestone"
+    icon: COBBLESTONE
+    result-amount: 1
+    cost-money: 6000
+    required-items:
+      - item: "COBBLESTONE"
+        amount: 512
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_wheat:
+    category: minions
+    name: "<yellow><bold>Minionek Pszenicy</bold></yellow>"
+    result-command: "ecopets give %player% wheat"
+    icon: WHEAT
+    result-amount: 1
+    cost-money: 20000
+    required-items:
+      - item: "WHEAT"
+        amount: 384
+      - item: "custom:skyblock:crystal/peridot"
+        amount: 1
+
+  minion_oak:
+    category: minions
+    name: "<gold><bold>Minionek Dębu</bold></gold>"
+    result-command: "ecopets give %player% oak"
+    icon: OAK_LOG
+    result-amount: 1
+    cost-money: 25000
+    # F27: bursztyn -> cytryn. Bursztyn był tu „kryształem z kuźni” z listy
+    # źródeł niezależnych od minionków, ale przestał być kryształem: jest
+    # jedynym paliwem w grze i kosztuje 142 110 coins-eq za sztukę. Minionek
+    # dębu zarabia 1 912 coins/h, więc pełny łańcuch skoczyłby z 80 756 na
+    # 310 756 coins-eq — 162 h zwrotu za maszynę z pasma 30–80 h. Bramka by
+    # tego nie zobaczyła, bo liczy wejście po samym `cost-money`.
+    # Cytryn to ten sam kryształ, którego żądają bruk, piasek, węgiel, miedź,
+    # redstone i lapis, i którego minionek dębu NIE produkuje (jego bonus to
+    # perydot, F14) — warunek „nie z własnego minionka” zostaje spełniony.
+    # Łańcuch: 27 036 coins-eq = 1,08 h.
+    required-items:
+      - item: "OAK_LOG"
+        amount: 384
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_diamond:
+    category: minions
+    name: "<aqua><bold>Minionek Diamentu</bold></aqua>"
+    result-command: "ecopets give %player% diamond"
+    icon: DIAMOND
+    result-amount: 1
+    cost-money: 1250000
+    required-items:
+      - item: "DIAMOND"
+        amount: 256
+      - item: "custom:skyblock:crystal/aquamarine"
+        amount: 3
+      - item: "custom:skyblock:metal/perfect_plate"
+        amount: 1
+
+  minion_sand:
+    category: minions
+    name: "<yellow><bold>Minionek Piasku</bold></yellow>"
+    result-command: "ecopets give %player% sand"
+    icon: SAND
+    result-amount: 1
+    cost-money: 13000
+    required-items:
+      - item: "SAND"
+        amount: 512
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_coal:
+    category: minions
+    name: "<dark_gray><bold>Minionek Węgla</bold></dark_gray>"
+    result-command: "ecopets give %player% coal"
+    icon: COAL
+    result-amount: 1
+    cost-money: 48000
+    required-items:
+      - item: "COAL"
+        amount: 384
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_redstone:
+    category: minions
+    name: "<red><bold>Minionek Redstone</bold></red>"
+    result-command: "ecopets give %player% redstone"
+    icon: REDSTONE
+    result-amount: 1
+    cost-money: 60000
+    required-items:
+      - item: "REDSTONE"
+        amount: 384
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_lapis:
+    category: minions
+    name: "<blue><bold>Minionek Lapisu</bold></blue>"
+    result-command: "ecopets give %player% lapis"
+    icon: LAPIS_LAZULI
+    result-amount: 1
+    cost-money: 62000
+    required-items:
+      - item: "LAPIS_LAZULI"
+        amount: 384
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_copper:
+    category: minions
+    name: "<gold><bold>Minionek Miedzi</bold></gold>"
+    result-command: "ecopets give %player% copper"
+    icon: COPPER_INGOT
+    result-amount: 1
+    cost-money: 72000
+    required-items:
+      - item: "COPPER_INGOT"
+        amount: 384
+      - item: "custom:skyblock:crystal/citrine"
+        amount: 1
+
+  minion_quartz:
+    category: minions
+    name: "<white><bold>Minionek Kwarcu</bold></white>"
+    result-command: "ecopets give %player% quartz"
+    icon: QUARTZ
+    result-amount: 1
+    cost-money: 81000
+    required-items:
+      - item: "QUARTZ"
+        amount: 256
+      - item: "custom:skyblock:crystal/topaz"
+        amount: 1
+
+  minion_iron:
+    category: minions
+    name: "<white><bold>Minionek Żelaza</bold></white>"
+    result-command: "ecopets give %player% iron"
+    icon: IRON_INGOT
+    result-amount: 1
+    cost-money: 140000
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 256
+      - item: "custom:skyblock:crystal/topaz"
+        amount: 2
+
+  minion_gold:
+    category: minions
+    name: "<yellow><bold>Minionek Złota</bold></yellow>"
+    result-command: "ecopets give %player% gold"
+    icon: GOLD_INGOT
+    result-amount: 1
+    cost-money: 190000
+    required-items:
+      - item: "GOLD_INGOT"
+        amount: 192
+      - item: "custom:skyblock:crystal/topaz"
+        amount: 2
+
+  minion_emerald:
+    category: minions
+    name: "<green><bold>Minionek Szmaragdu</bold></green>"
+    result-command: "ecopets give %player% emerald"
+    icon: EMERALD
+    result-amount: 1
+    cost-money: 1030000
+    required-items:
+      - item: "EMERALD"
+        amount: 192
+      - item: "custom:skyblock:crystal/onyx"
+        amount: 3

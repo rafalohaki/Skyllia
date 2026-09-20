@@ -1,0 +1,96 @@
+name: SkyBlockGameplay
+version: '${version}'
+main: org.rafalohaki.wpmecore.addons.skyblock.SkyBlockGameplay
+api-version: '1.21.4'
+folia-supported: true
+authors: [rafalohaki]
+description: Profesjonalna ekonomia i petla progresji SkyBlock dla Skyllia.
+dependencies:
+  server:
+    WpmeCore:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    Skyllia:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    Vault:
+      load: BEFORE
+      required: true
+      join-classpath: false
+    CustomItems:
+      load: BEFORE
+      required: true
+      join-classpath: false
+    EvenMoreFish:
+      load: AFTER
+      required: false
+      join-classpath: true
+    # PlaceholderAPI jest wtyczka Bukkita. Deklarujemy wylacznie kolejnosc
+    # ladowania, BEZ join-classpath: dolaczenie do grupy classloaderow Bukkita
+    # wciagneloby packetevents z przeslonietym Adventure i wywalilo enable na
+    # IncompatibleClassChangeError. Dostep do PAPI jest w calosci refleksyjny
+    # (SeasonPlaceholderModule + odizolowany classloader), tak jak w module Chat.
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
+      join-classpath: false
+
+permissions:
+  skyblockgameplay.use:
+    default: true
+  skyblockgameplay.bank.withdraw:
+    description: Pozwala wyplacac ze wspolnego banku wyspy (rola wyspy nadal jest sprawdzana).
+    default: true
+  skyblockgameplay.wands.use:
+    default: true
+  skyblockgameplay.qol.craft:
+    description: Wirtualny stol rzemieślniczy (/craft, /workbench).
+    default: true
+  skyblockgameplay.qol.enderchest:
+    description: Skrzynia kresu komenda (/enderchest, /ec).
+    default: true
+  # F17: znizka rangowa w Kuzni Mistrzowskiej. Procenty siedza w forge.yml
+  # (sekcja `discounts`), tutaj tylko deklaracja wezlow. Nadawane z kontekstem
+  # server=skyblock (docs/ranks.yml), wiec na anarchii i w lobby sa niewidoczne.
+  # Wezla kanonicznego wpme.* NIE MA celowo: para „krotki + kanoniczny" istnieje
+  # tam, gdzie sa DWAJ czytelnicy (runtime i kontrakt sklepu 2b2tbridge);
+  # tego wezla czyta wylacznie ForgeConfig.discountPercent.
+  # Drabinka znizek jest ciagla od vip: 5 / 8 / 10 / 15 procent
+  # (forge.yml -> discounts). Wczesniej vip i svip mialy procent w configu,
+  # ale nie mialy deklaracji ani nadania — czyli placily jak weteran.
+  skyblockgameplay.forge.discount.vip:
+    description: Znizka 5 procent na koszt wykucia w kuzni (ranga vip).
+    default: false
+  skyblockgameplay.forge.discount.svip:
+    description: Znizka 8 procent na koszt wykucia w kuzni (ranga svip).
+    default: false
+  skyblockgameplay.forge.discount.sponsor:
+    description: Znizka 10 procent na koszt wykucia w kuzni (ranga sponsor).
+    default: false
+  skyblockgameplay.forge.discount.legend:
+    description: Znizka 15 procent na koszt wykucia w kuzni (ranga legend).
+    default: false
+  # Perki rang (RankPerks) — lekki P2W bez PvP: tempo rozwoju własnej wyspy,
+  # zero przewagi nad innymi graczami. Liczy się NAJWYŻSZY nadany numer, więc
+  # ranga dostaje dokładnie jeden węzeł z każdej rodziny. Drabinka i nadania:
+  # docs/ranks.yml (sekcja „tempo rozwoju wyspy”), nadaje je
+  # scripts/wpme-ranks.py --apply. Kontekst: server=skyblock.
+  skyblockgameplay.minions.extra.*:
+    description: Dodatkowe sloty minionkow na wyspie (1..10; baza to 5 z minions.yml).
+    default: false
+  skyblockgameplay.sell.bonus.*:
+    description: Bonus procentowy do sprzedazy rozdzka (1..50; baza 90 procent z config.yml).
+    default: false
+  skyblockgameplay.daily.bonus.*:
+    description: Bonus procentowy do monet z codziennej nagrody (1..100).
+    default: false
+  skyblockgameplay.fly:
+    description: Lot na wlasnej wyspie (/fly, gasnie po wyjsciu z terenu wyspy).
+    default: false
+  skyblockgameplay.admin:
+    default: op
+  skyblockgameplay.admin.backfill:
+    description: Pozwala uruchamiac reczny backfill historii ekonomi (komenda admin backfill).
+    default: op

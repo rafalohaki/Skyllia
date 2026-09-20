@@ -1,0 +1,325 @@
+schema: 1
+
+settings:
+  checkpoint-every: 25
+  mob-warning-ticks: 40
+  # Czy zmianę rozdziału ogłaszać na czacie serwera (społeczna pętla postępu).
+  broadcast-phases: true
+
+# Kontrakt balansowy OneBlocka — pilnowany przez bramkę budowania
+# (OneBlockEconomyBalanceTest), nie przez runtime. Wartości poniżej są jedynymi
+# pokrętłami tempa zarobku; tabele `blocks` mają się do nich dostosować, a nie
+# odwrotnie.
+#
+# Punkt odniesienia: przewodnik postępu nazywa „bogatą wyspą” saldo
+# 25 000 coins (SkyBlockProgressiveObjectiveService, etap 10). Cała ekonomia
+# serwera jest zbudowana na regule „cena = 50 h przychodu, który odblokowuje”
+# (forge.yml, minions.yml). Godzina aktywnego kopania w OSTATNIM rozdziale ma
+# więc dawać jedną „bogatą wyspę”: 25 000 coins/h. Przy zweryfikowanym w
+# audycie tempie 1 rozbicie/s to 25 000 / 3600 ≈ 6,94 coins na rozbicie.
+#
+# F14: sufit zszedł z 8.0 na 6.9. F7 zostawiła zapas „na kryształ z pity i
+# zaokrąglenia”, ale 8.0 × 3600 to 28 800 coins/h, czyli 115 % tempa
+# docelowego — sufit był ustawiony POWYŻEJ liczby, której miał pilnować.
+# 6.7 × 3600 = 24 120 coins/h. Reszta budżetu (25 000) idzie na kanały, które
+# lecą RÓWNOLEGLE do kopania: zadania dzienne (151 coins/h przy 4 h gry na
+# dobę), nagroda sezonowa (223) i Skrzynia Podziemi z lotosów za zadania
+# (574). Suma: 23 677 + 948 = 24 625 coins/h — patrz raport F14.
+balance:
+  # Sufit wartości oczekiwanej JEDNEGO rozbicia w rozdziale terminalnym (tym,
+  # który nie ma następnika). Ten rozdział jest kranem bez dna — jego tempo to
+  # trwały przychód serwera. Liczone po cenach skupu ze sklepu, razem z
+  # kryształem bonusowym i jego licznikiem pity.
+  terminal-max-value-per-break: 6.7
+  # Sufit CAŁKOWITEJ wypłaty rozdziału skończonego: blocks-required × EV.
+  # Taki rozdział to treść jednorazowa (faza awansuje sama i nie da się w niej
+  # zostać), więc liczy się suma, nie tempo. Dwie „bogate wyspy” = 50 000.
+  finite-max-chapter-value: 50000
+
+phases:
+  - id: poczatek
+    biome: PLAINS  # sielskie niebo
+    name: "<green><bold>Początek</bold></green>"
+    subtitle: "Podstawowe surowce i zwierzęta"
+    icon: GRASS_BLOCK
+    blocks-required: 250
+    # Faza 1 = materiał wyłącznie do ręcznego kopania z dropem (wzorzec AOneBlock
+    # Plains): kamienie wchodzą dopiero w Podziemiach, gdzie start jest
+    # ubezpieczony skryptowanymi deskami poniżej.
+    blocks:
+      GRASS_BLOCK: 40.0
+      DIRT: 28.0
+      OAK_LOG: 22.0
+      CLAY: 10.0
+    # Skryptowany start jak fixedBlocks w AOneBlock (pozycje liczone od 1 —
+    # nasz licznik fazowy): trawa, trawa, dwa drewna => stół + drewniany kilof
+    # zanim losowanie zdąży cokolwiek utrudnić.
+    guaranteed:
+      1: GRASS_BLOCK
+      2: GRASS_BLOCK
+      3: OAK_LOG
+      4: OAK_LOG
+      50: OAK_LOG
+      200: COAL_ORE
+    bonus:
+      item: "skyblock:crystal/citrine"
+      chance: 0.15
+      pity: 400
+    mobs:
+      spawn-chance: 3.0
+      table:
+        PIG: 30.0
+        COW: 30.0
+        SHEEP: 20.0
+        CHICKEN: 20.0
+    milestones:
+      100:
+        name: "<gold>Pierwsza setka</gold>"
+        rolls: 2
+        rewards:
+          - {item: "skyblock:token/silver_lotus", amount: 1, weight: 40}
+          - {material: IRON_INGOT, amount: 8, weight: 60}
+      250:
+        name: "<gold>Koniec początku</gold>"
+        rolls: 1
+        rewards:
+          - {material: COAL, amount: 16, weight: 50}
+          - {material: IRON_INGOT, amount: 4, weight: 50}
+
+  - id: podziemia
+    biome: DARK_FOREST  # mrok i ponure niebo
+    name: "<gray><bold>Podziemia i Jaskinia</bold></gray>"
+    subtitle: "Kamień, węgiel i pierwsze rudy"
+    icon: STONE
+    blocks-required: 500
+    blocks:
+      STONE: 35.0
+      COBBLESTONE: 20.0
+      COAL_ORE: 15.0
+      IRON_ORE: 12.0
+      COPPER_ORE: 8.0
+      GRAVEL: 5.0
+      GOLD_ORE: 5.0
+    guaranteed:
+      150: IRON_ORE
+    bonus:
+      item: "skyblock:metal/raw_tungsten"
+      chance: 0.3
+      pity: 350
+    mobs:
+      spawn-chance: 4.0
+      table:
+        ZOMBIE: 40.0
+        SKELETON: 30.0
+        SPIDER: 20.0
+        BAT: 10.0
+    milestones:
+      250:
+        name: "<gold>Połowa podziemi</gold>"
+        rolls: 2
+        rewards:
+          - {item: "skyblock:token/silver_lotus", amount: 1, weight: 30}
+          - {material: IRON_INGOT, amount: 12, weight: 70}
+
+  - id: zima
+    biome: SNOWY_PLAINS  # śnieżyca nad wyspą
+    name: "<aqua><bold>Zima i Tundra</bold></aqua>"
+    subtitle: "Śnieg, lód i lapis"
+    icon: SNOW_BLOCK
+    blocks-required: 750
+    blocks:
+      SNOW_BLOCK: 30.0
+      PACKED_ICE: 25.0
+      SPRUCE_LOG: 20.0
+      LAPIS_ORE: 10.0
+      BLUE_ICE: 10.0
+      DIAMOND_ORE: 5.0
+    guaranteed:
+      400: DIAMOND_ORE
+    bonus:
+      item: "skyblock:crystal/onyx"
+      chance: 0.25
+      pity: 450
+    mobs:
+      spawn-chance: 3.5
+      table:
+        POLAR_BEAR: 40.0
+        FOX: 40.0
+        STRAY: 20.0
+    milestones:
+      750:
+        name: "<gold>Mroźny finał</gold>"
+        rolls: 2
+        rewards:
+          - {item: "skyblock:token/silver_lotus", amount: 2, weight: 40}
+          - {material: DIAMOND, amount: 2, weight: 60}
+
+  - id: pustynia
+    biome: DESERT  # palące słońce
+    name: "<yellow><bold>Pustynia i Sawanna</bold></yellow>"
+    subtitle: "Piasek, terakota i redstone"
+    icon: SAND
+    blocks-required: 1000
+    blocks:
+      SAND: 30.0
+      SANDSTONE: 20.0
+      ACACIA_LOG: 15.0
+      RED_SAND: 15.0
+      TERRACOTTA: 10.0
+      REDSTONE_ORE: 10.0
+    bonus:
+      item: "skyblock:crystal/topaz"
+      chance: 0.25
+      pity: 450
+    mobs:
+      spawn-chance: 3.5
+      table:
+        HUSK: 50.0
+        RABBIT: 30.0
+        CAMEL: 20.0
+    milestones:
+      500:
+        name: "<gold>Połowa pustyni</gold>"
+        rolls: 1
+        rewards:
+          - {material: REDSTONE, amount: 24, weight: 60}
+          - {item: "skyblock:token/silver_lotus", amount: 1, weight: 40}
+
+  - id: dzungla
+    biome: JUNGLE  # gęsta zieleń
+    name: "<dark_green><bold>Dżungla i Bagno</bold></dark_green>"
+    subtitle: "Drewno tropikalne, błoto i szmaragdy"
+    icon: JUNGLE_LOG
+    blocks-required: 1500
+    # F14: EMERALD_ORE 10,0 -> 4,5. Ten rozdział jest SKOŃCZONY, więc pilnuje
+    # go suma (`balance.finite-max-chapter-value`), a nie tempo. Przy Fortunie
+    # III szmaragd wart 440 zamiast 200 podnosił sumę rozdziału z 34 150 na
+    # 70 150 coins, czyli 1,4× ponad sufit 50 000. Waga zeszła o czynnik
+    # Fortuny, zwolniona poszła w mech (klimat, zero wartości). Po zmianie:
+    # 33 850 coins z Fortuną III i 17 650 bez niej.
+    blocks:
+      JUNGLE_LOG: 25.0
+      MUD: 20.0
+      MANGROVE_LOG: 15.0
+      MOSS_BLOCK: 20.5
+      BAMBOO_BLOCK: 15.0
+      EMERALD_ORE: 4.5
+    bonus:
+      item: "skyblock:crystal/peridot"
+      chance: 0.3
+      pity: 350
+    mobs:
+      spawn-chance: 4.0
+      table:
+        PARROT: 35.0
+        FROG: 35.0
+        SLIME: 30.0
+    milestones:
+      1000:
+        name: "<gold>Serce dżungli</gold>"
+        rolls: 2
+        rewards:
+          - {item: "skyblock:token/silver_lotus", amount: 2, weight: 35}
+          - {material: EMERALD, amount: 8, weight: 65}
+
+  - id: pieklo
+    biome: NETHER_WASTES  # karmazynowa mgła
+    name: "<red><bold>Piekło (Nether)</bold></red>"
+    subtitle: "Netherrack, kwarc i zanieczyszczone złoto"
+    icon: NETHERRACK
+    blocks-required: 2000
+    blocks:
+      NETHERRACK: 30.0
+      SOUL_SAND: 15.0
+      BASALT: 15.0
+      NETHER_QUARTZ_ORE: 15.0
+      NETHER_GOLD_ORE: 10.0
+      MAGMA_BLOCK: 8.0
+      GLOWSTONE: 5.0
+      ANCIENT_DEBRIS: 2.0
+    guaranteed:
+      1000: ANCIENT_DEBRIS
+    bonus:
+      item: "skyblock:metal/raw_umber"
+      chance: 0.2
+      pity: 500
+    mobs:
+      spawn-chance: 5.0
+      table:
+        PIGLIN: 30.0
+        ZOMBIFIED_PIGLIN: 30.0
+        MAGMA_CUBE: 20.0
+        BLAZE: 10.0
+        WITHER_SKELETON: 10.0
+    milestones:
+      2000:
+        name: "<gold>Przez piekło</gold>"
+        rolls: 2
+        rewards:
+          - {item: "skyblock:token/gold_lotus", amount: 1, weight: 25}
+          - {material: NETHERITE_SCRAP, amount: 2, weight: 75}
+
+  - id: kres
+    biome: THE_END  # czarne niebo z gwiazdami
+    name: "<light_purple><bold>Kres i Nieskończoność</bold></light_purple>"
+    subtitle: "Endstone, obsydian i bloki surowców"
+    icon: END_STONE
+    blocks-required: 3000
+    # ONEBLOCK-1: ten rozdział NIE MA następnika — gracz zostaje w nim do końca
+    # sezonu, więc jego tabela to trwałe tempo przychodu całego serwera, a nie
+    # jednorazowa treść. Poprzednia wersja dawała bloki surowców
+    # (DIAMOND_BLOCK/EMERALD_BLOCK/GOLD_BLOCK po 10 wag) = 439,5 coins
+    # oczekiwane na rozbicie, czyli ~1,6 mln coins/h pod autoklikerem.
+    # Teraz: rudy zamiast bloków i rzadkości o rząd wielkości niższe.
+    #
+    # F14: F7 policzyła tę tabelę na 7,26 coins/rozbicie po WANILIOWYM dropie
+    # bez Fortuny. `payOutBreak` woła jednak `block.getDrops(tool, player)`,
+    # więc Fortuna III mnoży rudy 2,20× i ta sama tabela dawała naprawdę
+    # 10,03 coins/rozbicie (36 100 coins/h). Wagi trzech rud zeszły więc o ten
+    # sam czynnik 2,2 (2,0/0,4/0,3 -> 0,9/0,18/0,12), a obsydian z 6 na 3 —
+    # co przywraca DOKŁADNIE wartość, którą F7 zamierzała, tyle że przy
+    # prawdziwym sufcie narzędzia. Zwolniona waga poszła w END_STONE (klimat
+    # rozdziału, zero wartości). Wynik: 2,21 z rud + 0,80 z obsydianu + 3,77
+    # z opalu = 6,58 coins/rozbicie = 23 677 coins/h, pod sufitem 6.7.
+    # Bez Fortuny ten sam rozdział daje 5,37 — Fortuna jest tu progresją,
+    # a nie ukrytym podwojeniem budżetu.
+    #
+    # To rozdział endgame'owy: jego wartością jest NIESKOŃCZONOŚĆ, nie tempo.
+    # Wcześniejsze rozdziały wolno mieć bogatsze na rozbicie, bo kończą się po
+    # `blocks-required` i nie da się w nich zostać.
+    blocks:
+      END_STONE: 49.5
+      PURPUR_BLOCK: 25.0
+      END_STONE_BRICKS: 15.0
+      PURPUR_PILLAR: 6.0
+      OBSIDIAN: 3.0
+      GOLD_ORE: 0.9
+      DIAMOND_ORE: 0.18
+      EMERALD_ORE: 0.12
+      ANCIENT_DEBRIS: 0.3
+    guaranteed:
+      5000: ANCIENT_DEBRIS
+    bonus:
+      item: "skyblock:crystal/opal"
+      chance: 0.35
+      pity: 300
+    mobs:
+      spawn-chance: 4.0
+      table:
+        ENDERMAN: 60.0
+        SHULKER: 25.0
+        ENDERMITE: 15.0
+    milestones:
+      3000:
+        name: "<gold>Kres i dalej</gold>"
+        rolls: 3
+        rewards:
+          - {item: "skyblock:token/gold_lotus", amount: 1, weight: 30}
+          - {item: "skyblock:token/diamond_lotus", amount: 1, weight: 5}
+          - {material: DIAMOND, amount: 8, weight: 65}
+      5000:
+        name: "<gold>Nieskończoność</gold>"
+        rolls: 3
+        rewards:
+          - {item: "skyblock:token/gold_lotus", amount: 2, weight: 40}
+          - {material: NETHERITE_INGOT, amount: 1, weight: 60}

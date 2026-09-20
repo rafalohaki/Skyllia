@@ -1,0 +1,141 @@
+# Kolekcje kosmetyczne SkyBlocka.
+#
+# Sezony są eventowe: resetują się, wyspy nie. Każdy sezon ma przypisaną jedną
+# kolekcję, a każdy wydany egzemplarz nosi znacznik sezonu i zdobytego miejsca,
+# więc po samym przedmiocie widać, skąd pochodzi. Dzięki temu "LIMITOWANA
+# EDYCJA" z opisu przedmiotu znaczy coś sprawdzalnego.
+#
+# Egzemplarze są soulbound — bramka handlowa nie pozwoli ich sprzedać ani zużyć
+# w kuźni. To celowe: kosmetyka ma zostać dowodem, a nie towarem.
+#
+# Ten sam katalog obsługuje sprzedaż w sklepie: komenda administracyjna wydaje
+# dowolną część z dowolnym znacznikiem, więc płatności nie muszą znać
+# wewnętrznych identyfikatorów.
+schema-version: 1
+enabled: true
+
+# Sezon -> kolekcja. Sezon bez wpisu nie wydaje kosmetyki.
+season-collections:
+  1: abyss
+  2: aquamarine
+  3: blood
+  4: flowering
+  5: forest
+  6: love
+  7: molten
+  8: rainbow
+  9: runic
+  10: sandnite
+
+# Miejsce w rankingu -> ile części kolekcji dostaje wyspa.
+# Cztery to komplet; kolejność wydawania jest taka jak w "pieces".
+top-rewards:
+  1: 4
+  2: 2
+  3: 1
+  # P2-4: próg sezonu (wirtualne 4. miejsce) — 1 część kolekcji dla każdej wyspy nad progiem.
+  4: 1
+  # 2026-09-10: TOP 10 — 1 część kolekcji. Miejsce 50 nie ma części, dostaje tytuł wyspy.
+  10: 1
+
+collections:
+  abyss:
+    name: "<dark_purple><bold>Set Otchłani</bold></dark_purple>"
+    core: mystical_core_abyss
+    content-version: 1
+    pieces:
+      - mystical_abyss_helmet
+      - mystical_abyss_chestplate
+      - mystical_abyss_leggings
+      - mystical_abyss_boots
+
+  aquamarine:
+    name: "<aqua><bold>Set Akwamarynu</bold></aqua>"
+    core: mystical_core_aquamarine
+    content-version: 1
+    pieces:
+      - mystical_aquamarine_helmet
+      - mystical_aquamarine_chestplate
+      - mystical_aquamarine_leggings
+      - mystical_aquamarine_boots
+
+  blood:
+    name: "<dark_red><bold>Set Krwi</bold></dark_red>"
+    core: mystical_core_blood
+    content-version: 1
+    pieces:
+      - mystical_blood_helmet
+      - mystical_blood_chestplate
+      - mystical_blood_leggings
+      - mystical_blood_boots
+
+  flowering:
+    name: "<light_purple><bold>Set Rozkwitu</bold></light_purple>"
+    core: mystical_core_flowering
+    content-version: 1
+    pieces:
+      - mystical_flowering_helmet
+      - mystical_flowering_chestplate
+      - mystical_flowering_leggings
+      - mystical_flowering_boots
+
+  forest:
+    name: "<dark_green><bold>Set Pradawnego Lasu</bold></dark_green>"
+    core: mystical_core_forest
+    content-version: 1
+    pieces:
+      - mystical_forest_helmet
+      - mystical_forest_chestplate
+      - mystical_forest_leggings
+      - mystical_forest_boots
+
+  love:
+    name: "<#ff5f8f><bold>Set Serca</bold></#ff5f8f>"
+    core: mystical_core_love
+    content-version: 1
+    pieces:
+      - mystical_love_helmet
+      - mystical_love_chestplate
+      - mystical_love_leggings
+      - mystical_love_boots
+
+  molten:
+    name: "<#ff7a18><bold>Set Magmy</bold></#ff7a18>"
+    core: mystical_core_molten
+    content-version: 1
+    pieces:
+      - mystical_molten_helmet
+      - mystical_molten_chestplate
+      - mystical_molten_leggings
+      - mystical_molten_boots
+
+  rainbow:
+    name: "<gradient:#ff5fd7:#67e8f9><bold>Set Pryzmatu</bold></gradient>"
+    core: mystical_core_rainbow
+    content-version: 1
+    pieces:
+      - mystical_rainbow_helmet
+      - mystical_rainbow_chestplate
+      - mystical_rainbow_leggings
+      - mystical_rainbow_boots
+
+  runic:
+    name: "<blue><bold>Set Runiczny</bold></blue>"
+    core: mystical_core_runic
+    content-version: 1
+    pieces:
+      - mystical_runic_helmet
+      - mystical_runic_chestplate
+      - mystical_runic_leggings
+      - mystical_runic_boots
+
+  sandnite:
+    name: "<gold><bold>Set Piaskowej Nocy</bold></gold>"
+    core: mystical_core_sandnite
+    content-version: 1
+    pieces:
+      - mystical_sandnite_helmet
+      - mystical_sandnite_chestplate
+      - mystical_sandnite_leggings
+      - mystical_sandnite_boots
+

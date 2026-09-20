@@ -1,0 +1,44 @@
+{
+  "pinned_9b1574d": "/Users/devin/pufferhost/skyllia/api/build/libs/api-3.0-281a1aad.jar",
+  "totalSkylliaClasses": 118,
+  "discoveredManagers": {
+    "IslandMemberQuery": "fr.euphyllia.skyllia.api.database.IslandMemberQuery",
+    "SkyblockCache": "ABSENT",
+    "SkyblockManager": "ABSENT"
+  },
+  "keyClassesPresentOnPinnedJar": {
+    "fr.euphyllia.skyllia.api.SkylliaAPI": true,
+    "fr.euphyllia.skyllia.api.skyblock.Island": true,
+    "fr.euphyllia.skyllia.api.skyblock.Players": true,
+    "fr.euphyllia.skyllia.api.coordinate.RegionCoordinate": true,
+    "fr.euphyllia.skyllia.api.database.IslandMemberQuery": true,
+    "fr.euphyllia.skyllia.api.event.SkyblockDeleteEvent": true
+  },
+  "pinnedMethodSurface": {
+    "fr.euphyllia.skyllia.api.SkylliaAPI": {
+      "getIslandByPlayerId": true,
+      "getIslandByIslandId": true,
+      "getIslandByOwner": true,
+      "createIsland": true,
+      "isWorldSkyblock": true,
+      "getFlagRegistry": true,
+      "getFlagModuleManager": true,
+      "getBiomesImpl": true,
+      "getTrustService": true
+    },
+    "fr.euphyllia.skyllia.api.skyblock.Island": {
+      "getId": true,
+      "getOwner": true,
+      "getMember": true,
+      "getRegionCoordinate": true,
+      "getSize": true,
+      "isDisable": true,
+      "isInside": true,
+      "updateMember": true,
+      "removeMember": true,
+      "addWarps": true,
+      "getWarps": true,
+      "getWarpByName": true
+    }
+  }
+}

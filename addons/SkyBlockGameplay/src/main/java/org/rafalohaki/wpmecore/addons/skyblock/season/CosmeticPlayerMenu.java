@@ -50,6 +50,8 @@ public final class CosmeticPlayerMenu {
     static final int SEPARATOR_ROW = 4;
     /** Podgląd noszonych części: HEAD, CHEST, LEGS, FEET. */
     static final int[] WORN_SLOTS = {46, 47, 48, 49};
+    /** Przycisk zbiorczy: zdejmuje wszystkie noszone części naraz. */
+    private static final int SLOT_UNEQUIP_ALL = 51;
     private static final int SLOT_CLOSE = 53;
 
     private static final EquipmentSlot[] BODY_ORDER = {
@@ -164,8 +166,8 @@ public final class CosmeticPlayerMenu {
         menu.decoration(SLOT_INFO, Ui.item(Material.BOOK, miniMessage,
                 "<aqua><bold>Twoja kolekcja</bold></aqua>",
                 List.of(
-                        "<gray>Kliknij część, aby ją założyć.</gray>",
-                        "<gray>Kliknij noszoną, aby ją zdjąć.</gray>",
+                        "<gray>LPM na części: załóż.</gray>",
+                        "<gray>PPM na noszonej: zdejmij.</gray>",
                         "<gray>Egzemplarze są soulbound — nie sprzedasz ich.</gray>",
                         // Gracz z pustą kolekcją musi wiedzieć, skąd brać części —
                         // inaczej menu jest ślepym zaułkiem.
@@ -208,6 +210,7 @@ public final class CosmeticPlayerMenu {
             String pieceId = catalogPieceOf(equipped, pieces);
             if (pieceId != null) {
                 final String id = pieceId;
+                // PPM zdejmuje (proszony gest); LPM też — stary nawyk.
                 menu.set(WORN_SLOTS[i], wornIcon(equipped, pieces.get(pieceId), id),
                         (viewer, click) -> unequip(viewer, id));
             } else if (equipped != null && !equipped.isEmpty()) {
@@ -223,7 +226,41 @@ public final class CosmeticPlayerMenu {
             }
         }
 
+        // Zdejmij wszystko — zbiorcza akcja dla pełnego stroju.
+        boolean anyWorn = false;
+        for (EquipmentSlot bs : BODY_ORDER) {
+            if (catalogPieceOf(player.getInventory().getItem(bs), pieces) != null) {
+                anyWorn = true;
+                break;
+            }
+        }
+        if (anyWorn) {
+            menu.set(SLOT_UNEQUIP_ALL, Ui.item(Material.BARRIER, miniMessage,
+                    "<red><bold>Zdejmij wszystko</bold></red>",
+                    List.of("<gray>Zdejmuje wszystkie noszone części.</gray>",
+                            "<yellow>Kliknij, aby zdjąć strój.</yellow>"),
+                    false),
+                    (viewer, click) -> unequipAll(viewer));
+        }
+
         menu.close(SLOT_CLOSE, Ui.closeButton(miniMessage));
+    }
+
+    /** Zdejmuje wszystkie noszone części naraz; puste sloty pomija. */
+    void unequipAll(@NotNull Player player) {
+        Map<String, CosmeticCatalog.Collection> pieces = pieceIndex();
+        int removed = 0;
+        for (EquipmentSlot bodySlot : BODY_ORDER) {
+            ItemStack equipped = player.getInventory().getItem(bodySlot);
+            String pieceId = catalogPieceOf(equipped, pieces);
+            if (pieceId != null) {
+                unequip(player, pieceId);
+                removed++;
+            }
+        }
+        if (removed == 0) {
+            send(player, "<gray>Nic nie jest założone.</gray>");
+        }
     }
 
     /** Zakłada część z ekwipunku na jej slot ciała. Idempotentne. */
@@ -286,7 +323,7 @@ public final class CosmeticPlayerMenu {
     private @NotNull ItemStack wornIcon(@NotNull ItemStack piece,
                                         @NotNull CosmeticCatalog.Collection collection,
                                         @NotNull String pieceId) {
-        return provenanceIcon(piece, collection, pieceId, "Noszona. Kliknij, aby zdjąć.");
+        return provenanceIcon(piece, collection, pieceId, "Noszona — PPM: zdejmij.");
     }
 
     /**

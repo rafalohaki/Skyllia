@@ -222,7 +222,11 @@ public final class IslandCreationMenus {
                             case MODE_DISABLED -> viewer.sendMessage(Ui.component(mm, "<red>" + result.message() + "</red>"));
                             case ALREADY_HAS_ISLAND -> viewer.sendMessage(Ui.component(mm, "<red>" + result.message() + "</red>"));
                             case UNKNOWN_TYPE -> viewer.sendMessage(Ui.component(mm, "<red>" + result.message() + "</red>"));
-                            case ALREADY_CREATING -> viewer.sendMessage(Ui.component(mm, "<yellow>" + result.message() + " ID=" + result.existingOp().operationId() + "</yellow>"));
+                            case ALREADY_CREATING -> {
+                                viewer.sendMessage(Ui.component(mm, "<yellow>" + result.message() + "</yellow>"));
+                                plugin.getLogger().info("Island create dedupe player=" + viewer.getUniqueId()
+                                        + " op=" + result.operationId());
+                            }
                             case FAILURE -> viewer.sendMessage(Ui.component(mm, "<red>" + result.message() + "</red>"));
                         }
                     });

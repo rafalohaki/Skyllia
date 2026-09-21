@@ -1961,7 +1961,9 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
                     creationCoordinator.create(player, createType).whenComplete((result, ex) -> {
                         getServer().getGlobalRegionScheduler().run(SkyBlockGameplay.this, task -> {
                             if (ex != null) {
-                                player.sendMessage(miniMessage.deserialize("<red>Nie udało się utworzyć wyspy: " + ex.getMessage() + "</red>"));
+                                player.sendMessage(miniMessage.deserialize("<red>Nie udało się utworzyć wyspy — spróbuj ponownie za chwilę.</red>"));
+                                getLogger().log(java.util.logging.Level.WARNING,
+                                        "Island create failed for " + player.getUniqueId(), ex);
                                 return;
                             }
                             if (result == null) return;

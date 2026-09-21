@@ -95,7 +95,7 @@ public final class IslandPrestigeMenu {
         if (context == null) {
             player.closeInventory();
             player.sendMessage(Ui.component(mm,
-                    "<red>Najpierw utwórz wyspę przez <yellow>/is create</yellow>.</red>"));
+                    "<red>Najpierw utwórz wyspę komendą <yellow>/is</yellow>.</red>"));
             return;
         }
         if (!opening.add(player.getUniqueId())) {

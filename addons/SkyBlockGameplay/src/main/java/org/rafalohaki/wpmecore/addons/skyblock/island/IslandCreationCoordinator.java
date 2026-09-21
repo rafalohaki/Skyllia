@@ -87,7 +87,7 @@ public final class IslandCreationCoordinator {
         if (skyllia.purgeSoftDeletedIsland(uuid) < 0) {
             plugin.getLogger().warning("SKY-2: purge soft-deleted wyspy nie powiodl sie, create przerwany player=" + uuid);
             return CompletableFuture.completedFuture(CreateResult.failure(
-                    "Czyszczenie poprzedniej wyspy nie powiodlo sie. Sprobuj ponownie za chwile."));
+                    "Nie udało się wyczyścić poprzedniej wyspy. Spróbuj ponownie za chwilę."));
         }
         if (skyllia.islandOf(uuid).isPresent()) {
             return CompletableFuture.completedFuture(CreateResult.alreadyHasIsland());
@@ -130,7 +130,7 @@ public final class IslandCreationCoordinator {
                 } catch (Exception e) {
                     plugin.getLogger().log(Level.WARNING, "Skyllia createIsland failed operationId=" + operationId, e);
                     updateState(uuid, IslandCreationState.FAILED);
-                    return CreateResult.failure("Skyllia create failed: " + e.getMessage());
+                    return CreateResult.failure("Nie udało się utworzyć wyspy — spróbuj ponownie za chwilę.");
                 }
                 if (!created) {
                     updateState(uuid, IslandCreationState.FAILED);
@@ -138,7 +138,7 @@ public final class IslandCreationCoordinator {
                         updateState(uuid, IslandCreationState.READY);
                         return CreateResult.success(mode, operationId);
                     }
-                    return CreateResult.failure("Utworzenie wyspy nie powiodlo sie.");
+                    return CreateResult.failure("Utworzenie wyspy nie powiodło się. Spróbuj ponownie za chwilę.");
                 }
                 updateState(uuid, IslandCreationState.INITIALIZING);
                 var view = skyllia.islandOf(uuid);
@@ -174,7 +174,7 @@ public final class IslandCreationCoordinator {
                     skyllia.invalidateIslandCache(uuid);
                     updateState(uuid, IslandCreationState.FAILED);
                     return CreateResult.failure(
-                            "Tworzenie wyspy nie powiodlo sie (swiat nie zostal zbudowany). Sprobuj ponownie za chwile.");
+                            "Tworzenie wyspy nie powiodło się. Spróbuj ponownie za chwilę.");
                 }
                 if (anchorHolder[0] != null) {
                     // SkylliaAPI.createIsland (w odróżnieniu od wbudowanego /is create)
@@ -190,8 +190,9 @@ public final class IslandCreationCoordinator {
                 skyllia.invalidateIslandCache(uuid);
                 return CreateResult.success(mode, operationId, anchorHolder[0]);
             } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING, "Island create failed operationId=" + operationId, e);
                 updateState(uuid, IslandCreationState.FAILED);
-                return CreateResult.failure(e.getMessage());
+                return CreateResult.failure("Tworzenie wyspy nie powiodło się — spróbuj ponownie za chwilę.");
             }
         });
     }
@@ -404,16 +405,18 @@ public final class IslandCreationCoordinator {
             return new CreateResult(Kind.SUCCESS, mode, opId, "Wyspa utworzona: " + mode.id(), null, anchor);
         }
         public static CreateResult alreadyHasIsland() {
-            return new CreateResult(Kind.ALREADY_HAS_ISLAND, null, null, "Masz juz aktywna wyspe. Mozesz miec tylko jedna.", null);
+            return new CreateResult(Kind.ALREADY_HAS_ISLAND, null, null, "Masz już aktywną wyspę. Możesz mieć tylko jedną.", null);
         }
         public static CreateResult modeDisabled(IslandMode mode) {
-            return new CreateResult(Kind.MODE_DISABLED, mode, null, "Tryb " + mode.id() + " jest w konserwacji.", null);
+            return new CreateResult(Kind.MODE_DISABLED, mode, null, "Tryb " + mode.id() + " jest chwilowo niedostępny.", null);
         }
         public static CreateResult unknownType(String raw) {
-            return new CreateResult(Kind.UNKNOWN_TYPE, null, null, "Nieznany typ wyspy: " + raw, null);
+            // raw trzymane poza komunikatem — idzie wprost do MiniMessage,
+            // a to wejście wpisane przez gracza na czacie (wstrzyknięcie tagów).
+            return new CreateResult(Kind.UNKNOWN_TYPE, null, null, "Nie ma takiego trybu wyspy.", null);
         }
         public static CreateResult alreadyCreating(CreationOperation op) {
-            return new CreateResult(Kind.ALREADY_CREATING, op.mode(), op.operationId(), "Tworzenie juz w toku: " + op.state(), op);
+            return new CreateResult(Kind.ALREADY_CREATING, op.mode(), op.operationId(), "Twoja wyspa już się tworzy — poczekaj chwilę...", op);
         }
         public static CreateResult failure(String msg) {
             return new CreateResult(Kind.FAILURE, null, null, msg, null);

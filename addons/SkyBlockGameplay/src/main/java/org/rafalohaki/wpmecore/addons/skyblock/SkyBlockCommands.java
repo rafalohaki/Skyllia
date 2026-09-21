@@ -586,7 +586,7 @@ final class SkyBlockCommands {
 
     int executeSeasonEnd(CommandSender sender) {
         if (!sender.hasPermission("skyblockgameplay.admin")) {
-            sender.sendMessage(Component.text("Nie masz uprawnienia do tej komendy.",
+            sender.sendMessage(Component.text("Nie masz uprawnień do tej komendy.",
                     NamedTextColor.RED));
             return 0;
         }
@@ -794,7 +794,7 @@ final class SkyBlockCommands {
                                     "Nie udało się odczytać stanu OneBlock.", NamedTextColor.RED)), null);
                             return null;
                         }),
-                () -> sender.sendMessage(Component.text("Nie masz wyspy.", NamedTextColor.RED)));
+                () -> sender.sendMessage(Component.text("Nie masz wyspy. Utwórz ją komendą /is.", NamedTextColor.RED)));
     }
 
     void oneblockRepair(CommandSender sender) {
@@ -817,7 +817,7 @@ final class SkyBlockCommands {
                 case WORLD_UNLOADED -> player.sendMessage(plugin.miniMessage().deserialize(
                         "<red>Świat Twojej wyspy nie jest obecnie załadowany.</red>"));
             }
-        }, () -> sender.sendMessage(Component.text("Nie masz wyspy.", NamedTextColor.RED)));
+        }, () -> sender.sendMessage(Component.text("Nie masz wyspy. Utwórz ją komendą /is.", NamedTextColor.RED)));
     }
 
     void oneblockSetPrompt(Player player, String phaseId, int progress) {
@@ -837,7 +837,7 @@ final class SkyBlockCommands {
                 player.sendMessage(Component.text(
                         "Nieznany rozdział albo to nie wyspa OneBlock.", NamedTextColor.RED));
             }
-        }, () -> player.sendMessage(Component.text("Nie masz wyspy.", NamedTextColor.RED)));
+        }, () -> player.sendMessage(Component.text("Nie masz wyspy. Utwórz ją komendą /is.", NamedTextColor.RED)));
     }
 
     void teleportToGlobalSpawn(Player player) {
@@ -940,7 +940,7 @@ final class SkyBlockCommands {
             return 0;
         }
         if (!player.hasPermission("skyblockgameplay.use")) {
-            player.sendMessage(Component.text("Nie masz uprawnienia do tej komendy.",
+            player.sendMessage(Component.text("Nie masz uprawnień do tej komendy.",
                     NamedTextColor.RED));
             return 0;
         }

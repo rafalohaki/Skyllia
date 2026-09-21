@@ -192,7 +192,7 @@ public final class IslandCenterMenu {
     public void open(@NotNull Player player) {
         var viewOpt = skyllia.islandOf(player.getUniqueId());
         if (viewOpt.isEmpty()) {
-            player.sendMessage(Ui.component(mm, "<red>Nie masz wyspy. Utwórz ją przez <yellow>/is create</yellow>.</red>"));
+            player.sendMessage(Ui.component(mm, "<red>Nie masz wyspy. Utwórz ją komendą <yellow>/is</yellow>.</red>"));
             openCreationFallback(player);
             return;
         }

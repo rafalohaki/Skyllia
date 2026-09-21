@@ -68,7 +68,7 @@ public final class IslandBankMenu {
         IslandView context = skyllia.islandOf(player.getUniqueId()).orElse(null);
         if (context == null) {
             player.sendMessage(Ui.component(miniMessage,
-                    "<red>Najpierw utwórz wyspę przez <yellow>/stworzwyspe</yellow>. "
+                    "<red>Najpierw utwórz wyspę komendą <yellow>/is</yellow>. "
                             + "Jeśli właśnie dołączyłeś, spróbuj ponownie za chwilę.</red>"));
             return;
         }

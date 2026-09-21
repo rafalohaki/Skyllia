@@ -71,6 +71,11 @@ public final class CosmeticPlayerMenu {
      * {@code null} = ścieżka legacy bez zmian.
      */
     @Nullable private final java.util.function.IntFunction<String> editionNameResolver;
+    /**
+     * Opcjonalny dostawca bieżącego sezonu — zasila kafle podglądu kolekcji
+     * w siatce, gdy gracz ma ją pustą. {@code null} = podgląd wyłączony.
+     */
+    @Nullable private final java.util.function.IntSupplier currentSeason;
 
     public CosmeticPlayerMenu(@NotNull org.bukkit.plugin.java.JavaPlugin plugin,
                               @NotNull MenuService menus,
@@ -92,6 +97,20 @@ public final class CosmeticPlayerMenu {
                               @NotNull CosmeticCatalog catalog,
                               @Nullable CustomItemService customItems,
                               @Nullable java.util.function.IntFunction<String> editionNameResolver) {
+        this(plugin, menus, miniMessage, catalog, customItems, editionNameResolver, null);
+    }
+
+    /**
+     * Wariant pełny: {@code currentSeason} (nullable) wskazuje sezon, którego
+     * kolekcja trafia do siatki jako podgląd części do zdobycia.
+     */
+    public CosmeticPlayerMenu(@NotNull org.bukkit.plugin.java.JavaPlugin plugin,
+                              @NotNull MenuService menus,
+                              @NotNull MiniMessage miniMessage,
+                              @NotNull CosmeticCatalog catalog,
+                              @Nullable CustomItemService customItems,
+                              @Nullable java.util.function.IntFunction<String> editionNameResolver,
+                              @Nullable java.util.function.IntSupplier currentSeason) {
         this.plugin = plugin;
         this.menus = menus;
         this.miniMessage = miniMessage;
@@ -99,6 +118,7 @@ public final class CosmeticPlayerMenu {
         this.customItems = customItems;
         this.itemNames = new ItemNames(customItems);
         this.editionNameResolver = editionNameResolver;
+        this.currentSeason = currentSeason;
     }
 
     /**
@@ -171,6 +191,13 @@ public final class CosmeticPlayerMenu {
             menu.set(slot, ownedIcon(item, pieces.get(pieceId), id),
                     (viewer, click) -> wear(viewer, id));
             slot++;
+        }
+
+        // Podgląd kolekcji: pusty ekwipunek nie może zostawiać gracza ze
+        // ścianą szkła — wolne sloty siatki pokazują części bieżącego sezonu
+        // z progiem rankingu, żeby było wiadomo, jak je zdobyć.
+        if (slot <= LAST_PIECE_SLOT) {
+            fillPreview(menu, player, pieces, slot, storage);
         }
 
         Ui.separatorRow(menu, miniMessage, SEPARATOR_ROW);
@@ -382,6 +409,81 @@ public final class CosmeticPlayerMenu {
             return EquipmentSlot.FEET;
         }
         return null;
+    }
+
+    /**
+     * Wypełnia resztę siatki podglądem części kolekcji bieżącego sezonu,
+     * których gracz nie posiada (ani w plecaku, ani noszonych). Dekoracje —
+     * klik nic nie robi, egzemplarz nigdy nie opuszcza menu.
+     */
+    private void fillPreview(@NotNull MenuService.Menu menu, @NotNull Player player,
+                             @NotNull Map<String, CosmeticCatalog.Collection> pieces,
+                             int startSlot, @NotNull ItemStack[] storage) {
+        if (currentSeason == null || customItems == null) {
+            return;
+        }
+        CosmeticCatalog.Collection collection = catalog.forSeason(currentSeason.getAsInt())
+                .orElse(null);
+        if (collection == null) {
+            return;
+        }
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (ItemStack item : storage) {
+            String id = catalogPieceOf(item, pieces);
+            if (id != null) {
+                owned.add(id);
+            }
+        }
+        for (EquipmentSlot bodySlot : BODY_ORDER) {
+            String id = catalogPieceOf(player.getInventory().getItem(bodySlot), pieces);
+            if (id != null) {
+                owned.add(id);
+            }
+        }
+        int slot = startSlot;
+        List<String> collectionPieces = collection.pieces();
+        for (int i = 0; i < collectionPieces.size() && slot <= LAST_PIECE_SLOT; i++) {
+            String pieceId = collectionPieces.get(i);
+            if (owned.contains(pieceId)) {
+                continue;
+            }
+            int rank = worstQualifyingRank(i);
+            final int previewSlot = slot;
+            customItems.create(pieceId).ifPresentOrElse(
+                    stack -> menu.decoration(previewSlot, Ui.decorate(stack, miniMessage,
+                            "<gray><bold>" + itemNames.customLabel(pieceId) + "</bold></gray>",
+                            List.of(
+                                    "<gray>Kolekcja: " + collection.name() + "</gray>",
+                                    rank > 0
+                                            ? "<gray>Zdobędziesz za TOP <white>" + rank
+                                                    + "</white> sezonu.</gray>"
+                                            : "<gray>Zdobędziesz w evencie sezonowym.</gray>",
+                                    "<yellow>Ranking i nagrody: /nagrody</yellow>"),
+                            false)),
+                    () -> menu.decoration(previewSlot, Ui.item(Material.PAPER, miniMessage,
+                            "<gray><bold>" + itemNames.customLabel(pieceId) + "</bold></gray>",
+                            List.of("<gray>Kolekcja: " + collection.name() + "</gray>",
+                                    "<yellow>Ranking i nagrody: /nagrody</yellow>"),
+                            false)));
+            slot++;
+        }
+    }
+
+    /**
+     * Najniższe (najłatwiejsze) miejsce w rankingu, które wciąż wydaje część
+     * o danym indeksie: {@code topRewards} mówi, ile początkowych części
+     * dostaje dane miejsce, więc część i wymaga progu >= i+1. Zwraca -1, gdy
+     * żadne skonfigurowane miejsce jej nie wydaje.
+     */
+    private int worstQualifyingRank(int pieceIndex) {
+        int required = pieceIndex + 1;
+        int worst = -1;
+        for (Map.Entry<Integer, Integer> reward : catalog.topRewards().entrySet()) {
+            if (reward.getValue() >= required) {
+                worst = Math.max(worst, reward.getKey());
+            }
+        }
+        return worst;
     }
 
     private @NotNull String bodyLabelOf(@NotNull String pieceId) {

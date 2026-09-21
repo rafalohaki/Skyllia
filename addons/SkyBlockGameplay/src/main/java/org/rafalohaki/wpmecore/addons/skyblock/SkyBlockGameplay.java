@@ -664,7 +664,8 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
                             : e.displayName() + " ("
                                     + org.rafalohaki.wpmecore.addons.skyblock.season.SeasonLabels.rangeFor(e)
                                     + ")";
-                });
+                },
+                topRewardCoordinator()::getCachedCurrentSeason);
         // Runda 4: zamknięcie sezonu wyłącznie komendą operatora
         // (/sezon zamknij --confirm). Nagrody kosmetyczne rang 1..3 idą przez
         // recordClaim koordynatora (deterministyczny dedupe) + istniejący tor

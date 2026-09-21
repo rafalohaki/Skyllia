@@ -73,6 +73,22 @@ class MinionDaoTest {
     }
 
     @Test
+    void tryInsertWithinLimitRejectsDuplicatePosition() {
+        UUID islandId = UUID.randomUUID();
+        assertTrue(dao.tryInsertWithinLimit(sample(islandId, "w", 10.5, 64, 10.5), 5).join());
+
+        assertFalse(dao.tryInsertWithinLimit(sample(islandId, "w", 10.5, 64, 10.5), 5).join());
+        assertEquals(1, dao.loadAll().join().size());
+    }
+
+    @Test
+    void tryInsertWithinLimitAllowsSameCoordsOnOtherIsland() {
+        assertTrue(dao.tryInsertWithinLimit(sample(UUID.randomUUID(), "w", 1.5, 64, 1.5), 5).join());
+        assertTrue(dao.tryInsertWithinLimit(sample(UUID.randomUUID(), "w", 1.5, 64, 1.5), 5).join());
+        assertEquals(2, dao.loadAll().join().size());
+    }
+
+    @Test
     void saveUpsertsStorageAndTier() {
         UUID islandId = UUID.randomUUID();
         MinionRecord record = sample(islandId, "w", 1.5, 64, 1.5);

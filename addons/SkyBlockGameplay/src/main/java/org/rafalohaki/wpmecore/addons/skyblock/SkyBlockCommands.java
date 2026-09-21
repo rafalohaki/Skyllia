@@ -114,6 +114,8 @@ final class SkyBlockCommands {
             "<font:wpme:icons>\uE011</font> <yellow>/nagroda</yellow> <gray>— codzienna nagroda i seria logowań</gray>",
             "<font:wpme:icons>\uE00E</font> <yellow>/sezon</yellow> <gray>— punkty sezonowe, questy i TOP-10</gray>",
             "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> <gray>— karnet sezonowy i nagrody</gray>",
+            "<font:wpme:icons>\uE034</font> <yellow>/nagrody</yellow> <gray>— ranking sezonu i odbiór nagród TOP wyspy</gray>",
+            "<font:wpme:icons>\uE008</font> <yellow>/kosmetyki</yellow> <gray>— kolekcja strojów zdobytych za TOP sezonu</gray>",
             "<font:wpme:icons>\uE00A</font> <yellow>/kuznia</yellow> <gray>— kuźnia: talizmany, ulepszenia i minionki za monety</gray>",
             "<font:wpme:icons>\uE00D</font> <yellow>Minionki</yellow> <gray>— stawiasz je na wyspie; kliknięcie otwiera zarządzanie</gray>",
             "<font:wpme:icons>\uE010</font> <yellow>/bank</yellow> <gray>— wspólny bank wyspy</gray>",

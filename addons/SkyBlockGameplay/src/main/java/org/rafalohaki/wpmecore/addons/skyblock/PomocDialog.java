@@ -82,6 +82,8 @@ final class PomocDialog {
                             "<font:wpme:icons>\uE00E</font> <yellow>/sezon</yellow> — punkty sezonowe, questy i TOP-10 wysp",
                             "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> — karnet sezonowy: 75 poziomów nagród",
                             "<font:wpme:icons>\uE011</font> <yellow>/nagroda</yellow> — codzienna nagroda i seria logowań",
+                            "<font:wpme:icons>\uE034</font> <yellow>/nagrody</yellow> — ranking sezonu i odbiór nagród TOP wyspy",
+                            "<font:wpme:icons>\uE008</font> <yellow>/kosmetyki</yellow> — zakładanie strojów kolekcji sezonowej",
                             "<white>15 zadań dnia wyspy w tygodniu = Złoty Lotos dla właściciela.</white>")),
             new Topic("Kuźnia i minionki", "Talizmany, ulepszenia, minionki",
                     List.of(

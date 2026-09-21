@@ -70,7 +70,8 @@ public final class SeasonCommand {
             "<gray>Sezon to wyścig na czas: punkty otwierają poziomy karnetu"
                     + " <dark_gray>(</dark_gray><yellow>/przepustka</yellow><dark_gray>)</dark_gray>."
                     + " <white>Zadania sezonowe</white> niżej robisz <white>raz na sezon</white>"
-                    + " — to rozbieg; dalsze poziomy niesie <white>łowienie ryb</white>.</gray>";
+                    + " — to rozbieg; dalsze poziomy niesie <white>łowienie ryb</white>."
+                    + " Nagrody TOP wysp (części kolekcji, tytuły): <yellow>/nagrody</yellow>.</gray>";
     /**
      * F24: było „Odblokowane questy: %d/40”. Liczba 40 to iloczyn progów
      * ({@link DefaultSeasonPointService#UNLOCK_THRESHOLDS} ×
@@ -84,7 +85,8 @@ public final class SeasonCommand {
             "<gray>Sezon to wyścig na czas: punkty z zadań dnia i jednorazowych misji sezonu"
                     + " <dark_gray>(</dark_gray><yellow>/zadania</yellow><dark_gray>)</dark_gray> oraz"
                     + " z łowienia ryb liczą się do rankingu i nagród sezonu; karnet z nagrodami:"
-                    + " <yellow>/przepustka</yellow>.</gray>";
+                    + " <yellow>/przepustka</yellow>. Nagrody TOP wysp (części kolekcji, tytuły):"
+                    + " <yellow>/nagrody</yellow>.</gray>";
     private static final String PERSONAL_POINTS_LINE_ECO =
             "<gray>Twoje punkty: <white><bold>%d</bold></white></gray>";
     private static final String PERSONAL_POINTS_LINE =

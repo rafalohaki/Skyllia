@@ -93,6 +93,28 @@ menu:
         - '<dark_gray>Sam karnet otworzysz komendą /przepustka</dark_gray>'
       command: 'sezon'
       required-plugin: ''
+    # 2026-09-21: kuźnia i kolekcja sezonowa nie miały ŻADNEGO wejścia z /menu —
+    # ta sama usterka co sezon w F24 (jedyne dojście = komenda na ślepo).
+    # Kafelek kosmetyki siada obok sezonu (28), kuźnia w rzędzie progresji (32);
+    # oba sloty są wolne — rezerwacje i zajęte pozycje jak wyżej.
+    collection:
+      slot: 28
+      material: NETHERITE_CHESTPLATE
+      name: '<white><font:wpme:icons></font></white> <light_purple><bold>Kolekcja sezonowa</bold></light_purple>'
+      lore:
+        - '<gray>Części stroju wygrywasz za TOP miejsca sezonu — /nagrody.</gray>'
+        - '<gray>Tu zakładasz i zdejmujesz zdobyte części.</gray>'
+      command: 'kosmetyki'
+      required-plugin: ''
+    forge:
+      slot: 32
+      material: ANVIL
+      name: '<white><font:wpme:icons></font></white> <gold><bold>Kuźnia i kantor</bold></gold>'
+      lore:
+        - '<gray>Ulepszenia, talizmany i minionki za monety.</gray>'
+        - '<gray>W kantorze wymienisz Złote Lotosy na klucze.</gray>'
+      command: 'kuznia'
+      required-plugin: ''
 
 # Plac startowy jest zarządzany jawnie przez SkyBlockGameplay. Dzięki temu
 # wejście z Velocity, /spawn, hologramy i skocznia korzystają z jednego układu

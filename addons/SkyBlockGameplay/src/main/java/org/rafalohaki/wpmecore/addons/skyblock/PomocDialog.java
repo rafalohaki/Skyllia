@@ -80,7 +80,7 @@ final class PomocDialog {
                     List.of(
                             "<font:wpme:icons>\uE00D</font> <yellow>/zadania</yellow> — dzienne zadania wyspy z nagrodami i punktami sezonu",
                             "<font:wpme:icons>\uE00E</font> <yellow>/sezon</yellow> — punkty sezonowe, questy i TOP-10 wysp",
-                            "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> — karnet sezonowy: 75 poziomów nagród",
+                            "<font:wpme:icons>\uE011</font> <yellow>/przepustka</yellow> — karnet sezonowy: 28 poziomów nagród",
                             "<font:wpme:icons>\uE011</font> <yellow>/nagroda</yellow> — codzienna nagroda i seria logowań",
                             "<font:wpme:icons>\uE034</font> <yellow>/nagrody</yellow> — ranking sezonu i odbiór nagród TOP wyspy",
                             "<font:wpme:icons>\uE008</font> <yellow>/kosmetyki</yellow> — zakładanie strojów kolekcji sezonowej",

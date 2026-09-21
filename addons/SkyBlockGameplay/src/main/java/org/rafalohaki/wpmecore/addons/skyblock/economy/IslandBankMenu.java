@@ -133,7 +133,8 @@ public final class IslandBankMenu {
             long amount = amounts.get(index);
             menu.set(DEPOSIT_SLOTS[index], Ui.item(Material.LIME_DYE, miniMessage,
                             "<green>Wpłać " + Ui.money(amount) + "</green>",
-                            List.of("<gray>Portfel → bank wyspy</gray>"), false),
+                            List.of("<gray>Portfel → bank wyspy</gray>",
+                                    "<yellow>Kliknij, aby wpłacić.</yellow>"), false),
                     (viewer, click) -> transfer(viewer, amount, true));
             boolean allowed = context.canWithdraw()
                     && player.hasPermission(WITHDRAW_PERMISSION);
@@ -144,7 +145,10 @@ public final class IslandBankMenu {
                                     ? "<gray>Wypłata tylko dla OWNER/CO_OWNER</gray>"
                                     : "<gray>Trwa weryfikacja roli…</gray>",
                             context.roleKnown()
-                                    ? List.of("<gray>Bank wyspy → portfel</gray>")
+                                    ? (allowed
+                                            ? List.of("<gray>Bank wyspy → portfel</gray>",
+                                                    "<yellow>Kliknij, aby wypłacić.</yellow>")
+                                            : List.of("<gray>Bank wyspy → portfel</gray>"))
                                     : List.of("<gray>Zamknij menu i spróbuj ponownie za chwilę.</gray>"),
                             false),
                     (viewer, click) -> transfer(viewer, amount, false));
@@ -153,7 +157,8 @@ public final class IslandBankMenu {
                         "<green><bold>Wpłać wszystko</bold></green>",
                         List.of("<gray>Cały portfel → bank wyspy</gray>",
                                 "<dark_gray>Przelew obejmie także kwoty mniejsze niż "
-                                        + Ui.money(smallestAmount) + ".</dark_gray>"),
+                                        + Ui.money(smallestAmount) + ".</dark_gray>",
+                                "<yellow>Kliknij, aby wpłacić.</yellow>"),
                         false),
                 (viewer, click) -> transferAll(viewer, true));
         boolean canWithdrawAll = context.canWithdraw()
@@ -163,7 +168,10 @@ public final class IslandBankMenu {
                         canWithdrawAll ? "<gold><bold>Wypłać wszystko</bold></gold>"
                                 : "<gray>Wypłata tylko dla OWNER/CO_OWNER</gray>",
                         List.of("<gray>Cały bank wyspy → portfel</gray>",
-                                "<dark_gray>Umożliwia bezpieczne wyzerowanie banku.</dark_gray>"),
+                                "<dark_gray>Umożliwia bezpieczne wyzerowanie banku.</dark_gray>",
+                                canWithdrawAll
+                                        ? "<yellow>Kliknij, aby wypłacić.</yellow>"
+                                        : "<red>Nie masz uprawnień do wypłaty.</red>"),
                         false),
                 (viewer, click) -> transferAll(viewer, false));
         menu.close(40, Ui.closeButton(miniMessage));

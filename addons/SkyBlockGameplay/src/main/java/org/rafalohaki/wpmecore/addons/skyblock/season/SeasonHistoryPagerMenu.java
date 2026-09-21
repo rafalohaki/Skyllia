@@ -90,7 +90,7 @@ public final class SeasonHistoryPagerMenu {
     static final int SLOT_NEXT = 51;
     static final int SLOT_CLOSE_UI = 53;
 
-    private static final String TITLE = "<dark_gray>Historia Edycji</dark_gray>";
+    private static final String TITLE = "<gold><bold>Historia Edycji</bold></gold>";
     private static final DateTimeFormatter DAY =
             DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.ROOT);
 

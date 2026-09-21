@@ -37,7 +37,7 @@ public final class SeasonCloseConfirmMenu {
     static final int SLOT_SUMMARY = 13;
     static final int SLOT_CONFIRM = 15;
 
-    private static final String TITLE = "<dark_gray>Potwierdź zamknięcie sezonu</dark_gray>";
+    private static final String TITLE = "<gold><bold>Potwierdź zamknięcie sezonu</bold></gold>";
 
     private final JavaPlugin plugin;
     private final MenuService menus;

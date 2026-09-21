@@ -128,6 +128,12 @@ public class MinionMenu {
             if (index < orderedKeys.size()) {
                 String key = orderedKeys.get(index);
                 ItemStack icon = iconFor(key, (int) Math.min(contents.get(key), 64));
+                long total = contents.get(key);
+                icon.editMeta(meta -> meta.lore(java.util.List.of(
+                        Ui.component(miniMessage,
+                                "<gray>W magazynie: <white>" + total + " szt.</white></gray>"),
+                        Ui.component(miniMessage,
+                                "<yellow>Kliknij, aby wyjąć do ekwipunku.</yellow>"))));
                 menu.set(slot, icon, storageClick(minionId, menu, key));
             } else {
                 menu.decoration(slot, Ui.item(Material.BLACK_STAINED_GLASS_PANE, miniMessage,
@@ -152,7 +158,8 @@ public class MinionMenu {
                         record.compactorEnabled()
                                 ? "<green>Auto-Kompaktor: WŁĄCZONY</green>"
                                 : "<red>Auto-Kompaktor: WYŁĄCZONY</red>",
-                        java.util.List.of("<gray>Automatycznie zbija 9 surowców w blok.</gray>"),
+                        java.util.List.of("<gray>Automatycznie zbija 9 surowców w blok.</gray>",
+                                "<yellow>Kliknij, aby przełączyć.</yellow>"),
                         record.compactorEnabled()),
                 compactorClick(minionId, menu));
 
@@ -169,20 +176,23 @@ public class MinionMenu {
                                     + "</white> z konta wyspy</gray>",
                             "<gray>+ <white>" + next.upgradeCostItems() + " x "
                                     + itemNames.vanillaLabel(type.primaryItem()) + "</white> z ekwipunku</gray>",
-                            "<gray>Nowy cykl: <white>" + next.intervalSeconds() + " s</white></gray>"),
+                            "<gray>Nowy cykl: <white>" + next.intervalSeconds() + " s</white></gray>",
+                            "<yellow>Kliknij, aby ulepszyć.</yellow>"),
                     true), upgradeClick(minionId, menu));
         }
 
         // Slot 43: zbierz wszystko
         menu.set(COLLECT_SLOT, Ui.item(Material.CHEST_MINECART, miniMessage,
                 "<yellow>Zbierz cały urobek</yellow>",
-                java.util.List.of("<gray>Przenosi wszystkie surowce do ekwipunku.</gray>"), false),
+                java.util.List.of("<gray>Przenosi wszystkie surowce do ekwipunku.</gray>",
+                        "<yellow>Kliknij, aby zebrać.</yellow>"), false),
                 collectAllClick(minionId, menu));
 
         // Slot 49: podnieś minionka
         menu.set(PICKUP_SLOT, Ui.item(Material.ARMOR_STAND, miniMessage,
                 "<red>Podnieś minionka</red>",
-                java.util.List.of("<gray>Zwraca przedmiot z zachowaniem poziomu i ulepszeń.</gray>"),
+                java.util.List.of("<gray>Zwraca przedmiot z zachowaniem poziomu i ulepszeń.</gray>",
+                        "<yellow>Kliknij, aby podnieść minionka.</yellow>"),
                 false), pickUpClick(minionId));
     }
 

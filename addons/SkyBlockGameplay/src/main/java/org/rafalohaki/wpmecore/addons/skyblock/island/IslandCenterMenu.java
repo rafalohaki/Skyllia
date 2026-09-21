@@ -314,7 +314,17 @@ public final class IslandCenterMenu {
                 });
 
         menu.close(49, Ui.closeButton(mm));
-        menu.set(48, Ui.backButton(mm), (v, c) -> v.closeInventory());
+        // „Powrót” wraca do Centrum gry (stamtąd wchodzi się tu z /menu);
+        // wcześniej zamykał GUI wbrew własnemu podpisowi „Wróć do poprzedniego
+        // ekranu”. Bez podpiętego otwieracza (testy) zostaje zamknięcie.
+        menu.set(48, Ui.backButton(mm), (v, c) -> {
+            Consumer<Player> back = gameCenterOpener;
+            if (back != null) {
+                back.accept(v);
+            } else {
+                v.closeInventory();
+            }
+        });
         menu.open(player);
         fillCenterModeAsync(player, islandId, cachedRole, menu);
     }

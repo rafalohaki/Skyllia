@@ -141,7 +141,10 @@ public final class OneBlockMilestoneMenu {
         OneBlockLoot.Entry first = loot.isEmpty()
                 ? new OneBlockLoot.Entry(null, Material.CHEST, 1) : loot.getFirst();
         ItemStack icon = iconFor(first);
-        icon.editMeta(meta -> meta.lore(loot.stream().map(this::lootLine).toList()));
+        List<Component> lines = new ArrayList<>(loot.stream().map(this::lootLine).toList());
+        lines.add(miniMessage.deserialize("<dark_gray> </dark_gray>"));
+        lines.add(miniMessage.deserialize("<yellow>Kliknij, aby odebrać nagrodę.</yellow>"));
+        icon.editMeta(meta -> meta.lore(lines));
         return icon;
     }
 

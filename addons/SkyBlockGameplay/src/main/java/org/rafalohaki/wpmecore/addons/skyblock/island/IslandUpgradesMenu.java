@@ -121,7 +121,7 @@ public final class IslandUpgradesMenu {
     private void openNow(@NotNull Player player, @NotNull IslandView context,
                          @NotNull Opening opening) {
         MenuService.Menu menu = menus.ofRows(5, Ui.component(mm,
-                "<aqua><bold>Ulepszenia wyspy</bold></aqua>"));
+                "<gold><bold>Ulepszenia wyspy</bold></gold>"));
         Ui.frame(menu, mm, Material.CYAN_STAINED_GLASS_PANE);
         menu.decoration(SLOT_BANK, Ui.item(Material.GOLD_BLOCK, mm, "<gold>Bank wyspy</gold>",
                 List.of(Ui.price(opening.balance()),
@@ -208,7 +208,7 @@ public final class IslandUpgradesMenu {
                          @NotNull IslandUpgradesService.TrackState state) {
         IslandUpgrades.TrackSettings settings = service.settings().track(state.track());
         MenuService.Menu menu = menus.ofRows(3, Ui.component(mm,
-                "<aqua><bold>Potwierdź ulepszenie</bold></aqua>"));
+                "<gold><bold>Potwierdź ulepszenie</bold></gold>"));
         Ui.frame(menu, mm, Material.CYAN_STAINED_GLASS_PANE);
         menu.decoration(CONFIRM_INFO, Ui.item(trackIcon(state.track()), mm,
                 "<white><bold>" + trackLabel(state.track()) + " "

@@ -386,7 +386,7 @@ public final class SeasonAdminMenu {
         if (menu == null) {
             menu = new SeasonCloseConfirmMenu(plugin, menus, miniMessage, currentSeason,
                     seasonEndMillis, headerLabelSupplier, this::nextLabel,
-                    closer, Player::closeInventory);
+                    closer, this::open);
             confirmMenu = menu;
         }
         return menu;

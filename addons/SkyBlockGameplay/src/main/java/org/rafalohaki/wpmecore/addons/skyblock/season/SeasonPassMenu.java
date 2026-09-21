@@ -182,7 +182,7 @@ public final class SeasonPassMenu {
                               int level, boolean premium, @NotNull Set<Integer> claimed) {
         String label = plugin.seasonLabel();
         MenuService.Menu menu = menus.ofRows(6, Ui.component(miniMessage,
-                "<gold><bold>Przepustka Sezonowa</bold></gold>"
+                "<font:wpme:gui>\uE1F0\uE112\uE1F1</font><gold><bold>Przepustka Sezonowa</bold></gold>"
                         + (label == null ? "" : " <gold>" + label + "</gold>")));
         Ui.frame(menu, miniMessage, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
 

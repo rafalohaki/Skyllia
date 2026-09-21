@@ -413,7 +413,7 @@ public final class DailyQuestService implements Listener {
                          Map<String, LedgerDao.QuestStatus> statuses,
                          int weeklyCount, boolean milestoneClaimed) {
         MenuService.Menu menu = menus.ofRows(4,
-                Ui.component(miniMessage, "<gold><bold>Dzienne zadania wyspy</bold></gold>"));
+                Ui.component(miniMessage, "<font:wpme:gui>\uE1F0\uE110\uE1F1</font><gold><bold>Dzienne zadania wyspy</bold></gold>"));
         Ui.frame(menu, miniMessage, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         List<QuestCatalog.Definition> active = catalog.active(day, oneblock);
         for (int index = 0; index < active.size(); index++) {

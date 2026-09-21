@@ -1199,6 +1199,10 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         return minionsConfig;
     }
 
+    LedgerService ledger() {
+        return ledger;
+    }
+
     OneBlockMilestoneMenu oneBlockMilestoneMenu() {
         return oneBlock.milestoneMenu();
     }

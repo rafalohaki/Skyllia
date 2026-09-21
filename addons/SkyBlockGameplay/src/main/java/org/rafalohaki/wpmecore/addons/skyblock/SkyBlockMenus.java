@@ -94,7 +94,9 @@ final class SkyBlockMenus {
         menu.set(11, Ui.item(Material.EMERALD, miniMessage,
                         "<green><bold>Sklep serwerowy</bold></green>",
                         List.of("<gray>Tu zamieniasz wykopane surowce na monety</gray>",
-                                "<gray>i kupujesz sprzęt. Ceny są dla wszystkich takie same.</gray>"), true),
+                                "<gray>i kupujesz sprzęt. Ceny są dla wszystkich takie same.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> {
                     // Uczciwy stan: sklep dostarcza zewnętrzna wtyczka (zShop).
                     // Gdy komenda nie jest zarejestrowana, klik nie może zniknąć
@@ -114,28 +116,38 @@ final class SkyBlockMenus {
                                 // (DailyQuestService.WEEKLY_MILESTONE_GOAL), ale
                                 // nigdzie nie było o nim słowa przed kliknięciem.
                                 "<gray>15 zadań w tygodniu to Złoty Lotos —</gray>",
-                                "<gray>klucz do toru premium karnetu sezonowego.</gray>"), true),
+                                "<gray>klucz do toru premium karnetu sezonowego.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> quests.open(viewer));
         menu.set(15, Ui.item(Material.ENDER_CHEST, miniMessage,
                         "<gold><bold>Bank wyspy</bold></gold>",
                         List.of("<gray>Wspólna kasa całej wyspy.</gray>",
-                                "<gray>Przekładasz tu monety ze swojej kieszeni.</gray>"), true),
+                                "<gray>Przekładasz tu monety ze swojej kieszeni.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> bank.open(viewer));
         menu.set(22, Ui.item(Material.HOPPER, miniMessage,
                         "<gold><bold>Automatyzacja wyspy</bold></gold>",
                         List.of("<gray>Maszyny, które zbierają i sprzedają za Ciebie.</gray>",
-                                "<gray>Przydają się, gdy masz już z czego kupić.</gray>"), true),
+                                "<gray>Przydają się, gdy masz już z czego kupić.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> openAutomationMenu(viewer));
         menu.set(31, Ui.item(Material.BLAZE_ROD, miniMessage,
                         "<light_purple><bold>Magiczne narzędzia</bold></light_purple>",
                         List.of("<gray>Różdżka, która sprzedaje zawartość skrzyni,</gray>",
                                 "<gray>i taka, która sama obsiewa pole.</gray>",
-                                "<gray>Każda ma z góry podaną liczbę użyć.</gray>"), true),
+                                "<gray>Każda ma z góry podaną liczbę użyć.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> wands.open(viewer));
         menu.set(33, Ui.item(Material.AMETHYST_SHARD, miniMessage,
                         "<light_purple><bold>Nagrody OneBlock</bold></light_purple>",
                         List.of("<gray>Skrzynie odkładane co któreś rozbicie bloku.</gray>",
-                                "<gray>Tylko dla wysp w trybie OneBlock.</gray>"), true),
+                                "<gray>Tylko dla wysp w trybie OneBlock.</gray>",
+                                "<dark_gray> </dark_gray>",
+                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (viewer, click) -> oneBlockMilestones.openFor(viewer));
         // F24: lista urywała się na „weź zadanie dnia”, czyli dokładnie tam, gdzie
         // zaczyna się reszta gry. Cztery kroki domykają łańcuch aż do nagrody, bo

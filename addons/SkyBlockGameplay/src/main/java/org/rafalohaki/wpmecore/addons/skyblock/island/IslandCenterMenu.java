@@ -220,16 +220,19 @@ public final class IslandCenterMenu {
 
         menu.set(12, Ui.item(Material.PAPER, mm, "<aqua><bold>Zaproszenia</bold></aqua>",
                 List.of("<gray>Dopisz znajomego do swojej wyspy.</gray>",
-                        "<gray>Napisz na czacie: <white>/is invite nick</white></gray>"), true),
+                        "<gray>Napisz na czacie: <white>/is invite nick</white></gray>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> openInvites(v, islandId));
 
         menu.set(13, Ui.item(Material.IRON_DOOR, mm, "<white><bold>Dostęp</bold></white>",
                 List.of("<gray>Ustawienia prywatności wyspy.</gray>",
-                        "<gray>Prywatna / publiczna</gray>"), true),
+                        "<gray>Prywatna / publiczna</gray>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> openAccess(v, islandId));
 
         menu.set(14, Ui.item(Material.BARRIER, mm, "<red><bold>Bany</bold></red>",
-                List.of("<gray>Zbanowani gracze i odbanowywanie.</gray>"), true),
+                List.of("<gray>Zbanowani gracze i odbanowywanie.</gray>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> openBans(v, islandId));
 
         // A9: Skyllia ma tylko odczyt punktu odwiedzin (getVisit) — kafel nie może
@@ -247,7 +250,8 @@ public final class IslandCenterMenu {
         int warpCount = skyllia.warpsOf(islandId).size();
         menu.set(16, Ui.item(Material.ENDER_EYE, mm, "<gold><bold>Warpy</bold></gold>",
                 List.of("<gray>Liczba warpów: <white>" + warpCount + "</white></gray>",
-                        "<gray>/is warp, /is setwarp</gray>"), true),
+                        "<gray>/is warp, /is setwarp</gray>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> openWarps(v, islandId));
 
         // Ulepszenia wyspy (migracja #14): średniotorowa progresja za monety
@@ -277,11 +281,13 @@ public final class IslandCenterMenu {
         menu.set(25, Ui.item(Material.ANVIL, mm, "<red><bold>Operacje właściciela</bold></red>",
                 List.of("<gray>Skasowanie wyspy, start od zera,</gray>",
                         "<gray>oddanie wyspy innemu graczowi.</gray>",
-                        "<red>Każda z tych rzeczy jest nieodwracalna.</red>"), true),
+                        "<red>Każda z tych rzeczy jest nieodwracalna.</red>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> openOwnerOps(v, islandId));
 
         menu.set(30, Ui.item(Material.BOOK, mm, "<aqua><bold>Przewodnik Wyspy</bold></aqua>",
-                List.of("<gray>Pierwsze kroki i wskazówki.</gray>"), true),
+                List.of("<gray>Pierwsze kroki i wskazówki.</gray>",
+                        "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
                 (v, c) -> new IslandGuideMenu(menus, mm).open(v));
 
         // Slot 34: Prestiż Wyspy — powtarzalny zlew monet z konta wyspy na nagrodę
@@ -415,6 +421,7 @@ public final class IslandCenterMenu {
         lore.add("<gray>Twoja rola: <yellow>" + roleName(role) + "</yellow></gray>");
         lore.add("<gray>Wyspa działa normalnie.</gray>");
         lore.add("<dark_gray>Numer wyspy: " + shortId(islandId) + "</dark_gray>");
+        lore.add("<yellow>Kliknij, aby otworzyć.</yellow>");
         return Ui.item(Material.GRASS_BLOCK, mm, "<green><bold>Przegląd wyspy</bold></green>",
                 List.copyOf(lore), true);
     }

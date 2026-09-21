@@ -217,8 +217,8 @@ public final class IslandPrestigeMenu {
                 "<gray>Koszt: <white>" + LOTUS_COST + "</white> × Diamentowy Lotos</gray>",
                 "<gray>z Twojego ekwipunku.</gray>",
                 "<gray>Tytuł nosi cała wyspa i widać go</gray>",
-                "<gray>w Centrum Wyspy oraz pod</gray>",
-                "<white>%skyblock_island_title%</white>",
+                "<gray>w Centrum Wyspy oraz wszędzie,</gray>",
+                "<gray>gdzie serwer pokazuje tytuł wyspy.</gray>",
                 context.role() == IslandRole.OWNER
                         ? "<yellow>Kliknij, aby nadać tytuł.</yellow>"
                         : "<red>Zlewkę robi tylko właściciel wyspy.</red>");

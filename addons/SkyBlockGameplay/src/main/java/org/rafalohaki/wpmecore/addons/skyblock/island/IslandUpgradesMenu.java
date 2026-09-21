@@ -305,7 +305,7 @@ public final class IslandUpgradesMenu {
      */
     static @NotNull String message(@NotNull IslandUpgradesService.PurchaseResult result) {
         return switch (result.status()) {
-            case PURCHASED -> "<green><track> podniesione na poziom <gold><level></gold>! "
+            case PURCHASED -> "<green><track>: poziom <gold><level></gold>! "
                     + "Z banku wyspy zeszło <gold><cost></gold>.</green>";
             case ALREADY_PURCHASED -> "<gray>To ulepszenie było już opłacone — "
                     + "bank wyspy nie stracił drugi raz.</gray>";

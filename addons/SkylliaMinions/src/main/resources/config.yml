@@ -13,3 +13,9 @@ database:
 prestige:
   # +1 slot minionka co N poziomów prestiżu wyspy; 0 = bonus wyłączony.
   minion-slots-every-levels: 2
+
+# Ulepszenia wyspy (SkyBlockGameplay, island.upgrades.minions — tor `minions`
+# w wpme_sb_island_upgrades): +N slotów za każdy kupiony poziom.
+# MUSI być równe slots-per-level toru minions w configu SkyBlockGameplay.
+upgrades:
+  slots-per-level: 1

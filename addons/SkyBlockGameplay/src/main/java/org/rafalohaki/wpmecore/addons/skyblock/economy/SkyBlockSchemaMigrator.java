@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class SkyBlockSchemaMigrator {
 
-    public static final int CURRENT_VERSION = 13;
+    public static final int CURRENT_VERSION = 14;
     static final String MIGRATIONS_TABLE = "wpme_sb_schema_migrations";
 
     private static final long POSTGRES_ADVISORY_LOCK = 0x57504D4553424D31L;
@@ -619,11 +619,36 @@ public final class SkyBlockSchemaMigrator {
             13,
             "island-titles",
             checksum(String.join("\n-- ddl --\n", ISLAND_TITLES_MIGRATION_DDL)));
+    /**
+     * Migracja #14: Ulepszenia Wyspy — średniotorowa progresja za monety
+     * z banku wyspy (rozmiar, miejsca w zespole, sloty minionków). Jeden wiersz
+     * na (wyspa, tor): poziom nigdy nie spada, {@code spent_minor} sumuje
+     * wydane monety. Płatność idzie przez ledger z idempotentnym
+     * {@code island_upgrade:<wyspa>:<tor>:<poziom>}. Tor MINIONS czyta także
+     * SkylliaMinions z współdzielonej bazy (ten sam kanał co prestiż).
+     * Wydane migracje 1–13 pozostają nietykalne.
+     */
+    public static final String ISLAND_UPGRADES_DDL = """
+            CREATE TABLE IF NOT EXISTS wpme_sb_island_upgrades (
+                island_id   VARCHAR(36) NOT NULL,
+                track       VARCHAR(32) NOT NULL,
+                level       INTEGER     NOT NULL,
+                spent_minor BIGINT      NOT NULL,
+                updated_at  BIGINT      NOT NULL,
+                PRIMARY KEY (island_id, track)
+            )
+            """;
+    private static final List<String> ISLAND_UPGRADES_MIGRATION_DDL = List.of(
+            ISLAND_UPGRADES_DDL);
+    private static final Migration ISLAND_UPGRADES = new Migration(
+            14,
+            "island-upgrades",
+            checksum(String.join("\n-- ddl --\n", ISLAND_UPGRADES_MIGRATION_DDL)));
     private static final List<Migration> MIGRATIONS = List.of(
             BASELINE, PROFILE_GUARD, PROFILE_ISOLATION, SEASONAL_ISLAND_CLAIM,
             SEASON_FOUNDATION, SEASON_QUEST_PROGRESS, SEASON_EDITIONS,
             OUTBOX_PLAYER_STATUS_INDEX, DAILY_REWARD, ISLAND_LEVEL,
-            SEASON_DAILY_POINTS, ISLAND_PRESTIGE, ISLAND_TITLES);
+            SEASON_DAILY_POINTS, ISLAND_PRESTIGE, ISLAND_TITLES, ISLAND_UPGRADES);
 
     private final SqlService sql;
 
@@ -749,6 +774,10 @@ public final class SkyBlockSchemaMigrator {
                 }
             } else if (migration.version() == ISLAND_TITLES.version()) {
                 for (String ddl : ISLAND_TITLES_MIGRATION_DDL) {
+                    executeDdl(connection, dialect, ddl);
+                }
+            } else if (migration.version() == ISLAND_UPGRADES.version()) {
+                for (String ddl : ISLAND_UPGRADES_MIGRATION_DDL) {
                     executeDdl(connection, dialect, ddl);
                 }
             } else {

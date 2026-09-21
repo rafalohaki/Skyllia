@@ -78,6 +78,10 @@ import org.rafalohaki.wpmecore.addons.skyblock.island.IslandPrestige;
 import org.rafalohaki.wpmecore.addons.skyblock.island.IslandPrestigeDao;
 import org.rafalohaki.wpmecore.addons.skyblock.island.IslandPrestigeMenu;
 import org.rafalohaki.wpmecore.addons.skyblock.island.IslandPrestigeService;
+import org.rafalohaki.wpmecore.addons.skyblock.island.IslandUpgrades;
+import org.rafalohaki.wpmecore.addons.skyblock.island.IslandUpgradesDao;
+import org.rafalohaki.wpmecore.addons.skyblock.island.IslandUpgradesMenu;
+import org.rafalohaki.wpmecore.addons.skyblock.island.IslandUpgradesService;
 import org.rafalohaki.wpmecore.addons.skyblock.playtime.ProfilePlaytimeDao;
 
 import com.mojang.brigadier.Command;
@@ -198,6 +202,9 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
     /** Prestiż Wyspy — {@code null}, gdy config nie ma sekcji {@code island.prestige} (fail-closed). */
     private IslandPrestigeService islandPrestige;
     private IslandPrestigeMenu islandPrestigeMenu;
+    /** Ulepszenia Wyspy — {@code null}, gdy config nie ma sekcji {@code island.upgrades} (fail-closed). */
+    private IslandUpgradesService islandUpgrades;
+    private IslandUpgradesMenu islandUpgradesMenu;
     /** Trwały tytuł wyspy (migracja #13) — jeden na wyspę, z prestiżu/sezonu/zlewu Lotosów. */
     private org.rafalohaki.wpmecore.addons.skyblock.island.IslandTitleService islandTitles;
     private IslandCreationMenus islandCreationMenus;
@@ -821,6 +828,48 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
                 }
                 if (prestigeSettings.grantsMemberSlot(up.level())) {
                     skyllia.addIslandMemberSlots(up.islandId(), 1);
+                }
+            });
+        }
+        // Ulepszenia Wyspy (średniotorowa progresja): poziomy za monety z BANKU
+        // WYSPY — rozmiar, miejsca w zespole, sloty minionków. Ta sama logika
+        // fail-closed co prestiż: brak sekcji albo niepoliczalne wartości
+        // = brak kafelka i menu, wtyczka startuje jak dziś.
+        org.bukkit.configuration.ConfigurationSection upgradesSection =
+                getConfig().getConfigurationSection("island.upgrades");
+        IslandUpgrades.Settings upgradesSettings = IslandUpgrades.Settings.load(upgradesSection);
+        if (upgradesSettings == null) {
+            if (upgradesSection != null) {
+                getLogger().warning("island.upgrades: sekcja jest, ale ulepszenia są wyłączone "
+                        + "albo wartości są nieprawidłowe (max-level/base-cost/cost-multiplier) "
+                        + "— kafelek ulepszeń się nie pokaże");
+            }
+        } else {
+            this.islandUpgrades = new IslandUpgradesService(getLogger(), upgradesSettings,
+                    new IslandUpgradesDao.Sql(binding.service()), ledger,
+                    this::announceIslandUpgrade);
+            this.islandUpgradesMenu = new IslandUpgradesMenu(this, menus, miniMessage, skyllia,
+                    ledger, islandUpgrades, islandCenter);
+            islandCenter.setUpgradesMenu(islandUpgradesMenu);
+            // Mutacje wyspy przy awansie toru: rozmiar kumulatywnie procentowy
+            // (jak w prestiżu), miejsca w zespole +slots-per-level. Tor MINIONS
+            // nie woła Skyllii — SkylliaMinions sam czyta wpme_sb_island_upgrades
+            // ze współdzielonej bazy (kanał jak wpme_sb_island_prestige).
+            islandUpgrades.setPerkApplier((track, up) -> {
+                IslandUpgrades.TrackSettings trackSettings = upgradesSettings.track(track);
+                if (trackSettings == null) {
+                    return;
+                }
+                switch (track) {
+                    case SIZE -> {
+                        double step = trackSettings.percentPerLevel();
+                        if (step > 0.0D) {
+                            skyllia.multiplyIslandSize(up.islandId(), 1.0D + step / 100.0D);
+                        }
+                    }
+                    case MEMBERS -> skyllia.addIslandMemberSlots(up.islandId(),
+                            trackSettings.slotsPerLevel());
+                    case MINIONS -> { /* sloty czyta SkylliaMinions z bazy */ }
                 }
             });
         }
@@ -1531,6 +1580,36 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
                             "<gold><bold>Prestiż wyspy " + up.level() + "!</bold></gold>" + titleLine));
                     player.playSound(player.getLocation(),
                             org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.1f);
+                }, null);
+            }
+        });
+    }
+
+    /** Ogłoszenie awansu toru ulepszeń dla członków wyspy online — jak przy prestiżu. */
+    private void announceIslandUpgrade(IslandUpgradesService.UpgradeUp up) {
+        SchedulerService tick = scheduler;
+        if (tick == null) {
+            return;
+        }
+        String trackLabel = switch (up.track()) {
+            case SIZE -> "Rozmiar wyspy";
+            case MEMBERS -> "Miejsca w zespole";
+            case MINIONS -> "Sloty minionków";
+        };
+        tick.global(() -> {
+            SkylliaIntegration integration = skyllia;
+            if (integration == null) {
+                return;
+            }
+            for (Player player : List.copyOf(getServer().getOnlinePlayers())) {
+                if (!integration.cachedIslandIdOf(player.getUniqueId())
+                        .map(up.islandId()::equals).orElse(false)) {
+                    continue;
+                }
+                player.getScheduler().run(this, task -> {
+                    player.sendMessage(miniMessage.deserialize(
+                            "<aqua><bold>Ulepszenie wyspy:</bold></aqua> <gray>" + trackLabel
+                                    + " na poziom <white>" + up.level() + "</white>.</gray>"));
                 }, null);
             }
         });

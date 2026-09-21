@@ -132,6 +132,11 @@ public final class IslandCenterMenu {
      */
     private volatile IslandPrestigeMenu prestige;
     /**
+     * Ulepszenia Wyspy (setter, jak prestiż). Brak wstrzyknięcia = ulepszenia
+     * wyłączone w configu (fail-closed) i kafelek w ogóle się nie renderuje.
+     */
+    private volatile IslandUpgradesMenu upgrades;
+    /**
      * Trwały tytuł wyspy (migracja #13). Setter, bo serwis powstaje po tym
      * menu; brak wstrzyknięcia = kafel przeglądu bez linii tytułu.
      */
@@ -165,6 +170,15 @@ public final class IslandCenterMenu {
      */
     public void setPrestigeMenu(@NotNull IslandPrestigeMenu prestige) {
         this.prestige = prestige;
+    }
+
+    /**
+     * Wstrzyknięcie menu ulepszeń po jego zbudowaniu (jak prestiż).
+     * Bez niego kafelek ulepszeń nie istnieje — tak wygląda config bez
+     * sekcji {@code island.upgrades}.
+     */
+    public void setUpgradesMenu(@NotNull IslandUpgradesMenu upgrades) {
+        this.upgrades = upgrades;
     }
 
     /**
@@ -236,6 +250,15 @@ public final class IslandCenterMenu {
                         "<gray>/is warp, /is setwarp</gray>"), true),
                 (v, c) -> openWarps(v, islandId));
 
+        // Ulepszenia wyspy (migracja #14): średniotorowa progresja za monety
+        // z banku wyspy — rozmiar, członkowie, sloty minionków. Kafelek
+        // istnieje tylko wtedy, gdy sekcja `island.upgrades` jest włączona
+        // (fail-closed jak prestiż). Slot 20 siada w rzędzie progresji wyspy,
+        // obok biomu (19) i poziomu wyspy (21).
+        IslandUpgradesMenu upgradesMenu = this.upgrades;
+        if (upgradesMenu != null) {
+            upgradesMenu.renderTile(player, menu, 20, islandId);
+        }
         menu.set(19, Ui.item(Material.OAK_LEAVES, mm, "<green><bold>Biom</bold></green>",
                 List.of("<gray>Aktualny biom: <white>" + biomeLabel(skyllia.biomeOf(islandId)) + "</white></gray>",
                         "<yellow>Kliknij, aby zmienić.</yellow>"), true),

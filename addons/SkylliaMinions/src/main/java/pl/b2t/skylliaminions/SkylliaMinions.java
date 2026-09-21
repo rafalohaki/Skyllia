@@ -112,17 +112,21 @@ public final class SkylliaMinions extends JavaPlugin {
     }
 
     /**
-     * Sloty +prestiż: poziom wyspy czytamy z {@code wpme_sb_island_prestige}
-     * (współdzielona baza — zapisuje ją SkyBlockGameplay przy zakupie), co ile
-     * poziomów daje slot definiuje {@code prestige.minion-slots-every-levels}.
+     * Sloty bonusowe z współdzielonej bazy: poziom prestiżu czytamy z
+     * {@code wpme_sb_island_prestige} (co {@code prestige.minion-slots-every-levels}
+     * poziomów = +1 slot), a tor minionków ulepszeń z {@code wpme_sb_island_upgrades}
+     * ({@code upgrades.slots-per-level} slotów za poziom). Obie tabele zapisuje
+     * SkyBlockGameplay — resolver działa, gdy choć jedno źródło jest włączone.
      */
     private void wirePrestigeSlots(@NotNull SqlService sql) {
         int everyLevels = Math.max(0, getConfig().getInt("prestige.minion-slots-every-levels", 0));
-        if (everyLevels <= 0) {
+        int perUpgradeLevel = Math.max(0, getConfig().getInt("upgrades.slots-per-level", 0));
+        if (everyLevels <= 0 && perUpgradeLevel <= 0) {
             return;
         }
-        listener.setIslandExtraSlots(new PrestigeSlots(sql, everyLevels).resolver());
-        getLogger().info("Sloty prestiżu dopięte (wpme_sb_island_prestige, co " + everyLevels + " poziomy).");
+        listener.setIslandExtraSlots(new PrestigeSlots(sql, everyLevels, perUpgradeLevel).resolver());
+        getLogger().info("Sloty bonusowe dopięte (prestiż co " + everyLevels
+                + " poziomy, ulepszenia " + perUpgradeLevel + "/poziom).");
     }
 
     /**

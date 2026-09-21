@@ -62,7 +62,7 @@ class SkyBlockSchemaMigratorTest {
                 result.getInt(1), result.getString(2), result.getString(3)))
                 .join();
 
-        assertEquals(13, rows.size(), "historia ma baseline + profile guard + profile isolation + seasonal island claim + season foundation + quest progress + season editions + indeks outboxu + codzienna nagroda + poziom wyspy + dzienne punkty sezonowe + prestiż wyspy + tytuły wyspy");
+        assertEquals(14, rows.size(), "historia ma baseline + profile guard + profile isolation + seasonal island claim + season foundation + quest progress + season editions + indeks outboxu + codzienna nagroda + poziom wyspy + dzienne punkty sezonowe + prestiż wyspy + tytuły wyspy + ulepszenia wyspy");
         assertEquals(1, rows.get(0).version());
         assertEquals("baseline-skyblock-schema", rows.get(0).description());
         assertTrue(rows.get(0).checksum().matches("[0-9a-f]{64}"));
@@ -101,7 +101,10 @@ class SkyBlockSchemaMigratorTest {
         assertEquals(13, rows.get(12).version());
         assertEquals("island-titles", rows.get(12).description());
         assertTrue(rows.get(12).checksum().matches("[0-9a-f]{64}"));
-        assertEquals(SkyBlockSchemaMigrator.CURRENT_VERSION, rows.get(12).version());
+        assertEquals(14, rows.get(13).version());
+        assertEquals("island-upgrades", rows.get(13).description());
+        assertTrue(rows.get(13).checksum().matches("[0-9a-f]{64}"));
+        assertEquals(SkyBlockSchemaMigrator.CURRENT_VERSION, rows.get(13).version());
     }
 
     /**
@@ -139,8 +142,8 @@ class SkyBlockSchemaMigratorTest {
     void baselineCreatesEveryLiveTable() {
         migrator.migrate().join();
 
-        // 35 tabel danych (24 + 4 M2.5 sezon + postęp questów + edycje sezonów + codzienna nagroda + poziom wyspy + dzienne punkty + prestiż wyspy + tytuły wyspy) plus tabela wersji schematu
-        assertEquals(35L, scalar("""
+        // 36 tabel danych (24 + 4 M2.5 sezon + postęp questów + edycje sezonów + codzienna nagroda + poziom wyspy + dzienne punkty + prestiż wyspy + tytuły wyspy + ulepszenia wyspy) plus tabela wersji schematu
+        assertEquals(36L, scalar("""
                 SELECT COUNT(*) FROM sqlite_master
                 WHERE type = 'table' AND name LIKE 'wpme_sb_%'
                 """));
@@ -155,7 +158,7 @@ class SkyBlockSchemaMigratorTest {
                 "wpme_sb_season_quest_progress", "wpme_sb_season_editions",
                 "wpme_sb_daily_reward", "wpme_sb_island_level",
                 "wpme_sb_season_daily_points", "wpme_sb_island_prestige",
-                "wpme_sb_island_titles")) {
+                "wpme_sb_island_titles", "wpme_sb_island_upgrades")) {
             assertFalse(tableColumns(table).isEmpty(), "brak tabeli " + table);
         }
     }
@@ -256,15 +259,16 @@ class SkyBlockSchemaMigratorTest {
         // Dawne tabele lifecycle (np. wpme_sb_island_invites) nie powinny wrócić;
         // obecne M1-A tabele to dokładnie 2 island_* + active helper. Migracja #10
         // dokłada wpme_sb_island_level (poziom wyspy), #12 wpme_sb_island_prestige
-        // (prestiż wyspy), a #13 wpme_sb_island_titles (tytuł wyspy) — to nie
-        // lifecycle, stąd wszystkie trzy na liście.
+        // (prestiż wyspy), #13 wpme_sb_island_titles (tytuł wyspy), a #14
+        // wpme_sb_island_upgrades (ulepszenia wyspy) — to nie lifecycle,
+        // stąd wszystkie na liście.
         assertEquals(2L, scalar("""
                 SELECT COUNT(*) FROM sqlite_master
                 WHERE type = 'table' AND name = 'wpme_sb_island_profiles' OR name = 'wpme_sb_island_membership'
                 """));
         assertEquals(0L, scalar("""
                 SELECT COUNT(*) FROM sqlite_master
-                WHERE type = 'table' AND name LIKE 'wpme_sb_island_%' AND name NOT IN ('wpme_sb_island_profiles','wpme_sb_island_membership','wpme_sb_island_level','wpme_sb_island_prestige','wpme_sb_island_titles')
+                WHERE type = 'table' AND name LIKE 'wpme_sb_island_%' AND name NOT IN ('wpme_sb_island_profiles','wpme_sb_island_membership','wpme_sb_island_level','wpme_sb_island_prestige','wpme_sb_island_titles','wpme_sb_island_upgrades')
                 """));
     }
 

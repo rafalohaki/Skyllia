@@ -205,6 +205,35 @@ island:
       - '<red>Wulkan</red>'
       - '<dark_purple>Otchłań</dark_purple>'
       - 'Legenda Wysp'
+
+  # Ulepszenia wyspy — średniotorowa progresja ZA MONETY Z BANKU WYSPY
+  # (płacą członkowie, kupuje tylko właściciel). Trzy niezależne tory:
+  # size — procentowy przyrost rozmiaru wyspy na poziom (kumuluje się),
+  # members — dodatkowe miejsca w zespole na poziom,
+  # minions — dodatkowe sloty minionków na poziom (czyta SkylliaMinions
+  #           z wpme_sb_island_upgrades — ten sam kanał co prestiż).
+  # Cena poziomu N: base-cost × cost-multiplier^N (jak prestiż).
+  # Sekcja usunięta albo enabled: false → kafelek i menu znikają.
+  upgrades:
+    enabled: true
+    size:
+      enabled: true
+      max-level: 8
+      base-cost: 50000
+      cost-multiplier: 1.8
+      percent-per-level: 5.0
+    members:
+      enabled: true
+      max-level: 6
+      base-cost: 40000
+      cost-multiplier: 2.0
+      slots-per-level: 1
+    minions:
+      enabled: true
+      max-level: 4
+      base-cost: 80000
+      cost-multiplier: 2.2
+      slots-per-level: 1
   modes:
     classic:
       enabled: true

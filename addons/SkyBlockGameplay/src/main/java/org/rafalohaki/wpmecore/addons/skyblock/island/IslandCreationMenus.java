@@ -77,7 +77,7 @@ public final class IslandCreationMenus {
             // ekranu „Tworzenie już w toku”.
             coordinator.clearFailed(player.getUniqueId());
         }
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(mm, "<gold><bold>Wybierz, jak chcesz zacząć</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(mm, "<gold><bold>Wybierz, jak chcesz zacząć</bold></gold>")));
         Ui.frame(menu, mm, Material.CYAN_STAINED_GLASS_PANE);
         int slot = 11;
         for (IslandMode mode : IslandMode.values()) {
@@ -141,7 +141,7 @@ public final class IslandCreationMenus {
     }
 
     private void openConfirmation(@NotNull Player player, @NotNull IslandMode mode) {
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(mm, "<gold><bold>Potwierdź utworzenie</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(mm, "<gold><bold>Potwierdź utworzenie</bold></gold>")));
         Ui.frame(menu, mm, Material.LIME_STAINED_GLASS_PANE);
         List<String> lore = List.of(
                 "<white>Wybrany tryb: " + mode.displayName() + "</white>",
@@ -306,7 +306,7 @@ public final class IslandCreationMenus {
         if (coordinator == null) return;
         var op = coordinator.operationOf(player.getUniqueId());
         if (op == null) return;
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(mm, "<gold><bold>Status tworzenia</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(mm, "<gold><bold>Status tworzenia</bold></gold>")));
         Ui.frame(menu, mm, Material.CLOCK);
         menu.decoration(13, Ui.item(Material.CLOCK, mm, "<yellow>Twoja wyspa powstaje</yellow>",
                 List.of("<gray>Tryb: <white>" + op.mode().displayName() + "</white></gray>",

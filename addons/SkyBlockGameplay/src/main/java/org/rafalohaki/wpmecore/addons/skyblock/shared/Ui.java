@@ -73,6 +73,69 @@ public final class Ui {
                 "<dark_gray> </dark_gray>", List.of(), false), "separator");
     }
 
+    /** Glify paneli GUI (font {@code wpme:gui}) — tekstura tła zakotwiczona w tytule. */
+    public static final char GUI_QUESTS = '\uE110';
+    public static final char GUI_SHOP = '\uE111';
+    public static final char GUI_PASS = '\uE112';
+    public static final char GUI_SHOP4 = '\uE113';
+    public static final char GUI_QUESTS6 = '\uE114';
+    public static final char GUI_PASS3 = '\uE115';
+    public static final char GUI_ISLAND = '\uE116';
+    public static final char GUI_ISLAND6 = '\uE117';
+    public static final char GUI_KUZNIA = '\uE11E';
+    public static final char GUI_KOSMETYKA = '\uE11F';
+    public static final char GUI_ONEBLOCK = '\uE121';
+
+    /**
+     * Tytuł inventory z teksturą panelu: space-glify przesuwają pen na lewą
+     * krawędź okna, bitmap-glyph rysuje panel, drugi space wraca pen na tekst.
+     * Bez paczki (brak {@link ClientAssetService}) zwraca sam tytuł — panel
+     * teksturowany jest bezużyteczny bez zasobów klienta.
+     * {@code rows} dobiera neutralny wariant wysokości (1..6).
+     */
+    public static @NotNull String guiTitle(int rows, @NotNull String miniTitle) {
+        return guiTitle(glyphForRows(rows), miniTitle);
+    }
+
+    /** Wariant z wybranym tematem glyphu (np. {@link #GUI_QUESTS}). */
+    public static @NotNull String guiTitle(char glyph, @NotNull String miniTitle) {
+        if (clientAssets == null) {
+            return miniTitle;
+        }
+        return "<font:wpme:gui>\uE1F0" + glyph + "\uE1F1</font>" + miniTitle;
+    }
+
+    /** Taka sama nakładka na już złożony {@link Component}. */
+    public static @NotNull Component panelTitle(int rows, @NotNull Component title) {
+        return panelTitle(glyphForRows(rows), title);
+    }
+
+    /** Wariant z wybranym tematem glyphu na {@link Component}. */
+    public static @NotNull Component panelTitle(char glyph, @NotNull Component title) {
+        if (clientAssets == null) {
+            return title;
+        }
+        return Component.text("\uE1F0" + glyph + "\uE1F1")
+                .font(net.kyori.adventure.key.Key.key("wpme", "gui"))
+                .append(title);
+    }
+
+    /** Neutralny glyph panelu dla danej liczby wierszy (1..6). */
+    public static char glyphNeutral(int rows) {
+        return glyphForRows(rows);
+    }
+
+    private static char glyphForRows(int rows) {
+        return switch (rows) {
+            case 6 -> '\uE119';
+            case 5 -> '\uE11A';
+            case 3 -> '\uE11B';
+            case 2 -> '\uE11C';
+            case 1 -> '\uE11D';
+            default -> '\uE118';
+        };
+    }
+
     /**
      * Pozioma linia separatora w rzędzie {@code row} (kolumny wewnętrzne 1..7),
      * z pominięciem podanych slotów (np. przycisków stopki). Oddziela strefę

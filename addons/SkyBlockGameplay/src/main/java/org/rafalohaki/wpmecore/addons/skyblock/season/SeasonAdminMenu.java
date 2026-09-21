@@ -153,7 +153,7 @@ public final class SeasonAdminMenu {
     }
 
     private @NotNull MenuService.Menu newPanelMenu() {
-        return menus.ofRows(6, Ui.component(miniMessage, TITLE));
+        return menus.ofRows(6, Ui.panelTitle(6, Ui.component(miniMessage, TITLE)));
     }
 
     /** Wypełnia sloty panelu; package-private dla testów layoutu. */

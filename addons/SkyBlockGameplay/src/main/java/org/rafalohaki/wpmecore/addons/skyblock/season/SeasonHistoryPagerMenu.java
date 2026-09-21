@@ -194,7 +194,7 @@ public final class SeasonHistoryPagerMenu {
     }
 
     private @NotNull MenuService.Menu newPagerMenu() {
-        return menus.ofRows(6, Ui.component(miniMessage, TITLE));
+        return menus.ofRows(6, Ui.panelTitle(6, Ui.component(miniMessage, TITLE)));
     }
 
     /**

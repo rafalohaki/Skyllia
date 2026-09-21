@@ -102,7 +102,7 @@ public final class SeasonCloseConfirmMenu {
     }
 
     void buildAndOpen(@NotNull Player player) {
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(miniMessage, TITLE));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(miniMessage, TITLE)));
         populate(menu, player);
         menu.open(player);
     }

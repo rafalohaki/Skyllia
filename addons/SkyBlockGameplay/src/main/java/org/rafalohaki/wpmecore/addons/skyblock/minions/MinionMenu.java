@@ -90,7 +90,7 @@ public class MinionMenu {
             return;
         }
         MenuService.Menu menu = menus.ofRows(6,
-                Ui.component(miniMessage, "<gold><bold>Minionek</bold></gold>"));
+                Ui.panelTitle(6, Ui.component(miniMessage, "<gold><bold>Minionek</bold></gold>")));
         Ui.frame(menu, miniMessage, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         menu.close(53, Ui.closeButton(miniMessage));
         renderSlots(player, minionId, menu);

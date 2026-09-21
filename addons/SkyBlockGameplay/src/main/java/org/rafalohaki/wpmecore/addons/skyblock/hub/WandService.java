@@ -93,7 +93,7 @@ public final class WandService implements Listener {
 
     public void open(@NotNull Player player) {
         MenuService.Menu menu = menus.ofRows(3,
-                Ui.component(miniMessage, "<gold><bold>Magiczne narzędzia</bold></gold>"));
+                Ui.panelTitle(3, Ui.component(miniMessage, "<gold><bold>Magiczne narzędzia</bold></gold>")));
         Ui.frame(menu, miniMessage, Material.PURPLE_STAINED_GLASS_PANE);
         menu.decoration(4, Ui.item(Material.GOLD_INGOT, miniMessage,
                 "<gold>Portfel: </gold>" + Ui.price(ledger.playerBalance(player.getUniqueId())),

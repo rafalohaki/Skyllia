@@ -78,7 +78,7 @@ public class ForgeMenu {
         net.kyori.adventure.text.Component title = isTokens
                 ? Ui.component(miniMessage, "<yellow><bold>Kantor Wymiany Lotosów</bold></yellow>")
                 : Ui.component(miniMessage, "<gold><bold>Kuźnia Mistrzowska</bold></gold>");
-        MenuService.Menu menu = menus.ofRows(6, title);
+        MenuService.Menu menu = menus.ofRows(6, Ui.panelTitle(Ui.GUI_KUZNIA, title));
         Ui.frame(menu, miniMessage, isTokens ? Material.YELLOW_STAINED_GLASS_PANE : Material.ORANGE_STAINED_GLASS_PANE);
 
         for (ForgeConfig.ForgeCategory category : visible) {

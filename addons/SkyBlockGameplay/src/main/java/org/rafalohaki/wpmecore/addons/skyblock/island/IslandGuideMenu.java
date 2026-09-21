@@ -20,7 +20,7 @@ public final class IslandGuideMenu {
     }
 
     public void open(@NotNull Player player) {
-        MenuService.Menu menu = menus.ofRows(4, Ui.component(mm, "<gold><bold>Przewodnik — pierwsze kroki</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(4, Ui.panelTitle(Ui.GUI_ISLAND, Ui.component(mm, "<gold><bold>Przewodnik — pierwsze kroki</bold></gold>")));
         Ui.frame(menu, mm, Material.BOOK);
         menu.decoration(4, Ui.item(Material.OAK_SIGN, mm, "<yellow><bold>Jak wpisać komendę</bold></yellow>",
                 List.of("<gray>Naciśnij klawisz <white>T</white>, wpisz komendę</gray>",

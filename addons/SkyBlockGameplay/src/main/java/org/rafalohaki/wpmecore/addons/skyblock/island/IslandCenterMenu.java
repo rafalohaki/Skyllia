@@ -200,7 +200,7 @@ public final class IslandCenterMenu {
         UUID islandId = view.islandId();
         IslandRole cachedRole = view.role();
 
-        MenuService.Menu menu = menus.ofRows(6, panelTitle("Centrum Wyspy"));
+        MenuService.Menu menu = menus.ofRows(6, panelTitle(6, "Centrum Wyspy"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
 
         // A2: tryb gry czytamy z profilu asynchronicznie — kafel startuje z napisem
@@ -335,9 +335,15 @@ public final class IslandCenterMenu {
         fillCenterModeAsync(player, islandId, cachedRole, menu);
     }
 
-    /** Nagłówek ekranu gracza — jednolity złoty tytuł we wszystkich menu tego pliku. */
-    private @NotNull Component panelTitle(@NotNull String name) {
-        return Ui.component(mm, "<gold><bold>" + name + "</bold></gold>");
+    /** Nagłówek ekranu gracza — jednolity złoty tytuł + tekstura panelu wyspy. */
+    private @NotNull Component panelTitle(int rows, @NotNull String name) {
+        char glyph = switch (rows) {
+            case 6 -> Ui.GUI_ISLAND6;
+            case 4 -> Ui.GUI_ISLAND;
+            default -> Ui.glyphNeutral(rows);
+        };
+        return Ui.panelTitle(glyph,
+                Ui.component(mm, "<gold><bold>" + name + "</bold></gold>"));
     }
 
     /**
@@ -519,7 +525,7 @@ public final class IslandCenterMenu {
     }
 
     private void openOverview(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(3, panelTitle("Przegląd wyspy"));
+        MenuService.Menu menu = menus.ofRows(3, panelTitle(3, "Przegląd wyspy"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         var members = skyllia.membersOf(islandId);
         menu.decoration(13, overviewIcon(islandId, null, members));
@@ -529,7 +535,7 @@ public final class IslandCenterMenu {
     }
 
     private void openMembers(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(4, panelTitle("Członkowie i role"));
+        MenuService.Menu menu = menus.ofRows(4, panelTitle(4, "Członkowie i role"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         var members = skyllia.membersOf(islandId);
         if (members.isEmpty()) {
@@ -585,7 +591,7 @@ public final class IslandCenterMenu {
     }
 
     private void openInvites(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(3, panelTitle("Zaproszenia"));
+        MenuService.Menu menu = menus.ofRows(3, panelTitle(3, "Zaproszenia"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         menu.decoration(13, Ui.item(Material.PAPER, mm, "<aqua><bold>Zaproszenia</bold></aqua>",
                 List.of("<gray>Zaproś kogoś: napisz na czacie</gray>",
@@ -597,7 +603,7 @@ public final class IslandCenterMenu {
     }
 
     private void openAccess(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(3, panelTitle("Dostęp"));
+        MenuService.Menu menu = menus.ofRows(3, panelTitle(3, "Dostęp"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         boolean isPrivate = skyllia.isPrivateIsland(islandId);
         menu.set(11, Ui.item(isPrivate ? Material.IRON_DOOR : Material.OAK_DOOR, mm,
@@ -638,7 +644,7 @@ public final class IslandCenterMenu {
     }
 
     private void openBans(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(4, panelTitle("Bany"));
+        MenuService.Menu menu = menus.ofRows(4, panelTitle(4, "Bany"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         var banned = skyllia.bannedMembersOf(islandId);
         if (banned.isEmpty()) {
@@ -688,7 +694,7 @@ public final class IslandCenterMenu {
     }
 
     private void openWarps(Player player, UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(4, panelTitle("Warpy"));
+        MenuService.Menu menu = menus.ofRows(4, panelTitle(4, "Warpy"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         var warps = skyllia.warpsOf(islandId);
         if (warps.isEmpty()) {
@@ -744,7 +750,7 @@ public final class IslandCenterMenu {
      * 24./25. biomu przyciskami.
      */
     private void openBiome(Player player, UUID islandId, int page) {
-        MenuService.Menu menu = menus.ofRows(6, panelTitle("Biom wyspy"));
+        MenuService.Menu menu = menus.ofRows(6, panelTitle(6, "Biom wyspy"));
         Ui.frame(menu, mm, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         List<String> biomes = skyllia.biomeNames();
         if (biomes.isEmpty()) {

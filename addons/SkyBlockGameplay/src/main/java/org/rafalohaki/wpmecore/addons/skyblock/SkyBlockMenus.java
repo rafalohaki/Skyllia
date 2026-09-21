@@ -89,7 +89,7 @@ final class SkyBlockMenus {
 
     void open(@NotNull Player player) {
         MenuService.Menu menu = menus.ofRows(5,
-                Ui.component(miniMessage, settings.menuTitle()));
+                Ui.panelTitle(5, Ui.component(miniMessage, settings.menuTitle())));
         Ui.frame(menu, miniMessage, Material.CYAN_STAINED_GLASS_PANE);
         menu.set(11, Ui.item(Material.EMERALD, miniMessage,
                         "<green><bold>Sklep serwerowy</bold></green>",
@@ -260,7 +260,7 @@ final class SkyBlockMenus {
 
     void openAutomationMenu(@NotNull Player player) {
         MenuService.Menu menu = menus.ofRows(3,
-                Ui.component(miniMessage, "<gold><bold>Automatyzacja wyspy</bold></gold>"));
+                Ui.panelTitle(3, Ui.component(miniMessage, "<gold><bold>Automatyzacja wyspy</bold></gold>")));
         Ui.frame(menu, miniMessage, Material.ORANGE_STAINED_GLASS_PANE);
         menu.decoration(4, Ui.item(Material.GOLD_INGOT, miniMessage,
                 "<gold>Portfel: </gold>" + Ui.price(ledger.playerBalance(player.getUniqueId())),

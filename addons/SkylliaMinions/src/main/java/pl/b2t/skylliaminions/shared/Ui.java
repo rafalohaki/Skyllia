@@ -30,6 +30,9 @@ public final class Ui {
     public static final String ICON_COINS = "<font:wpme:icons>\uE002</font>";
     public static final String ICON_LOTUS = "<font:wpme:icons>\uE01F</font>";
 
+    /** Glify paneli GUI (font {@code wpme:gui}) — tekstura tła w tytule inventory. */
+    public static final String GUI_NEUTRAL6 = "<font:wpme:gui>\uE1F0\uE119\uE1F1</font>";
+
     /** Most do paczki klienta; {@code null} = czyste vanilla (testy, brak rdzenia). */
     private static volatile @Nullable ClientAssetService clientAssets;
 

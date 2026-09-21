@@ -151,8 +151,8 @@ public final class IslandPrestigeMenu {
                          @NotNull Opening opening) {
         IslandPrestigeService.State state = opening.state();
         long balance = opening.balance();
-        MenuService.Menu menu = menus.ofRows(5, Ui.component(mm,
-                "<gold><bold>Prestiż wyspy</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(5, Ui.panelTitle(5, Ui.component(mm,
+                "<gold><bold>Prestiż wyspy</bold></gold>")));
         Ui.frame(menu, mm, Material.PURPLE_STAINED_GLASS_PANE);
         menu.decoration(SLOT_STATE, stateIcon(state, context.islandId()));
         menu.decoration(SLOT_BANK, Ui.item(Material.GOLD_BLOCK, mm, "<gold>Bank wyspy</gold>",
@@ -349,8 +349,8 @@ public final class IslandPrestigeMenu {
     private void confirm(@NotNull Player player, @NotNull IslandView context,
                          @NotNull IslandPrestigeService.State state, long balance) {
         int target = state.level() + 1;
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(mm,
-                "<gold><bold>Na pewno? Prestiż " + target + "</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(mm,
+                "<gold><bold>Na pewno? Prestiż " + target + "</bold></gold>")));
         Ui.frame(menu, mm, Material.PURPLE_STAINED_GLASS_PANE);
         menu.decoration(SLOT_STATE, Ui.item(Material.PAPER, mm, "<yellow>Co się stanie</yellow>",
                 List.of("<gray>• Z banku wyspy zniknie " + Ui.price(state.nextCost()) + "</gray>",

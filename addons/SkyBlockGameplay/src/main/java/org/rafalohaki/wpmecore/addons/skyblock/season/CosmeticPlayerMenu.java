@@ -152,8 +152,8 @@ public final class CosmeticPlayerMenu {
     }
 
     void buildAndOpen(@NotNull Player player) {
-        MenuService.Menu menu = menus.ofRows(6, Ui.component(miniMessage,
-                "<gold><bold>Kosmetyka Sezonowa</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(6, Ui.panelTitle(Ui.GUI_KOSMETYKA, Ui.component(miniMessage,
+                "<gold><bold>Kosmetyka Sezonowa</bold></gold>")));
         populate(menu, player);
         menu.open(player);
     }

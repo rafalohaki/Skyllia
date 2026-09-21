@@ -42,7 +42,7 @@ public final class IslandOwnerOperationsMenu {
     }
 
     public void open(@NotNull Player player, @NotNull UUID islandId) {
-        MenuService.Menu menu = menus.ofRows(4, Ui.component(mm, "<dark_red>Operacje właściciela</dark_red>"));
+        MenuService.Menu menu = menus.ofRows(4, Ui.panelTitle(4, Ui.component(mm, "<dark_red>Operacje właściciela</dark_red>")));
         Ui.frame(menu, mm, Material.RED_STAINED_GLASS_PANE);
         menu.set(11, Ui.item(Material.TNT, mm, "<red><bold>Usuń wyspę</bold></red>",
                 List.of("<gray>Wyspa i wszystko, co na niej stoi, znika.</gray>",
@@ -64,7 +64,7 @@ public final class IslandOwnerOperationsMenu {
 
     private void openConsequence(Player player, UUID islandId, OperationType type) {
         String operationId = type.name().toLowerCase() + ":" + islandId + ":" + UUID.randomUUID().toString().substring(0,8);
-        MenuService.Menu menu = menus.ofRows(3, Ui.component(mm, "<dark_red>Na pewno? " + typeName(type) + "</dark_red>"));
+        MenuService.Menu menu = menus.ofRows(3, Ui.panelTitle(3, Ui.component(mm, "<dark_red>Na pewno? " + typeName(type) + "</dark_red>")));
         Ui.frame(menu, mm, Material.RED_STAINED_GLASS_PANE);
         List<String> cons = switch (type) {
             case DELETE -> List.of("<red>• Wyspa znika razem ze wszystkim, co na niej zbudowałeś.</red>",

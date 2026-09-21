@@ -101,8 +101,9 @@ public final class OneBlockMilestoneMenu {
             return;
         }
         int menuRows = Math.min(MAX_ROWS, 1 + (rows.size() + SLOTS_PER_ROW - 1) / SLOTS_PER_ROW);
-        MenuService.Menu menu = menus.ofRows(menuRows,
-                Ui.component(miniMessage, "<gold><bold>Nagrody OneBlock</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(menuRows, Ui.panelTitle(
+                menuRows == 4 ? Ui.GUI_ONEBLOCK : Ui.glyphNeutral(menuRows),
+                Ui.component(miniMessage, "<gold><bold>Nagrody OneBlock</bold></gold>")));
         Ui.frame(menu, miniMessage, Material.LIME_STAINED_GLASS_PANE);
         int capacity = SLOTS_PER_ROW * (menuRows - 1);
         int slot = FIRST_SLOT;

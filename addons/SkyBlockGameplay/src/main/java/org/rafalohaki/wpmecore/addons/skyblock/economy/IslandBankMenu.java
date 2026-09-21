@@ -119,8 +119,8 @@ public final class IslandBankMenu {
 
     private void openNow(Player player, IslandView context,
                          BankBalances balances) {
-        MenuService.Menu menu = menus.ofRows(5,
-                Ui.component(miniMessage, "<gold><bold>Wspólny bank wyspy</bold></gold>"));
+        MenuService.Menu menu = menus.ofRows(5, Ui.panelTitle(5,
+                Ui.component(miniMessage, "<gold><bold>Wspólny bank wyspy</bold></gold>")));
         Ui.frame(menu, miniMessage, Material.YELLOW_STAINED_GLASS_PANE);
         menu.decoration(11, Ui.item(Material.GOLD_INGOT, miniMessage,
                 "<gold>Twój portfel</gold>",

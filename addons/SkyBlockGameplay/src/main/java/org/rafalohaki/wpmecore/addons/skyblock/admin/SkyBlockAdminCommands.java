@@ -122,7 +122,92 @@ public final class SkyBlockAdminCommands {
                                 .then(Commands.literal("verify")
                                         .then(Commands.argument("snapshotId", StringArgumentType.greedyString())
                                                 .executes(ctx -> verifySnapshot(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "snapshotId"))))))
+                        // Kanał sklepowy: /skyblock admin monety <gracz> <kwota> — wpłata
+                        // monet przez ledger (działa dla gracza offline).
+                        .then(Commands.literal("monety")
+                                .then(Commands.argument("gracz", StringArgumentType.word())
+                                        .then(Commands.argument("kwota", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10_000_000))
+                                                .executes(ctx -> grantMoney(ctx.getSource().getSender(),
+                                                        StringArgumentType.getString(ctx, "gracz"),
+                                                        ctx.getArgument("kwota", Integer.class))))))
+                        // Kanał sklepowy: /skyblock admin minion-give <gracz> <typ> [poziom]
+                        // — wydanie minionka wskazanemu graczowi (przedmiot wymaga online).
+                        .then(Commands.literal("minion-give")
+                                .then(Commands.argument("gracz", StringArgumentType.word())
+                                        .then(Commands.argument("typ", StringArgumentType.word())
+                                                .executes(ctx -> giveMinionTo(ctx.getSource().getSender(),
+                                                        StringArgumentType.getString(ctx, "gracz"),
+                                                        StringArgumentType.getString(ctx, "typ"), 1))
+                                                .then(Commands.argument("poziom", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 5))
+                                                        .executes(ctx -> giveMinionTo(ctx.getSource().getSender(),
+                                                                StringArgumentType.getString(ctx, "gracz"),
+                                                                StringArgumentType.getString(ctx, "typ"),
+                                                                ctx.getArgument("poziom", Integer.class)))))))
                 ).build(), "SkyBlock admin panel — M1-D recovery & profile view", List.of("sbadmin"));
+    }
+
+    /**
+     * Kanał sklepowy dla monet: wpłata przez ledger — działa też dla gracza
+     * offline (konto powstaje z saldem startowym).
+     */
+    private int grantMoney(CommandSender sender, String playerName, int amount) {
+        org.rafalohaki.wpmecore.addons.skyblock.SkyBlockGameplay sb =
+                (org.rafalohaki.wpmecore.addons.skyblock.SkyBlockGameplay) plugin;
+        var ledger = sb.ledger();
+        if (ledger == null) {
+            sender.sendMessage(Component.text("Ledger monet niedostępny.", NamedTextColor.RED));
+            return 0;
+        }
+        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
+        UUID playerId = target.getUniqueId();
+        ledger.depositPlayer(playerId, amount, "shop_grant:" + UUID.randomUUID(), "shop_purchase")
+                .whenComplete((mutation, failure) -> {
+                    if (failure != null) {
+                        sender.sendMessage(Component.text("Wpłata odrzucona dla " + playerName
+                                + ": " + failure.getMessage(), NamedTextColor.RED));
+                    } else {
+                        sender.sendMessage(Component.text("Wydano " + amount + " monet graczowi "
+                                + playerName + " (saldo: " + mutation.balance() + ").",
+                                NamedTextColor.GREEN));
+                    }
+                });
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * Kanał sklepowy dla minionków: przedmiot fizyczny wymaga gracza online —
+     * sklep dostarcza zamówienia przy wejściu, więc "offline" tu zwraca błąd.
+     */
+    private int giveMinionTo(CommandSender sender, String playerName, String typeId, int tier) {
+        Player target = Bukkit.getPlayerExact(playerName);
+        if (target == null) {
+            sender.sendMessage(Component.text("Gracz " + playerName + " jest offline",
+                    NamedTextColor.RED));
+            return 0;
+        }
+        org.rafalohaki.wpmecore.addons.skyblock.SkyBlockGameplay sb =
+                (org.rafalohaki.wpmecore.addons.skyblock.SkyBlockGameplay) plugin;
+        var config = sb.minionsConfig();
+        var type = config == null ? null : config.type(typeId);
+        if (type == null) {
+            sender.sendMessage(Component.text("Nieznany typ minionka: " + typeId
+                    + ". Dostępne: " + String.join(", ", config.minions().keySet()),
+                    NamedTextColor.RED));
+            return 0;
+        }
+        Player t = target;
+        t.getScheduler().run(plugin, ignored -> {
+            org.bukkit.inventory.ItemStack item =
+                    org.rafalohaki.wpmecore.addons.skyblock.minions.MinionItem
+                            .create(type, tier, false, null, 0L, "", mm);
+            t.getInventory().addItem(item).values().forEach(
+                    stack -> t.getWorld().dropItemNaturally(t.getLocation(), stack));
+            t.sendMessage(Component.text("Otrzymałeś minionka " + typeId
+                    + " (poziom " + tier + ").", NamedTextColor.GREEN));
+        }, null);
+        sender.sendMessage(Component.text("Wydano minionka " + typeId + " (poziom " + tier
+                + ") graczowi " + playerName, NamedTextColor.GREEN));
+        return Command.SINGLE_SUCCESS;
     }
 
     private int viewProfile(CommandSender sender, String playerName) {

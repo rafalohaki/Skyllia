@@ -501,38 +501,7 @@ final class SkyBlockCommands {
                                                     .executes(context -> giveMinion(
                                                             context.getSource().getSender(),
                                                             context.getArgument("typ", String.class),
-                                                            context.getArgument("poziom", Integer.class)))))
-                                    // Kanał sklepowy: `skyblock admin minion-give <gracz> <typ> [poziom]`
-                                    // — konsola wydaje minionka wskazanemu graczowi (wymaga online).
-                                    .then(Commands.argument("gracz",
-                                                    com.mojang.brigadier.arguments.StringArgumentType.word())
-                                            .then(Commands.argument("typ",
-                                                            com.mojang.brigadier.arguments.StringArgumentType.word())
-                                                    .executes(context -> giveMinionTo(
-                                                            context.getSource().getSender(),
-                                                            com.mojang.brigadier.arguments.StringArgumentType
-                                                                    .getString(context, "gracz"),
-                                                            context.getArgument("typ", String.class), 1))
-                                                    .then(Commands.argument("poziom",
-                                                                    com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 5))
-                                                            .executes(context -> giveMinionTo(
-                                                                    context.getSource().getSender(),
-                                                                    com.mojang.brigadier.arguments.StringArgumentType
-                                                                            .getString(context, "gracz"),
-                                                                    context.getArgument("typ", String.class),
-                                                                    context.getArgument("poziom", Integer.class)))))))
-                            // Kanał sklepowy: `skyblock admin monety <gracz> <kwota>` — wpłata
-                            // monet na konto gracza przez ledger (działa dla gracza offline).
-                            .then(Commands.literal("monety")
-                                    .then(Commands.argument("gracz",
-                                                    com.mojang.brigadier.arguments.StringArgumentType.word())
-                                            .then(Commands.argument("kwota",
-                                                            com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10_000_000))
-                                                    .executes(context -> grantMoney(
-                                                            context.getSource().getSender(),
-                                                            com.mojang.brigadier.arguments.StringArgumentType
-                                                                    .getString(context, "gracz"),
-                                                            context.getArgument("kwota", Integer.class)))))))
+                                                            context.getArgument("poziom", Integer.class)))))))
                     .build(),
                     "Komendy administracyjne SkyBlock", List.of());
         });
@@ -612,68 +581,6 @@ final class SkyBlockCommands {
                 stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
         player.sendMessage(Component.text("Wydano minionka " + typeId + " (poziom " + tier + ").",
                 NamedTextColor.GREEN));
-        return Command.SINGLE_SUCCESS;
-    }
-
-    /**
-     * Wariant dla konsoli/sklepu: wydaje minionka wskazanemu graczowi.
-     * Przedmiot fizyczny wymaga gracza online — sklep dostarcza zamówienia
-     * przy wejściu gracza, więc "offline" tu po prostu zwraca błąd.
-     */
-    int giveMinionTo(CommandSender sender, String playerName, String typeId, int tier) {
-        Player target = Bukkit.getPlayerExact(playerName);
-        if (target == null) {
-            sender.sendMessage(Component.text("Gracz " + playerName + " jest offline",
-                    NamedTextColor.RED));
-            return 0;
-        }
-        MinionsConfig config = plugin.minionsConfig();
-        MinionsConfig.TypeDef type = config == null ? null : config.type(typeId);
-        if (type == null) {
-            sender.sendMessage(Component.text("Nieznany typ minionka: " + typeId
-                    + ". Dostępne: " + String.join(", ", config.minions().keySet()),
-                    NamedTextColor.RED));
-            return 0;
-        }
-        Player t = target;
-        t.getScheduler().run(plugin, ignored -> {
-            ItemStack item = MinionItem.create(type, tier, false, null, 0L, "", plugin.miniMessage());
-            t.getInventory().addItem(item).values().forEach(
-                    stack -> t.getWorld().dropItemNaturally(t.getLocation(), stack));
-            t.sendMessage(Component.text("Otrzymałeś minionka " + typeId
-                    + " (poziom " + tier + ").", NamedTextColor.GREEN));
-        }, null);
-        sender.sendMessage(Component.text("Wydano minionka " + typeId + " (poziom " + tier
-                + ") graczowi " + playerName, NamedTextColor.GREEN));
-        return Command.SINGLE_SUCCESS;
-    }
-
-    /**
-     * Kanał sklepowy dla monet: `skyblock admin monety <gracz> <kwota>`.
-     * Wpłata idzie przez ledger (idempotentny transactionId per zamówienie
-     * nie istnieje po stronie komendy — dedupe zamówień pilnuje sklep), więc
-     * nadaje się też dla gracza offline — konto powstaje z saldem startowym.
-     */
-    int grantMoney(@NotNull CommandSender sender, @NotNull String playerName, int amount) {
-        LedgerService ledger = plugin.ledger();
-        if (ledger == null) {
-            sender.sendMessage(Component.text("Ledger monet niedostępny.", NamedTextColor.RED));
-            return 0;
-        }
-        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
-        java.util.UUID playerId = target.getUniqueId();
-        String txId = "shop_grant:" + java.util.UUID.randomUUID();
-        ledger.depositPlayer(playerId, amount, txId, "shop_purchase")
-                .whenComplete((mutation, failure) -> {
-                    if (failure != null) {
-                        sender.sendMessage(Component.text("Wpłata odrzucona dla " + playerName
-                                + ": " + failure.getMessage(), NamedTextColor.RED));
-                    } else {
-                        sender.sendMessage(Component.text("Wydano " + amount + " monet graczowi "
-                                + playerName + " (saldo: " + mutation.balance() + ").",
-                                NamedTextColor.GREEN));
-                    }
-                });
         return Command.SINGLE_SUCCESS;
     }
 

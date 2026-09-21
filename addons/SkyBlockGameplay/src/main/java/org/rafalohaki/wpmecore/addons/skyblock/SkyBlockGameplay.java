@@ -1195,11 +1195,11 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         return dailyRewardListener;
     }
 
-    MinionsConfig minionsConfig() {
+    public MinionsConfig minionsConfig() {
         return minionsConfig;
     }
 
-    LedgerService ledger() {
+    public LedgerService ledger() {
         return ledger;
     }
 

@@ -20,8 +20,9 @@ public final class MinionDao {
     }
 
     /**
-     * Atomowy insert z limitem: licznik i insert w jednym SQL, więc dwa
-     * równoległe postawienia nie przekroczą limitu wyspy.
+     * Atomowy insert z limitem i dedupem pozycji: licznik, brak wpisu na tych
+     * samych koordynatach i insert w jednym SQL, więc równoległe postawienia
+     * nie przekroczą limitu wyspy ani nie zduplikują minionka na jednym bloku.
      */
     public @NotNull CompletableFuture<Boolean> tryInsertWithinLimit(
             @NotNull MinionRecord record, int maxPerIsland) {
@@ -33,13 +34,18 @@ public final class MinionDao {
                      total_generated, created_at, updated_at)
                 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 WHERE (SELECT COUNT(*) FROM wpme_sb_minions WHERE island_id = ?) < ?
+                    AND NOT EXISTS (SELECT 1 FROM wpme_sb_minions
+                        WHERE island_id = ? AND world = ?
+                          AND x = ? AND y = ? AND z = ?)
                 """,
                 record.minionId().toString(), record.islandId().toString(), record.typeId(),
                 record.tier(), record.world(), record.x(), record.y(), record.z(),
                 record.storageEncoded(), record.fuelType(), record.fuelExpiresAt(),
                 record.compactorEnabled(), record.linkedChestX(), record.linkedChestY(),
                 record.linkedChestZ(), record.totalGenerated(), record.createdAt(),
-                record.updatedAt(), record.islandId().toString(), maxPerIsland
+                record.updatedAt(), record.islandId().toString(), maxPerIsland,
+                record.islandId().toString(), record.world(),
+                record.x(), record.y(), record.z()
         ).thenApply(updated -> updated != null && updated >= 1);
     }
 

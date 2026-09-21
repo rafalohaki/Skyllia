@@ -146,7 +146,10 @@ public final class CosmeticPlayerMenu {
                 List.of(
                         "<gray>Kliknij część, aby ją założyć.</gray>",
                         "<gray>Kliknij noszoną, aby ją zdjąć.</gray>",
-                        "<gray>Egzemplarze są soulbound — nie sprzedasz ich.</gray>"),
+                        "<gray>Egzemplarze są soulbound — nie sprzedasz ich.</gray>",
+                        // Gracz z pustą kolekcją musi wiedzieć, skąd brać części —
+                        // inaczej menu jest ślepym zaułkiem.
+                        "<gray>Części wygrywasz za wysokie miejsca w sezonie — /nagrody.</gray>"),
                 false));
 
         /*

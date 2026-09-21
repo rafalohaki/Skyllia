@@ -46,7 +46,9 @@ class SkyBlockSettingsTest {
         assertEquals(3, settings.bankAmounts().size());
         // F24: doszedł kafelek „Sezon i karnet” (slot 29) — sezon nie miał
         // w Centrum gry żadnego wejścia.
-        assertEquals(3, settings.externalActions().size());
+        // 2026-09-21: doszły kafelki „Kolekcja sezonowa” (28) i „Kuźnia
+        // i kantor” (32) — /kosmetyki i /kuznia nie miały wejścia z /menu.
+        assertEquals(5, settings.externalActions().size());
         assertEquals("world", settings.hub().spawn().world());
         // Spawn hubu przeniesiony 2026-08-19 na (27.5, 99.0, 1.5), mapa BlueApple
         // Autumn. Uwaga operacyjna: te współrzędne żyją w TRZECH miejscach —

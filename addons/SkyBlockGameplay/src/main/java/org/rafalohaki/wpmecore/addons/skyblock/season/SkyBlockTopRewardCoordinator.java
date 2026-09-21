@@ -604,7 +604,7 @@ public final class SkyBlockTopRewardCoordinator {
                             }
                             schedulePlayer(player, () -> {
                                 playRewardEffects(player);
-                                sendClaimSuccessMessage(player, seasonId, rank, reward);
+                                sendClaimSuccessMessage(player, seasonId, rank, rewardRank, reward);
                             });
                             if (outbox == null) {
                                 // Fallback bez outboxa: dostawa dopiero po recordClaim,
@@ -707,11 +707,30 @@ public final class SkyBlockTopRewardCoordinator {
                             case 1 -> "<gold><bold>#" + configured.rank() + " Miejsce:</bold></gold>";
                             case 2 -> "<white><bold>#" + configured.rank() + " Miejsce:</bold></white>";
                             case 3 -> "<color:#cd7f32><bold>#" + configured.rank() + " Miejsce:</bold></color>";
-                            default -> "<yellow><bold>#" + configured.rank() + " Miejsce:</bold></yellow>";
+                            // Wpis progu (THRESHOLD_RANK) płaci każdej wyspie poza
+                            // podium powyżej threshold-score, nie tylko dokładnemu
+                            // miejscu #4 — etykieta „#4 Miejsce" zmyłałaby resztę
+                            // stawki. Miejsca z własnym wpisem (10, 50) idą dalej.
+                            default -> configured.rank() == THRESHOLD_RANK
+                                    ? "<yellow><bold>Próg sezonu</bold></yellow> <dark_gray>(miejsce #4+):</dark_gray>"
+                                    : "<yellow><bold>#" + configured.rank() + " Miejsce:</bold></yellow>";
                         };
+                        // Tylko składniki faktycznie w wpisie: „0x Lotos + 0 monet"
+                        // (TOP 10/50) wyglądało jak brak nagrody, a to część kolekcji
+                        // albo tytuł wyspy.
+                        List<String> parts = new ArrayList<>();
+                        if (configured.lotus() > 0) {
+                            parts.add("<aqua>" + configured.lotus() + "x Diamentowy Lotos</aqua>");
+                        }
+                        if (configured.coins() > 0) {
+                            parts.add("<yellow>" + CompactBalanceFormatter.exact(configured.coins()) + " monet</yellow>");
+                        }
+                        String base = parts.isEmpty()
+                                ? "<gray>nagroda kosmetyczna</gray>"
+                                : String.join(" + ", parts);
                         sender.sendMessage(miniMessage.deserialize("  " + placeLabel
-                                + " <aqua>" + configured.lotus() + "x Diamentowy Lotos</aqua> + <yellow>"
-                                + CompactBalanceFormatter.exact(configured.coins()) + " monet</yellow>"
+                                + " " + base
+                                + collectionSuffix(seasonId, configured.rank())
                                 + titleSuffix(configured.rank())));
                     }
 
@@ -865,6 +884,38 @@ public final class SkyBlockTopRewardCoordinator {
                 : " <dark_gray>•</dark_gray> <gray>tytuł wyspy:</gray> <white>" + title + "</white>";
     }
 
+    /**
+     * Dopisek do wiersza nagrody, gdy to miejsce daje części kolekcji sezonowej
+     * ({@code cosmetics.yml} → {@code top-rewards}). Bez niego /nagrody pokazywało
+     * tylko Lotosy i monety — gracz nie wiedział, że na podium i progu czeka set.
+     * Katalog bywa odpięty (kosmetyka wyłączona): wtedy dopisek po prostu znika.
+     *
+     * @param rewardRank ranga z wpisu nagrody — dla ogona stawki to wpis progu
+     *                   ({@link #THRESHOLD_RANK}), bo części wychodzą z tej samej
+     *                   rangi co dostawa w {@code deliverCosmetics}
+     */
+    private @NotNull String collectionSuffix(int seasonId, int rewardRank) {
+        CosmeticService service = cosmetics;
+        if (service == null) {
+            return "";
+        }
+        CosmeticCatalog catalog = service.catalog();
+        int pieces = catalog.piecesFor(seasonId, rewardRank).size();
+        if (pieces == 0) {
+            return "";
+        }
+        String name = catalog.forSeason(seasonId)
+                .map(CosmeticCatalog.Collection::name)
+                .orElse(null);
+        return " <dark_gray>•</dark_gray> <gray>" + pieces + " " + pieceWord(pieces)
+                + " kolekcji</gray>" + (name == null ? "" : " " + name);
+    }
+
+    /** Polska odmiana „część” — w katalogu występują wyłącznie liczby 1–4. */
+    private static @NotNull String pieceWord(int pieces) {
+        return pieces == 1 ? "część" : "części";
+    }
+
     private void scheduleCosmetics(Player player, int seasonId, int rank) {
         try {
             var scheduled = player.getScheduler().runDelayed(plugin,
@@ -960,6 +1011,7 @@ public final class SkyBlockTopRewardCoordinator {
     }
 
     private void sendClaimSuccessMessage(@NotNull Player player, int seasonId, int rank,
+                                         int rewardRank,
                                          @NotNull SkyBlockSettings.TopReward reward) {
         String rankLabel = switch (rank) {
             case 1 -> "<gold><bold>1. MIEJSCE</bold></gold>";
@@ -978,8 +1030,40 @@ public final class SkyBlockTopRewardCoordinator {
         player.sendMessage(miniMessage.deserialize(
                 "<green>Gratulacje! Twoja wyspa zdobyła " + rankLabel + " w "
                         + (edition != null ? "<gold>edycji " + edition + "</gold>" : "<gold>tej edycji</gold>") + "!</green>"));
+        /*
+         * Wiersz nagrody wymienia tylko to, co faktycznie przyszło: miejsce
+         * z „0x Lotos + 0 monet" (TOP 10/50) płaci kosmetyką i/lub tytułem,
+         * więc stare zdanie wyglądało jak brak nagrody. Części kolekcji
+         * wiążą się z rangą wpisu (dla ogona stawki = próg), tytuł —
+         * z faktycznym miejscem w rankingu, tak jak w grantSeasonTitle.
+         */
+        List<String> parts = new ArrayList<>();
+        if (reward.lotus() > 0) {
+            parts.add("<aqua><bold>" + reward.lotus() + "x Diamentowy Lotos</bold></aqua>");
+        }
+        if (reward.coins() > 0) {
+            parts.add("<gold><bold>" + CompactBalanceFormatter.exact(reward.coins()) + " monet</bold></gold>");
+        }
+        CosmeticService service = cosmetics;
+        if (service != null) {
+            CosmeticCatalog catalog = service.catalog();
+            int pieces = catalog.piecesFor(seasonId, rewardRank).size();
+            if (pieces > 0) {
+                String name = catalog.forSeason(seasonId)
+                        .map(CosmeticCatalog.Collection::name).orElse(null);
+                parts.add("<light_purple><bold>" + pieces + " " + pieceWord(pieces)
+                        + " kolekcji" + (name == null ? "" : " " + name) + "</bold></light_purple>");
+            }
+        }
+        String title = titleRewards.get(rank);
+        if (title != null && !title.isBlank()) {
+            parts.add("<white><bold>tytuł wyspy:</bold></white> <white>" + title + "</white>");
+        }
+        String rewardText = parts.isEmpty()
+                ? "<gray><bold>nagroda specjalna</bold></gray>"
+                : String.join("<gray> oraz </gray>", parts);
         player.sendMessage(miniMessage.deserialize(
-                "<yellow>Otrzymano nagrody:</yellow> <aqua><bold>" + reward.lotus() + "x Diamentowy Lotos</bold></aqua> <gray>oraz</gray> <gold><bold>" + CompactBalanceFormatter.exact(reward.coins()) + " monet</bold></gold>!"));
+                "<yellow>Otrzymano nagrody:</yellow> " + rewardText + "!"));
         player.sendMessage(miniMessage.deserialize(
                 "<gradient:#00d2ff:#00a8ff><bold>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</bold></gradient>"));
     }

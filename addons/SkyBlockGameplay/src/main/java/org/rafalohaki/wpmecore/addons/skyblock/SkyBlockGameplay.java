@@ -207,6 +207,8 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
     private IslandUpgradesMenu islandUpgradesMenu;
     /** Trwały tytuł wyspy (migracja #13) — jeden na wyspę, z prestiżu/sezonu/zlewu Lotosów. */
     private org.rafalohaki.wpmecore.addons.skyblock.island.IslandTitleService islandTitles;
+    /** R48: fallback id wyspy dla odznaki offline graczy (migawka TTL + magazyn). */
+    private org.rafalohaki.wpmecore.addons.skyblock.season.OfflineIslandIdResolver offlineIslandIdResolver;
     private IslandCreationMenus islandCreationMenus;
     private IslandGuideMenu islandGuide;
     private ProfilePlaytimeDao playtimeDao;
@@ -431,13 +433,25 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         this.islandTitles = new org.rafalohaki.wpmecore.addons.skyblock.island.IslandTitleService(
                 new org.rafalohaki.wpmecore.addons.skyblock.island.IslandTitleDao.Sql(
                         binding.service()));
+        /*
+         * R48: odznaka wyspy (%skyblock_island_badge%) dla świeżo-offline graczy.
+         * cachedIslandIdOf potrafi wrócić pusto dla ducha gracza w TAB — fallback
+         * czyta aktywne członkostwo z magazynu (wpme_sb_island_membership) przez
+         * migawkę TTL z OfflineIslandIdResolver, bez SQL w wątku renderu.
+         */
+        this.offlineIslandIdResolver = new org.rafalohaki.wpmecore.addons.skyblock.season.OfflineIslandIdResolver(
+                skyllia,
+                playerId -> profileStateService.activeMembership(playerId)
+                        .thenApply(membership -> membership.map(
+                                org.rafalohaki.wpmecore.addons.skyblock.islandprofile.IslandMembership::islandId)),
+                playerId -> getServer().getPlayer(playerId) != null);
         this.season = new SeasonModule(this, binding.service(), miniMessage,
                 settings.leaderboards(), settings.seasons(),
                 ledger, inventoryOutbox, cosmeticCatalog, skyllia, customItems,
                 // %skyblock_island_title%: tytuł wyspy gracza wprost z migawki
                 // magazynu (żadnego SQL-a w wątku rysującym hologram).
                 playerId -> islandTitles.placeholderTitle(
-                        skyllia.cachedIslandIdOf(playerId).orElse(null)));
+                        offlineIslandIdResolver.resolve(playerId)));
         // C1: nagrody top z config.yml (season.top-rewards; fail-closed na
         // 3 domyślne pozycje) oraz resolver nazwy edycji dla komunikatów
         // operatora (null/brak edycji → legacy fallback zakresu dat).

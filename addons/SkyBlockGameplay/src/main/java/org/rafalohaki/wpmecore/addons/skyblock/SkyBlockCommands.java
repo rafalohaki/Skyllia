@@ -144,7 +144,7 @@ final class SkyBlockCommands {
                     .requires(source -> source.getSender() instanceof Player player
                             && player.hasPermission("skyblockgameplay.use"))
                     .executes(context -> execute(context.getSource().getSender(),
-                            player -> { try { if (plugin.skyllia() != null && plugin.skyllia().islandOf(player.getUniqueId()).isPresent() && plugin.islandCenter() != null) plugin.islandCenter().open(player); else plugin.mainMenu().open(player); } catch (Exception e) { plugin.mainMenu().open(player); } })).build(),
+                            this::openSkyblockMenu)).build(),
                     "Otwiera główne menu SkyBlock", List.of("sbmenu", "skyblockmenu", "sb"));
             // Literał `latanie`, nie `fly`: na każdym backendzie z AdminTools
             // (SkyBlock, anarchia) `/fly` należy do narzędzi administracji
@@ -534,23 +534,13 @@ final class SkyBlockCommands {
             menu.open(player);
         }, "prestige");
 
-        // /is menu — Centrum Wyspy (jak gołe /menu)
+        // /is menu — Centrum Wyspy (jak gołe /menu; wspólny routing openSkyblockMenu)
         SkylliaCommands.registerSubCommand(plugin, "skyblockgameplay.use", sender -> {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(Component.text("Tylko w grze.", NamedTextColor.RED));
                 return;
             }
-            try {
-                if (plugin.skyllia() != null
-                        && plugin.skyllia().islandOf(player.getUniqueId()).isPresent()
-                        && plugin.islandCenter() != null) {
-                    plugin.islandCenter().open(player);
-                } else {
-                    plugin.mainMenu().open(player);
-                }
-            } catch (Exception e) {
-                plugin.mainMenu().open(player);
-            }
+            openSkyblockMenu(player);
         }, "menu");
 
         // /is wartosc — cennik przedmiotu w ręce (jak /wartosc)
@@ -561,6 +551,32 @@ final class SkyBlockCommands {
                 sender.sendMessage(Component.text("Tylko w grze.", NamedTextColor.RED));
             }
         }, "wartosc", "cena", "ilewarto");
+    }
+
+    /**
+     * Wspólny routing /menu i /is menu (r48: jedno źródło zamiast dwóch
+     * zduplikowanych lambd). Widok = akcja docelowa: wyspa → Centrum Wyspy
+     * (tytuł „Centrum Wyspy”), brak wyspy → hub (tytuł z configu,
+     * „SkyBlock • Centrum gry”). Fallback przestaje być cichy: powód
+     * (pudło detekcji wyspy vs wyjątek) trafia do logu — wcześniej gracz
+     * z wyspą mógł po cichu dostać hub i audyt widział „tytuł /menu zawsze
+     * Centrum gry” bez śladu w logach, dlaczego.
+     */
+    private void openSkyblockMenu(Player player) {
+        try {
+            if (plugin.islandCenter() != null
+                    && plugin.skyllia() != null
+                    && plugin.skyllia().islandOf(player.getUniqueId()).isPresent()) {
+                plugin.islandCenter().open(player);
+                return;
+            }
+            plugin.getLogger().fine("/menu → hub (detekcja wyspy: brak wyspy lub Skyllia "
+                    + "niegotowa) dla " + player.getName());
+        } catch (Exception e) {
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "/menu → hub (wyjątek detekcji wyspy) dla " + player.getName(), e);
+        }
+        plugin.mainMenu().open(player);
     }
 
     int giveMinion(CommandSender sender, String typeId, int tier) {

@@ -73,7 +73,7 @@ public final class Ui {
                 "<dark_gray> </dark_gray>", List.of(), false), "separator");
     }
 
-    /** Glify paneli GUI (font {@code wpme:gui}) — tekstura tła zakotwiczona w tytule. */
+    /** Glify paneli GUI (font {@code wpme:gui}) — historyczne; tytuły ich już nie noszą (r48). */
     public static final char GUI_QUESTS = '\uE110';
     public static final char GUI_SHOP = '\uE111';
     public static final char GUI_PASS = '\uE112';
@@ -87,40 +87,32 @@ public final class Ui {
     public static final char GUI_ONEBLOCK = '\uE121';
 
     /**
-     * Tytuł inventory z teksturą panelu: space-glify przesuwają pen na lewą
-     * krawędź okna, bitmap-glyph rysuje panel, drugi space wraca pen na tekst.
-     * Bez paczki (brak {@link ClientAssetService}) zwraca sam tytuł — panel
-     * teksturowany jest bezużyteczny bez zasobów klienta.
-     * {@code rows} dobiera neutralny wariant wysokości (1..6).
+     * Tytuł inventory: czysty tekst MiniMessage, bez prefiksów fontu
+     * {@code wpme:gui} ani glifów bannerowych. Tła paneli rysują modele itemów
+     * ({@link #frame}, {@link #separator}), więc tytuł musi być czytelny
+     * samodzielnie — bez polegania na neutralizacji glifów w paczce klienta.
+     * Parametr {@code rows} pozostał dla zgodności wywołań (ignorowany).
      */
     public static @NotNull String guiTitle(int rows, @NotNull String miniTitle) {
-        return guiTitle(glyphForRows(rows), miniTitle);
+        return miniTitle;
     }
 
-    /** Wariant z wybranym tematem glyphu (np. {@link #GUI_QUESTS}). */
+    /** Wariant z tematem glyphu (np. {@link #GUI_QUESTS}); glyph pomijany w tytule. */
     public static @NotNull String guiTitle(char glyph, @NotNull String miniTitle) {
-        if (clientAssets == null) {
-            return miniTitle;
-        }
-        return "<font:wpme:gui>\uE1F0" + glyph + "\uE1F1</font>" + miniTitle;
+        return miniTitle;
     }
 
-    /** Taka sama nakładka na już złożony {@link Component}. */
+    /** Taka sama zasada na już złożony {@link Component}: bez nakładki glifów. */
     public static @NotNull Component panelTitle(int rows, @NotNull Component title) {
-        return panelTitle(glyphForRows(rows), title);
+        return title;
     }
 
-    /** Wariant z wybranym tematem glyphu na {@link Component}. */
+    /** Wariant z tematem glyphu na {@link Component}; glyph pomijany w tytule. */
     public static @NotNull Component panelTitle(char glyph, @NotNull Component title) {
-        if (clientAssets == null) {
-            return title;
-        }
-        return Component.text("\uE1F0" + glyph + "\uE1F1")
-                .font(net.kyori.adventure.key.Key.key("wpme", "gui"))
-                .append(title);
+        return title;
     }
 
-    /** Neutralny glyph panelu dla danej liczby wierszy (1..6). */
+    /** Neutralny glyph panelu dla danej liczby wierszy (1..6) — historyczny, nieużywany w tytułach. */
     public static char glyphNeutral(int rows) {
         return glyphForRows(rows);
     }

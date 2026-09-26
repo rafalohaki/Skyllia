@@ -1101,7 +1101,7 @@ shop:
         emerald: {material: EMERALD, buy: 1200, sell: 200}
         quartz: {material: QUARTZ, buy: 70, sell: 14}
         amethyst_shard: {material: AMETHYST_SHARD, buy: 60, sell: 12}
-        netherite_scrap: {material: NETHERITE_SCRAP, buy: 6000, sell: 1000}
+        netherite_scrap: {material: NETHERITE_SCRAP, buy: 3500, sell: 1000} # r49: mirror zShop ores.yml (r47 pasmo krysztalow 2500-4000)
     drops:
       items:
         rotten_flesh: {material: ROTTEN_FLESH, buy: 12, sell: 3}
@@ -1140,7 +1140,7 @@ shop:
         fishing_rod: {material: FISHING_ROD, buy: 50, sell: 10}
         end_portal_frame:
           material: END_PORTAL_FRAME
-          buy: 1000
+          buy: 50000 # r49: mirror zShop utility.yml (anty-bypass Endu, r27)
           sell: 0
     crystals:
       items:
@@ -1172,7 +1172,7 @@ shop:
         ruby:
           material: PAPER
           custom-item: "skyblock:crystal/ruby"
-          buy: 5000
+          buy: 3500 # r49: mirror zShop crystals.yml (r47 pasmo krysztalow 2500-4000)
           sell: 1000
         topaz:
           material: PAPER

@@ -12,6 +12,7 @@ import org.rafalohaki.wpmecore.api.item.CustomItemService;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
@@ -21,13 +22,22 @@ import java.util.logging.Level;
  * potwierdz} przez clickEvent), bo akcja jest bezzwrotna.
  *
  * <p>Flow stawki idzie przez outbox (ten sam kontrakt co składniki kuźni):
- * deterministyczny operationId na dobę, wiec powtórka po awarii nie zabiera
+ * deterministyczny operationId na dobę, więc powtórka po awarii nie zabiera
  * SL drugi raz. Dzień gry zapisujemy w PDC gracza dopiero w callbacku
  * udanego zabrania stawki — awaria przed rzutem kosztuje dom, nie gracza.
- * Wygrana leci zagnieżdżoną operacją outboxa dopiero z następnego ticku
- * encji (dzierżawa callbacku, patrz saga w ForgeService).
+ * Rzut leci 2 ticki po zabraniu stawki, bo callback outboxu domyka się jeszcze
+ * w leasingu operacji — natychmiastowe zagnieżdżone nadanie wygranej dostałoby
+ * BUSY (patrz saga w ForgeService). Każde wyjście ze stanu „stawka zabrana"
+ * kończy się rzutem: gdy gracz zniknie w oknie albo scheduler odrzuci zadanie,
+ * wynik rozstrzyga się offline — wygrana trafia do trwałego nadania
+ * ({@code beginOfflineGrant}, ten sam deterministyczny operationId jak normalna
+ * wygrana), a przegrana czysto wygasa. Stawka nigdy nie przepada bez losowania.
  */
 public final class LotusWagerCommand {
+
+    /** Próby doręczenia offline wygranej: pierwsza + ponowienia co 5 s. */
+    private static final int OFFLINE_RETRY_LIMIT = 4;
+    private static final long OFFLINE_RETRY_DELAY_TICKS = 100L;
 
     private final JavaPlugin plugin;
     private final MiniMessage miniMessage;
@@ -109,17 +119,7 @@ public final class LotusWagerCommand {
                 // Dzień blokujemy dopiero po trwałym zabraniu stawki.
                 wager.markPlayed(player.getPersistentDataContainer(), today);
                 send(player, "<gold>Lotosy postawione — losowanie...</gold>");
-                try {
-                    var scheduled = player.getScheduler().runDelayed(plugin,
-                            task -> roll(player, today), null, 2L);
-                    if (scheduled == null) {
-                        plugin.getLogger().warning("Zakład: nie udało się zaplanować losowania dla "
-                                + player.getUniqueId() + " (gracz offline); stawka przepadła");
-                    }
-                } catch (RuntimeException rejected) {
-                    plugin.getLogger().log(Level.WARNING,
-                            "Zakład: scheduler odrzucił losowanie dla " + player.getUniqueId(), rejected);
-                }
+                scheduleRoll(player, today);
             }
             case INSUFFICIENT -> send(player, "<red>Za mało Srebrnych Lotosów.</red>");
             case BUSY -> send(player, "<gray>Poprzednia operacja jeszcze trwa.</gray>");
@@ -128,10 +128,32 @@ public final class LotusWagerCommand {
         }
     }
 
+    /**
+     * Rzut 2 ticki po zabraniu stawki: callback outboxu domyka się jeszcze
+     * w leasingu operacji (beginMutation woła complete przed release), więc
+     * natychmiastowe zagnieżdżone nadanie wygranej dostałoby BUSY. Okno jest
+     * zabezpieczone: wycofanie encji albo odrzucenie schedulera rozstrzyga
+     * rzut offline — stawka nie może przepaść bez losowania.
+     */
+    private void scheduleRoll(@NotNull Player player, @NotNull LocalDate today) {
+        try {
+            var scheduled = player.getScheduler().runDelayed(plugin,
+                    task -> roll(player, today),
+                    () -> resolveOffline(player.getUniqueId(), today), 2L);
+            if (scheduled == null) {
+                resolveOffline(player.getUniqueId(), today);
+            }
+        } catch (RuntimeException rejected) {
+            plugin.getLogger().log(Level.WARNING,
+                    "Zakład: scheduler odrzucił losowanie dla " + player.getUniqueId()
+                            + " — rozstrzygam offline", rejected);
+            resolveOffline(player.getUniqueId(), today);
+        }
+    }
+
     private void roll(@NotNull Player player, @NotNull LocalDate today) {
         if (!player.isOnline() || !plugin.isEnabled()) {
-            plugin.getLogger().warning("Zakład: gracz " + player.getUniqueId()
-                    + " nieosiągalny przy losowaniu; stawka dnia " + today + " przepadła");
+            resolveOffline(player.getUniqueId(), today);
             return;
         }
         boolean win = ThreadLocalRandom.current().nextBoolean();
@@ -160,6 +182,57 @@ public final class LotusWagerCommand {
                         send(player, "<red>Wygrana jest zapisana — wejdź ponownie, aby ją odebrać.</red>");
                     }
                 });
+    }
+
+    /**
+     * Rzut dla gracza, który zniknął między zabraniem stawki a losowaniem.
+     * Losowanie dzieje się dokładnie raz; przy wygranej dostawa idzie trwałym
+     * {@code beginOfflineGrant} z tym samym deterministycznym operationId co
+     * normalna wygrana — odbiór przy najbliższym wejściu, idempotentnie.
+     * Strażnik mutacji potrafi odrzucić nadanie w trakcie przenosin, więc
+     * doręczenie ponawia kilka razy (wynik już ustalony — ponawiane jest
+     * wyłącznie wydanie, nie rzut).
+     */
+    private void resolveOffline(@NotNull UUID playerId, @NotNull LocalDate today) {
+        boolean win = ThreadLocalRandom.current().nextBoolean();
+        plugin.getLogger().info("Zakład: gracz " + playerId + " zniknął po zabraniu stawki — "
+                + "losowanie offline (dzień " + today + "): " + (win ? "wygrana" : "przegrana"));
+        if (win) {
+            deliverOfflineWin(playerId, today, 0);
+        }
+    }
+
+    private void deliverOfflineWin(@NotNull UUID playerId, @NotNull LocalDate today, int attempt) {
+        ItemStack payout = customItems.create(LotusWager.SILVER_LOTUS_ID).orElse(null);
+        if (payout == null) {
+            plugin.getLogger().severe("Zakład: brak przedmiotu " + LotusWager.SILVER_LOTUS_ID
+                    + " — offline wygrana dla " + playerId + " niewydana");
+            return;
+        }
+        payout.setAmount(LotusWager.PAYOUT);
+        String operationId = LotusWager.grantOperationId(playerId, today);
+        outbox.beginOfflineGrant(playerId, 0L, operationId, "zaklad_win", payout, outcome -> {
+            if (outcome == InventoryOutbox.Outcome.SUCCESS
+                    || outcome == InventoryOutbox.Outcome.DEFERRED) {
+                plugin.getLogger().info("Zakład: offline wygrana dla " + playerId
+                        + " zakolejkowana (operationId " + operationId + ")");
+                return;
+            }
+            if (attempt + 1 < OFFLINE_RETRY_LIMIT) {
+                try {
+                    plugin.getServer().getGlobalRegionScheduler().runDelayed(plugin,
+                            task -> deliverOfflineWin(playerId, today, attempt + 1),
+                            OFFLINE_RETRY_DELAY_TICKS);
+                    return;
+                } catch (RuntimeException rejected) {
+                    plugin.getLogger().log(Level.WARNING,
+                            "Zakład: ponowienie offline wygranej odrzucone dla " + playerId,
+                            rejected);
+                }
+            }
+            plugin.getLogger().warning("Zakład: offline wygrana " + outcome + " dla "
+                    + playerId + " — do ręcznego wydania (operationId " + operationId + ")");
+        });
     }
 
     private int countSilverLotus(@NotNull Player player) {

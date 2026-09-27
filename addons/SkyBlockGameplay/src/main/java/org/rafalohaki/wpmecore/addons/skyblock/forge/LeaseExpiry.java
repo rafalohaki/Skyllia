@@ -11,12 +11,15 @@ import org.jetbrains.annotations.NotNull;
 /**
  * ECO-10: znacznik PDC wygaśnięcia dzierżawy (epoch millis).
  *
- * <p>Znacznik trafia na egzemplarz w momencie wykucia i podróżuje z przedmiotem
- * (ekwipunek, pancerz, skrzynia). Czyszczeniem zajmuje się
- * {@link LeaseSweepListener}: przy wejściu i co 5 minut dla obecnych graczy
- * zdejmujemy z ekwipunku i z noszonych części wszystko, co przekroczyło termin.
- * Kosmetyka dzierżawna jest soulbound, więc przed wygaśnięciem nie opuści
- * ekwipunku właściciela — po nim znika, zamiast krążyć po wyspach.
+ * <p>Znacznik trafia na egzemplarz w momencie wykucia i podróżuje z przedmiotem.
+ * Inwariancję „dzierżawa przed wygaśnięciem nie opuści ekwipunku właściciela —
+ * po nim znika, zamiast krążyć po wyspach" egzekwują razem dwa elementy:
+ * {@link LeaseSweepListener} kasuje wygasłe egzemplarze (przy wejściu i co
+ * 5 minut) z plecaka, pancerza, drugiej ręki i kursora, a
+ * {@link LeaseCarryGuard} blokuje wyniesienie jeszcze-ważnej sztuki poza
+ * ekwipunek — do skrzyni, lejka, na ziemię, do ramki/stojaka zbroi (przy
+ * śmierci egzemplarz zostaje w ekwipunku zamiast w zrzucie). Sam znacznik
+ * niczego nie egzekwuje — bez guarda skrzynia na wyspie byłaby dziurą w zlewie.
  */
 public final class LeaseExpiry {
 
@@ -103,6 +106,9 @@ public final class LeaseExpiry {
             touched += reStamp(stack, expiry);
         }
         touched += reStamp(inventory.getItemInOffHand(), expiry);
+        // Kursor: sweep go obejmuje, więc re-stamp też musi — inaczej operator
+        // nie zobaczy efektu dla stosu trzymanego w dłoni.
+        touched += reStamp(player.getItemOnCursor(), expiry);
         return touched;
     }
 

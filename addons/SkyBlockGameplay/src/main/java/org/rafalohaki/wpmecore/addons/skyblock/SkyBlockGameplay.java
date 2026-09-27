@@ -802,6 +802,11 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
                         forgeService.leaseExpiry(), miniMessage);
         getServer().getPluginManager().registerEvents(leaseSweep, this);
         leaseSweep.start();
+        // ECO-10: dzierżawa nie wynosi się poza ekwipunek (skrzynie/lejki/
+        // wyrzucanie/ramki) do wygaśnięcia — sweep czyta tylko ekwipunek gracza.
+        getServer().getPluginManager().registerEvents(
+                new org.rafalohaki.wpmecore.addons.skyblock.forge.LeaseCarryGuard(
+                        this, forgeService.leaseExpiry(), miniMessage), this);
         // Perki rang (RankPerks): lot na własnej wyspie.
         if (getConfig().getBoolean("features.island-fly", false)) {
             this.islandFly = new org.rafalohaki.wpmecore.addons.skyblock.perks.IslandFlyModule(skyllia, miniMessage);

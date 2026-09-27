@@ -1520,6 +1520,12 @@ daily-reward:
   per-streak-day: 50
   streak-cap: 7
   custom-item: skyblock:token/silver_lotus
+  # ECO-14 „wielka seria": przy wielokrotności great-every dni serii dodatkowo
+  # great-coins monet (przez księgę) + 1 × great-item (przez outbox ekwipunku).
+  # great-every: 0 wyłącza. Wartości = defaulty kodu (SkyBlockSettings).
+  great-every: 28
+  great-coins: 10000
+  great-item: skyblock:token/gold_lotus
 
 # Poziom wyspy — nasza liczba (Skyllia nie zna poziomu). Liczony z trwałego dorobku:
 #   xp = (bank + 500 × zadania) / score-divisor

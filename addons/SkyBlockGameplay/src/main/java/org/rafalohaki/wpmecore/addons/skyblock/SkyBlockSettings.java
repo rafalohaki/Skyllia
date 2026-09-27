@@ -131,13 +131,27 @@ public record SkyBlockSettings(long startingBalance,
      * Kwota = baseCoins + perStreakDay × min(seria, streakCap); co 7. dzień
      * serii dodatkowo {@code lotusItem} przez outbox ekwipunku.
      *
+     * <p>ECO-14: przy wielokrotności {@code greatEvery} (domyślnie 28) serii
+     * dochodzi „wielka seria" — {@code greatCoins} monet przez księgę plus
+     * egzemplarz {@code greatItem} przez outbox. {@code greatEvery} 0 wyłącza
+     * wielką serię bez ruszania codziennej.
+     *
      * <p>Brak sekcji znaczy <b>wyłączone</b> — ta sama asymetria co w
      * {@link #seasons}: nie wypłacamy monet z domyślnych, których nikt nie zapisał.
      */
     public record DailyRewardSettings(boolean enabled, long baseCoins, long perStreakDay,
-                                      int streakCap, @NotNull String lotusItem) {
+                                      int streakCap, @NotNull String lotusItem,
+                                      int greatEvery, long greatCoins, @NotNull String greatItem) {
         public static final DailyRewardSettings DISABLED =
-                new DailyRewardSettings(false, 250L, 50L, 7, "skyblock:token/silver_lotus");
+                new DailyRewardSettings(false, 250L, 50L, 7, "skyblock:token/silver_lotus",
+                        28, 10_000L, "skyblock:token/gold_lotus");
+
+        /** Stary kształt rekordu — testy i wywołania bez sekcji wielkiej serii. */
+        public DailyRewardSettings(boolean enabled, long baseCoins, long perStreakDay,
+                                   int streakCap, @NotNull String lotusItem) {
+            this(enabled, baseCoins, perStreakDay, streakCap, lotusItem,
+                    28, 10_000L, "skyblock:token/gold_lotus");
+        }
     }
 
     private static @NotNull DailyRewardSettings dailyReward(@Nullable ConfigurationSection section) {
@@ -157,7 +171,18 @@ public record SkyBlockSettings(long startingBalance,
         if (item == null || !item.matches("[a-z0-9_]+:[a-z0-9_/.-]{1,64}")) {
             throw new IllegalArgumentException("daily-reward.custom-item is not a custom item id: " + item);
         }
-        return new DailyRewardSettings(section.getBoolean("enabled", true), base, perDay, cap, item);
+        int greatEvery = range(section.getInt("great-every", 28), 0, 365,
+                "daily-reward.great-every");
+        long greatCoins = section.getLong("great-coins", 10_000L);
+        if (greatCoins < 0L || greatCoins > 1_000_000L) {
+            throw new IllegalArgumentException("daily-reward.great-coins outside 0..1000000");
+        }
+        String greatItem = section.getString("great-item", "skyblock:token/gold_lotus");
+        if (greatItem == null || !greatItem.matches("[a-z0-9_]+:[a-z0-9_/.-]{1,64}")) {
+            throw new IllegalArgumentException("daily-reward.great-item is not a custom item id: " + greatItem);
+        }
+        return new DailyRewardSettings(section.getBoolean("enabled", true), base, perDay, cap, item,
+                greatEvery, greatCoins, greatItem);
     }
 
     /**

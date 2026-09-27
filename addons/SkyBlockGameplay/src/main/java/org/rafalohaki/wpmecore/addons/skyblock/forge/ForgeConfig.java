@@ -9,6 +9,7 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog;
 import org.rafalohaki.wpmecore.api.item.CustomItemService;
 
 import java.io.File;
@@ -52,6 +53,10 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
     /** Największy stos w waniliowym Minecrafcie; sprawdzenie bez rejestru serwera. */
     static final int MAX_RESULT_AMOUNT = 64;
 
+    /** Domyślna i maksymalna długość dzierżawy (ECO-10) w dobach. */
+    static final int DEFAULT_LEASE_DAYS = 7;
+    static final int MAX_LEASE_DAYS = 365;
+
     private static final String CUSTOM_PREFIX = "custom:";
     private static final String MINION_PREFIX = "minion:";
 
@@ -60,11 +65,17 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
 
     /**
      * Dokładnie jedno z {@code resultCustomItemId} / {@code resultMaterial} /
-     * {@code resultMinionType} jest niepuste.
+     * {@code resultMinionType} / {@code resultCosmetic} jest niepuste.
      *
      * <p>Minionek jest osobnym rodzajem wyrobu, bo jego przedmiot to głowa
      * z teksturą i danymi trwałymi, których nie da się zapisać ani jako
      * materiał, ani jako identyfikator CustomItems.
+     *
+     * <p>ECO-10: {@code resultCosmetic} = {@code "<kolekcja>/<część>"} z
+     * cosmetics.yml — egzemplarz dostaje znaczniki kolekcjonerskie (soulbound)
+     * i PDC wygaśnięcia {@code leaseDays} dni od wykucia. {@code leaseDays}
+     * może też towarzyszyć zwykłemu {@code resultCustomItemId} (dzierżawa
+     * wyrobu customowego, np. peta kosmetycznego); 0 = wyrób wieczny.
      */
     public record ForgeRecipe(@NotNull String id, @NotNull String category, @NotNull String name,
                               @Nullable String resultCustomItemId,
@@ -74,14 +85,40 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                               @Nullable Material icon,
                               @Nullable String iconCustomItemId,
                               @NotNull List<ForgeIngredient> ingredients,
-                              @Nullable String resultCommand) {
+                              @Nullable String resultCommand,
+                              @Nullable String resultCosmetic,
+                              int leaseDays) {
         /** Receptura z wyrobem-przedmiotem (bez komendy) — stary kształt, używany przez testy. */
         public ForgeRecipe(@NotNull String id, @NotNull String category, @NotNull String name,
                            @Nullable String resultCustomItemId, @Nullable Material resultMaterial,
                            @Nullable String resultMinionType, int resultAmount, long costMoney,
                            @Nullable Material icon, @NotNull List<ForgeIngredient> ingredients) {
             this(id, category, name, resultCustomItemId, resultMaterial, resultMinionType,
-                    resultAmount, costMoney, icon, null, ingredients, null);
+                    resultAmount, costMoney, icon, null, ingredients, null, null, 0);
+        }
+
+        /** Kształt z komendą — receptury {@code result-command}. */
+        public ForgeRecipe(@NotNull String id, @NotNull String category, @NotNull String name,
+                           @Nullable String resultCustomItemId, @Nullable Material resultMaterial,
+                           @Nullable String resultMinionType, int resultAmount, long costMoney,
+                           @Nullable Material icon, @Nullable String iconCustomItemId,
+                           @NotNull List<ForgeIngredient> ingredients,
+                           @Nullable String resultCommand) {
+            this(id, category, name, resultCustomItemId, resultMaterial, resultMinionType,
+                    resultAmount, costMoney, icon, iconCustomItemId, ingredients,
+                    resultCommand, null, 0);
+        }
+
+        /** Kształt z dzierżawą (ECO-10) — bez komendy. */
+        public ForgeRecipe(@NotNull String id, @NotNull String category, @NotNull String name,
+                           @Nullable String resultCustomItemId, @Nullable Material resultMaterial,
+                           @Nullable String resultMinionType, int resultAmount, long costMoney,
+                           @Nullable Material icon, @Nullable String iconCustomItemId,
+                           @NotNull List<ForgeIngredient> ingredients,
+                           @Nullable String resultCosmetic, int leaseDays) {
+            this(id, category, name, resultCustomItemId, resultMaterial, resultMinionType,
+                    resultAmount, costMoney, icon, iconCustomItemId, ingredients,
+                    null, resultCosmetic, leaseDays);
         }
     }
 
@@ -151,11 +188,24 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
     public static @NotNull ForgeConfig load(@NotNull JavaPlugin plugin,
                                             @Nullable CustomItemService customItems,
                                             @NotNull Set<String> minionTypes) {
+        return load(plugin, customItems, minionTypes, null);
+    }
+
+    /**
+     * Wariant z katalogiem kosmetyki (ECO-10): receptury
+     * {@code result-cosmetic} są walidowane względem cosmetics.yml przy starcie
+     * — nieznana kolekcja/część wali start, zamiast obiecywać przedmiot, którego
+     * nie da się wydać. {@code null} = dzierżawy kosmetyczne niedostępne.
+     */
+    public static @NotNull ForgeConfig load(@NotNull JavaPlugin plugin,
+                                            @Nullable CustomItemService customItems,
+                                            @NotNull Set<String> minionTypes,
+                                            @Nullable org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics) {
         File file = new File(plugin.getDataFolder(), "forge.yml");
         if (!file.isFile()) {
             plugin.saveResource("forge.yml", false);
         }
-        return parse(YamlConfiguration.loadConfiguration(file), customItems, minionTypes);
+        return parse(YamlConfiguration.loadConfiguration(file), customItems, minionTypes, cosmetics);
     }
 
     /** Bez znanych typów minionków — receptura na minionka wtedy nie przejdzie. */
@@ -167,6 +217,13 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
     static @NotNull ForgeConfig parse(@NotNull ConfigurationSection root,
                                       @Nullable CustomItemService customItems,
                                       @NotNull Set<String> minionTypes) {
+        return parse(root, customItems, minionTypes, null);
+    }
+
+    static @NotNull ForgeConfig parse(@NotNull ConfigurationSection root,
+                                      @Nullable CustomItemService customItems,
+                                      @NotNull Set<String> minionTypes,
+                                      @Nullable org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics) {
         int schema = root.getInt("schema-version", -1);
         if (schema != 1) {
             throw SCHEMA.fail("schema-version", "oczekiwano 1, było " + schema);
@@ -197,7 +254,8 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
         ConfigurationSection recipesSection = root.getConfigurationSection("recipes");
         if (recipesSection != null) {
             for (String id : recipesSection.getKeys(false)) {
-                recipes.put(id, parseRecipe(root, id, categories, perCategory, customItems, minionTypes));
+                recipes.put(id, parseRecipe(root, id, categories, perCategory, customItems,
+                        minionTypes, cosmetics));
             }
         }
 
@@ -234,7 +292,8 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                                            Map<String, ForgeCategory> categories,
                                            Map<String, Integer> perCategory,
                                            @Nullable CustomItemService customItems,
-                                           @NotNull Set<String> minionTypes) {
+                                           @NotNull Set<String> minionTypes,
+                                           @Nullable org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics) {
         String path = "recipes." + id;
         ConfigurationSection section = SCHEMA.section(root, path);
 
@@ -247,6 +306,38 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                     + MAX_RECIPES_PER_CATEGORY + " receptur");
         }
 
+        // ECO-10: wyrób może być częścią kolekcji kosmetycznej (`result-cosmetic:
+        // "<kolekcja>/<część>"`) wydawaną jako dzierżawa z PDC wygaśnięcia.
+        String resultCosmeticRaw = section.getString("result-cosmetic");
+        if (resultCosmeticRaw != null && resultCosmeticRaw.isBlank()) {
+            resultCosmeticRaw = null;
+        }
+        String resultCosmetic = null;
+        if (resultCosmeticRaw != null) {
+            int split = resultCosmeticRaw.indexOf('/');
+            if (split <= 0 || split == resultCosmeticRaw.length() - 1) {
+                throw SCHEMA.fail(path + ".result-cosmetic",
+                        "oczekiwano formatu '<kolekcja>/<część>', było '" + resultCosmeticRaw + "'");
+            }
+            if (cosmetics == null) {
+                throw SCHEMA.fail(path + ".result-cosmetic",
+                        "katalog kosmetyki niedostępny — receptury dzierżawne wymagają cosmetics.yml");
+            }
+            String collectionId = resultCosmeticRaw.substring(0, split);
+            String pieceId = resultCosmeticRaw.substring(split + 1);
+            org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog.Collection collection =
+                    cosmetics.collections().get(collectionId);
+            if (collection == null) {
+                throw SCHEMA.fail(path + ".result-cosmetic",
+                        "nieznana kolekcja '" + collectionId + "'");
+            }
+            if (!collection.pieces().contains(pieceId)) {
+                throw SCHEMA.fail(path + ".result-cosmetic", "kolekcja '" + collectionId
+                        + "' nie ma części '" + pieceId + "'");
+            }
+            resultCosmetic = collectionId + "/" + pieceId;
+        }
+
         // Wyrób może być komendą konsoli (`result-command`) — wtedy `result-item`
         // nie jest wymagany. Minionki NIE idą tędy: komenda nie jest idempotentna,
         // więc ich wyrób to `result-item: minion:<typ>` przez outbox.
@@ -257,7 +348,7 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
         String resultCustomId = null;
         String resultMinionType = null;
         Material resultMaterial = null;
-        if (resultCommand == null) {
+        if (resultCommand == null && resultCosmetic == null) {
             String resultKey = SCHEMA.string(section, path, "result-item");
             resultCustomId = customIdOf(resultKey);
             resultMinionType = minionTypeOf(resultKey);
@@ -271,6 +362,17 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
             } else {
                 resultMaterial = SCHEMA.material(resultKey, path + ".result-item");
             }
+        } else if (resultCommand == null) {
+            // ECO-10: dzierżawa kosmetyki — `result-item` musi być nieobecny,
+            // żeby konfliktu dwóch wyrobów nie rozstrzygał przypadkiem czytnika.
+            if (section.getString("result-item") != null) {
+                throw SCHEMA.fail(path + ".result-cosmetic",
+                        "receptura nie może mieć jednocześnie result-cosmetic i result-item");
+            }
+        }
+        if (resultCommand != null && resultCosmetic != null) {
+            throw SCHEMA.fail(path + ".result-cosmetic",
+                    "receptura nie może mieć jednocześnie result-cosmetic i result-command");
         }
 
         int resultAmount = section.getInt("result-amount", resultCommand != null ? 1 : 0);
@@ -284,6 +386,13 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
          */
         if (resultMinionType != null && resultAmount != 1) {
             throw SCHEMA.fail(path + ".result-amount", "receptura na minionka musi wydawać dokładnie 1");
+        }
+        /*
+         * ECO-10: dzierżawa to jeden egzemplarz na klik — stos egzemplarzy z
+         * różnymi datami wygaśnięcia zlałby się w jeden wpis o jednej dacie.
+         */
+        if ((resultCosmetic != null || section.getInt("lease-days", 0) > 0) && resultAmount != 1) {
+            throw SCHEMA.fail(path + ".result-amount", "receptura dzierżawna musi wydawać dokładnie 1");
         }
         /*
          * setAmount() powyżej maksimum stosu nie przycina i nie rzuca — tworzy stos
@@ -326,9 +435,24 @@ public record ForgeConfig(@NotNull Map<String, ForgeCategory> categories,
                     path + ".required-items[" + index + "]", customItems));
         }
 
+        /*
+         * ECO-10: dzierżawa. `lease-days` obowiązuje przy result-cosmetic
+         * (domyślne 7 dni) albo przy zwykłym wyrobie customowym; komendy i
+         * minionki nie podlegają dzierżawie — ich wyroby mają własny cykl życia.
+         */
+        int leaseDays = section.getInt("lease-days", resultCosmetic != null ? DEFAULT_LEASE_DAYS : 0);
+        if (leaseDays < 0 || leaseDays > MAX_LEASE_DAYS) {
+            throw SCHEMA.fail(path + ".lease-days", "poza zakresem [0, " + MAX_LEASE_DAYS + "]");
+        }
+        if (leaseDays > 0 && resultCosmetic == null && resultCustomId == null) {
+            throw SCHEMA.fail(path + ".lease-days",
+                    "dzierżawa dotyczy wyrobów customowych i kosmetycznych, nie materiałów/komend/minionków");
+        }
+
         ForgeRecipe recipe = new ForgeRecipe(id, category, SCHEMA.string(section, path, "name"),
                 resultCustomId, resultMaterial, resultMinionType, resultAmount, costMoney,
-                icon, iconCustomItemId, List.copyOf(ingredients), resultCommand);
+                icon, iconCustomItemId, List.copyOf(ingredients), resultCommand,
+                resultCosmetic, leaseDays);
         if (ForgeRequirements.consumesItsOwnResult(recipe)) {
             throw SCHEMA.fail(path, "receptura nie może zużywać własnego wyrobu — kuźnia wydaje go "
                     + "przed zabraniem składników, więc świeży egzemplarz zostałby zabrany");

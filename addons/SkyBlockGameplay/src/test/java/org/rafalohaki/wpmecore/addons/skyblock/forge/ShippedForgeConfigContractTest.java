@@ -36,6 +36,7 @@ class ShippedForgeConfigContractTest {
     private static final Path FORGE = Path.of("src/main/resources/forge.yml");
     private static final Path MODELS = Path.of("../customitems/src/main/resources/models.yml");
     private static final Path MINIONS = Path.of("src/main/resources/minions.yml");
+    private static final Path COSMETICS = Path.of("src/main/resources/cosmetics.yml");
 
     private record PresentItems(Set<String> ids) implements CustomItemService {
         @Override
@@ -89,8 +90,13 @@ class ShippedForgeConfigContractTest {
     }
 
     private static ForgeConfig shippedConfig() throws IOException {
-        return ForgeConfig.parse(load(FORGE), new PresentItems(shippedCustomItemIds()),
-                shippedMinionTypes());
+        PresentItems items = new PresentItems(shippedCustomItemIds());
+        // ECO-10: receptury dzierżawne walidują się względem wysyłanego
+        // cosmetics.yml — dokładnie ten sam łańcuch co na produkcji.
+        org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics =
+                org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog.parse(
+                        load(COSMETICS), items);
+        return ForgeConfig.parse(load(FORGE), items, shippedMinionTypes(), cosmetics);
     }
 
     /**
@@ -174,5 +180,28 @@ class ShippedForgeConfigContractTest {
                         .anyMatch(recipe -> "skyblock:crystal/amber"
                                 .equals(recipe.resultCustomItemId())),
                 "brak receptury na skyblock:crystal/amber");
+    }
+
+    /**
+     * ECO-10: wypożyczalnia ma istnieć i oferować bezpowtórne części — dwa
+     * receptury na tę samą kosmetykę oznaczałyby dwie ceny za to samo.
+     */
+    @Test
+    void shippedLeaseRecipesReferenceDistinctCosmeticPieces() throws IOException {
+        ForgeConfig config = shippedConfig();
+
+        List<String> leased = config.recipes().values().stream()
+                .map(ForgeConfig.ForgeRecipe::resultCosmetic)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        assertFalse(leased.isEmpty(), "wypożyczalnia kuźni bez receptur dzierżawnych");
+        assertEquals(leased.size(), leased.stream().distinct().count(),
+                "powtórzona kosmetyka w dzierżawie: " + leased);
+        for (ForgeConfig.ForgeRecipe recipe : config.recipes().values()) {
+            if (recipe.resultCosmetic() != null || recipe.leaseDays() > 0) {
+                assertTrue(recipe.leaseDays() > 0,
+                        "receptura dzierżawna bez lease-days: " + recipe.id());
+            }
+        }
     }
 }

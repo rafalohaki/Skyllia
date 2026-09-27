@@ -119,6 +119,17 @@ categories:
     name: "<gradient:#4ade80:#22c55e><bold>Magiczne Talizmany</bold></gradient>"
     lore:
       - "<gray>Prastare amulety dające potężne pasywne bonusy na wyspie.</gray>"
+  # ECO-10 (r49): dzierżawa kosmetyki — stroje sezonowe i pet na 7 dni za monety.
+  # Egzemplarz jest soulbound (nie sprzeda się, nie wejdzie w handel), a po
+  # wygaśnięciu znika przy wejściu lub w 5-minutowym przeglądzie. To zlew
+  # endgame'owy: kosmetyka nie daje mnożników mocy, gra wyłącznie wyglądem.
+  wynajem:
+    slot: 8
+    icon: DIAMOND_CHESTPLATE
+    name: "<light_purple><bold>Wypożyczalnia</bold></light_purple>"
+    lore:
+      - "<gray>Stroje sezonowe i peta na wynajem — 7 dni za monety.</gray>"
+      - "<dark_gray>Po wygaśnięciu przedmiot znika z ekwipunku.</dark_gray>"
 
 recipes:
   refined_tungsten:
@@ -723,3 +734,132 @@ recipes:
         amount: 192
       - item: "custom:skyblock:crystal/onyx"
         amount: 3
+
+  # --- Wypożyczalnia (ECO-10, r49) ------------------------------------------
+  # Stroje sezonowe: napierśnik każdej kolekcji (najbardziej widoczna część;
+  # reszta kompletu zostaje nagrodą za TOP). Egzemplarz dzierżawny jest
+  # soulbound i znika po 7 dobach (lease-days). Ceny w paśmie audytu 100-300k:
+  # im rzadszy stój w kolekcji, tym drożej. Koszt "w pełnym łańcuchu" to
+  # cost-money + 1 sztabka żelaza — daleko pod sufitem 50 h.
+  wynajem_abyss:
+    category: wynajem
+    name: "<dark_purple><bold>Wypożycz: Otchłań — napierśnik (7 dni)</bold></dark_purple>"
+    result-cosmetic: "abyss/mystical_abyss_chestplate"
+    result-amount: 1
+    cost-money: 300000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_rainbow:
+    category: wynajem
+    name: "<gradient:#ff5fd7:#67e8f9><bold>Wypożycz: Pryzmat — napierśnik (7 dni)</bold></gradient>"
+    result-cosmetic: "rainbow/mystical_rainbow_chestplate"
+    result-amount: 1
+    cost-money: 250000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_molten:
+    category: wynajem
+    name: "<#ff7a18><bold>Wypożycz: Magma — napierśnik (7 dni)</bold></#ff7a18>"
+    result-cosmetic: "molten/mystical_molten_chestplate"
+    result-amount: 1
+    cost-money: 250000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_aquamarine:
+    category: wynajem
+    name: "<aqua><bold>Wypożycz: Akwamaryn — napierśnik (7 dni)</bold></aqua>"
+    result-cosmetic: "aquamarine/mystical_aquamarine_chestplate"
+    result-amount: 1
+    cost-money: 200000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_blood:
+    category: wynajem
+    name: "<dark_red><bold>Wypożycz: Krew — napierśnik (7 dni)</bold></dark_red>"
+    result-cosmetic: "blood/mystical_blood_chestplate"
+    result-amount: 1
+    cost-money: 200000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_sandnite:
+    category: wynajem
+    name: "<gold><bold>Wypożycz: Piaskowa Noc — napierśnik (7 dni)</bold></gold>"
+    result-cosmetic: "sandnite/mystical_sandnite_chestplate"
+    result-amount: 1
+    cost-money: 200000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_runic:
+    category: wynajem
+    name: "<blue><bold>Wypożycz: Runy — napierśnik (7 dni)</bold></blue>"
+    result-cosmetic: "runic/mystical_runic_chestplate"
+    result-amount: 1
+    cost-money: 150000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_forest:
+    category: wynajem
+    name: "<dark_green><bold>Wypożycz: Pradawny Las — napierśnik (7 dni)</bold></dark_green>"
+    result-cosmetic: "forest/mystical_forest_chestplate"
+    result-amount: 1
+    cost-money: 150000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_flowering:
+    category: wynajem
+    name: "<light_purple><bold>Wypożycz: Rozkwit — napierśnik (7 dni)</bold></light_purple>"
+    result-cosmetic: "flowering/mystical_flowering_chestplate"
+    result-amount: 1
+    cost-money: 100000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  wynajem_love:
+    category: wynajem
+    name: "<#ff5f8f><bold>Wypożycz: Serce — napierśnik (7 dni)</bold></#ff5f8f>"
+    result-cosmetic: "love/mystical_love_chestplate"
+    result-amount: 1
+    cost-money: 100000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1
+
+  # Pet kosmetyczny: egzemplarz ikonki podglądowej jako towarzysz na 7 dni.
+  # Pure vanity — nie produkuje surowców (to nie minionek), tylko wizytówka.
+  wynajem_pet_diament:
+    category: wynajem
+    name: "<aqua><bold>Wypożycz: Pet kosmetyczny (7 dni)</bold></aqua>"
+    result-item: "custom:skyblock:pet/diamond"
+    result-amount: 1
+    cost-money: 300000
+    lease-days: 7
+    required-items:
+      - item: "IRON_INGOT"
+        amount: 1

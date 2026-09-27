@@ -28,7 +28,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.rafalohaki.wpmecore.addons.skyblock.economy.LedgerDao;
+import org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog;
 import org.rafalohaki.wpmecore.api.item.CustomItemService;
+import org.rafalohaki.wpmecore.api.item.ItemPolicyMarkers;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -72,6 +74,10 @@ public class ForgeService {
     private final ItemNames itemNames;
     /** Potrzebna do wyrobów typu minionek — stamtąd bierze się tekstura i tiery. */
     private final @Nullable MinionsConfig minions;
+    /** ECO-10: katalog kosmetyki — stamping części kolekcji przy dzierżawie. */
+    private final @Nullable org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics;
+    /** ECO-10: znacznik PDC wygaśnięcia dzierżawy. */
+    private final LeaseExpiry leaseExpiry;
 
     public ForgeService(@NotNull JavaPlugin plugin, @NotNull MiniMessage miniMessage,
                  @NotNull InventoryOutbox outbox, @NotNull ForgeConfig config,
@@ -83,7 +89,17 @@ public class ForgeService {
                  @NotNull InventoryOutbox outbox, @NotNull ForgeConfig config,
                  @Nullable CustomItemService customItems,
                  @Nullable MinionsConfig minions) {
+        this(plugin, miniMessage, outbox, config, customItems, minions, null);
+    }
+
+    public ForgeService(@NotNull JavaPlugin plugin, @NotNull MiniMessage miniMessage,
+                 @NotNull InventoryOutbox outbox, @NotNull ForgeConfig config,
+                 @Nullable CustomItemService customItems,
+                 @Nullable MinionsConfig minions,
+                 @Nullable org.rafalohaki.wpmecore.addons.skyblock.season.CosmeticCatalog cosmetics) {
         this.minions = minions;
+        this.cosmetics = cosmetics;
+        this.leaseExpiry = new LeaseExpiry(plugin);
         this.plugin = plugin;
         this.miniMessage = miniMessage;
         this.outbox = outbox;
@@ -97,6 +113,11 @@ public class ForgeService {
 
     @NotNull ForgeConfig config() {
         return config;
+    }
+
+    /** ECO-10: znacznik wygaśnięcia dla listenera czyszczącego i GUI. */
+    public @NotNull LeaseExpiry leaseExpiry() {
+        return leaseExpiry;
     }
 
     /**
@@ -173,9 +194,10 @@ public class ForgeService {
          * F17: cena schodzi przez config.costFor, a nie przez recipe.costMoney,
          * bo zniżka rangowa musi wejść w TO SAMO miejsce, w którym pieniądze
          * naprawdę schodzą z konta. Menu liczy ją tą samą metodą, więc cena
-         * pokazana i cena pobrana nie mogą się rozjechać.
+         * pokazana i cena pobrana nie mogą się rozjechać. ECO-12: okazja dnia
+         * (−20%) siedzi w tym samym miejscu — menu i kasa pytają priceFor.
          */
-        long price = config.costFor(player, recipe);
+        long price = priceFor(player, recipe);
         outbox.beginRemoval(player, -price, "forge:take:" + craftId,
                 "forge_take", ForgeRequirements.plainRemovals(recipe),
                 ForgeRequirements.customRemovals(recipe),
@@ -284,6 +306,9 @@ public class ForgeService {
             }
             return new ItemStack(recipe.icon() == null ? Material.PAPER : recipe.icon());
         }
+        if (recipe.resultCosmetic() != null) {
+            return leasedCosmeticStack(recipe);
+        }
         String minionType = recipe.resultMinionType();
         if (minionType != null) {
             /*
@@ -302,11 +327,75 @@ public class ForgeService {
             ItemStack stack = customItems.create(customItemId).orElse(null);
             if (stack != null) {
                 stack.setAmount(recipe.resultAmount());
+                stampLease(recipe, stack);
             }
             return stack;
         }
         Material material = recipe.resultMaterial();
         return material == null ? null : new ItemStack(material, recipe.resultAmount());
+    }
+
+    /**
+     * ECO-10: egzemplarz części kosmetycznej na wynajem — znaczniki
+     * kolekcjonerskie (soulbound, próg WYPOZYCZ, edycja z sezonu kolekcji)
+     * plus PDC wygaśnięcia. Sercem drogi wydania jest ten sam outbox co dla
+     * zwykłych wyrobów (paragon PDC), więc ponowiona operacja nie wyda drugiego
+     * egzemplarza; po {@code leaseDays} dobach zdjęcia go
+     * {@link LeaseSweepListener}.
+     */
+    private @Nullable ItemStack leasedCosmeticStack(@NotNull ForgeConfig.ForgeRecipe recipe) {
+        String cosmetic = recipe.resultCosmetic();
+        if (cosmetic == null || customItems == null || cosmetics == null) {
+            return null;
+        }
+        int split = cosmetic.indexOf('/');
+        CosmeticCatalog.Collection collection =
+                cosmetics.collections().get(cosmetic.substring(0, split));
+        String pieceId = cosmetic.substring(split + 1);
+        if (collection == null) {
+            return null;
+        }
+        ItemStack stack = customItems.create(pieceId).orElse(null);
+        if (stack == null) {
+            return null;
+        }
+        int season = cosmetics.seasonOf(collection.id()).orElse(0);
+        String edition = season > 0 ? CosmeticCatalog.editionOf(season) : "SKLEP";
+        ItemPolicyMarkers.markCollectible(stack, "WYPOZYCZ", edition,
+                collection.contentVersion(), true);
+        stampLease(recipe, stack);
+        return stack;
+    }
+
+    /** Dopełnia PDC wygaśnięcia, gdy receptura jest dzierżawą (ECO-10). */
+    private void stampLease(@NotNull ForgeConfig.ForgeRecipe recipe, @NotNull ItemStack stack) {
+        if (recipe.leaseDays() <= 0) {
+            return;
+        }
+        leaseExpiry.stamp(stack, System.currentTimeMillis()
+                + recipe.leaseDays() * 24L * 60L * 60L * 1000L);
+    }
+
+    /**
+     * ECO-12: czy receptura jest dziś „okazją dnia" (−20%). Menu i kasa pytają
+     * TO SAMO miejsce — cena pokazana i cena pobrana nie mogą się rozjechać
+     * (kontrakt F17, teraz rozszerzony o okazje).
+     */
+    public boolean isDealToday(@NotNull ForgeConfig.ForgeRecipe recipe) {
+        return ForgeDailyDeals.isDealToday(recipe.id(), config.recipes().keySet());
+    }
+
+    /**
+     * ECO-12: cena wykucia po zniżce rangowej i okazji dnia. Okazja działa
+     * multiplikatywnie na cenie po rabacie rangi (jak eventy sezonowe na
+     * mnożnikach punktów) — dzielenie całkowite obcina w dół zniżkę, nie cenę.
+     */
+    public long priceFor(@NotNull Player player, @NotNull ForgeConfig.ForgeRecipe recipe) {
+        long price = config.costFor(player, recipe);
+        if (!isDealToday(recipe)) {
+            return price;
+        }
+        return price - price * ForgeDailyDeals.DEAL_PERCENT / 100L;
     }
 
     private void celebrate(Player player) {

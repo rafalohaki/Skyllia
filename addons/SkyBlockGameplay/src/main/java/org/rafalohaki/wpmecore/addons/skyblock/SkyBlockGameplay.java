@@ -153,6 +153,8 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
     private IslandBankMenu bank;
     private PlayerOperationCoordinator operationCoordinator;
     private InventoryOutbox inventoryOutbox;
+    /** ECO-13: Zakład Lotosowy — stan dnia gry w PDC gracza. */
+    private org.rafalohaki.wpmecore.addons.skyblock.wager.LotusWager lotusWager;
     private IslandLifecycleGuard lifecycleGuard;
     private IslandFluidInitializer fluidInitializer;
     private NamespacedKey onboardingKey;
@@ -269,6 +271,15 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        // ECO-14: ta sama reguła dla nagrody wielkiej serii (gdy jest włączona).
+        if (settings.dailyReward().enabled()
+                && settings.dailyReward().greatEvery() > 0
+                && settings.dailyReward().greatCoins() > 0
+                && customItems.byId(settings.dailyReward().greatItem()).isEmpty()) {
+            getLogger().severe("Invalid daily-reward.great-item: " + settings.dailyReward().greatItem());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         this.sqlBinding = binding;
         this.ledger = new LedgerService(
                 new LedgerDao(binding.service()),
@@ -337,7 +348,10 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
          * i mają paść na starcie, gdy typ zniknie z konfiguracji.
          */
         try {
-            this.forgeConfig = ForgeConfig.load(this, customItems, minionsConfig.minions().keySet());
+            // ECO-10: katalog kosmetyki idzie do parsera kuźni — receptury
+            // result-cosmetic są walidowane fail-closed przy starcie.
+            this.forgeConfig = ForgeConfig.load(this, customItems, minionsConfig.minions().keySet(),
+                    this.cosmeticCatalog);
         } catch (IllegalArgumentException failure) {
             getLogger().log(Level.SEVERE, "Invalid forge.yml", failure);
             getServer().getPluginManager().disablePlugin(this);
@@ -559,7 +573,7 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         }
 
         this.forgeService = new ForgeService(this, miniMessage, inventoryOutbox,
-                forgeConfig, customItems, minionsConfig);
+                forgeConfig, customItems, minionsConfig, this.cosmeticCatalog);
         this.forgeMenu = new ForgeMenu(this, menus, miniMessage, forgeService, ledger);
         this.shop = new ServerShop(miniMessage, settings.shop(),
                 inventoryOutbox);
@@ -778,9 +792,16 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
             this.dailyRewardListener = new org.rafalohaki.wpmecore.addons.skyblock.reward.DailyRewardListener(
                     this, new org.rafalohaki.wpmecore.addons.skyblock.reward.DailyRewardService(
                             binding.service(), ledger, settings.dailyReward()),
-                    inventoryOutbox, customItems, miniMessage, settings.dailyReward().lotusItem());
+                    inventoryOutbox, customItems, miniMessage, settings.dailyReward().lotusItem(),
+                    settings.dailyReward().greatItem());
             getServer().getPluginManager().registerEvents(dailyRewardListener, this);
         }
+        // ECO-10: dzierżawy kuźni wygasają przy wejściu i co 5 minut online.
+        org.rafalohaki.wpmecore.addons.skyblock.forge.LeaseSweepListener leaseSweep =
+                new org.rafalohaki.wpmecore.addons.skyblock.forge.LeaseSweepListener(this,
+                        forgeService.leaseExpiry(), miniMessage);
+        getServer().getPluginManager().registerEvents(leaseSweep, this);
+        leaseSweep.start();
         // Perki rang (RankPerks): lot na własnej wyspie.
         if (getConfig().getBoolean("features.island-fly", false)) {
             this.islandFly = new org.rafalohaki.wpmecore.addons.skyblock.perks.IslandFlyModule(skyllia, miniMessage);
@@ -1520,6 +1541,18 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
 
     ServerShop shop() {
         return shop;
+    }
+
+    /** ECO-13: Zakład Lotosowy — leniwie, bo klucz PDC potrzebuje tylko pluginu. */
+    org.rafalohaki.wpmecore.addons.skyblock.wager.LotusWager lotusWager() {
+        if (lotusWager == null) {
+            lotusWager = new org.rafalohaki.wpmecore.addons.skyblock.wager.LotusWager(this);
+        }
+        return lotusWager;
+    }
+
+    InventoryOutbox outbox() {
+        return inventoryOutbox;
     }
 
     SkylliaIntegration skyllia() {

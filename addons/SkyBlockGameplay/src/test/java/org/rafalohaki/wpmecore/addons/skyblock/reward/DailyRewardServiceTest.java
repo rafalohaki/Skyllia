@@ -128,4 +128,63 @@ class DailyRewardServiceTest {
         assertEquals(360L, claim.coins(), "300 × 1,2");
         assertEquals(360L, ledger.playerBalance(player));
     }
+
+    // --- ECO-14: wielka seria ------------------------------------------------
+
+    @Test
+    void everyTwentyEighthDayGrantsGreatSeries() {
+        UUID player = UUID.randomUUID();
+        // Tor weryfikacji na żywo: operator stawia serię na 27, odbiór gracza
+        // (ten sam dzień) daje dokładnie 28 — wielką serię.
+        service.adminSetStreak(player, 27, DAY_1.plusDays(26)).join();
+
+        DailyRewardService.Claim day27ish = claim(player, DAY_1.plusDays(26));
+        assertEquals(28, day27ish.streak(), "27 po ustawieniu + 1 za odbiór");
+        assertTrue(day27ish.greatSeries(), "dzień 28 = wielka seria");
+        assertEquals(10_000L, day27ish.greatCoins());
+        assertEquals(600L + 10_000L, ledger.playerBalance(player),
+                "600 za dzień 28 (cap serii) + 10 000 wielkiej serii");
+    }
+
+    @Test
+    void greatSeriesRepeatsOnMultipleOfTwentyEight() {
+        UUID player = UUID.randomUUID();
+        for (int day = 1; day <= 56; day++) {
+            DailyRewardService.Claim claim = claim(player, DAY_1.plusDays(day - 1));
+            assertEquals(day % 28 == 0, claim.greatSeries(), "wielka seria dnia " + day);
+        }
+        assertEquals(2550L + 50L * 600L + 20_000L, ledger.playerBalance(player),
+                "dni 1-6 rosnąco (2550) + 50 dni po capie 600 + dwie wielkie serie po 10 000");
+    }
+
+    @Test
+    void greatSeriesIsOffWhenGreatEveryIsZero() {
+        SkyBlockSettings.DailyRewardSettings settings =
+                new SkyBlockSettings.DailyRewardSettings(true, 250L, 50L, 7,
+                        "skyblock:token/silver_lotus", 0, 10_000L, "skyblock:token/gold_lotus");
+        DailyRewardService off = new DailyRewardService(sql, ledger, settings);
+        UUID player = UUID.randomUUID();
+        assertFalse(off.isGreatSeries(28), "great-every 0 wyłącza wielką serię");
+        assertEquals(0, off.daysToNextGreat(1));
+        // Świeży gracz: pierwszy odbiór = seria 1, więc 300 monet bez bonusa.
+        DailyRewardService.Claim claim = off.claim(player, DAY_1.plusDays(27), 0).join().orElseThrow();
+        assertFalse(claim.greatSeries());
+        assertEquals(300L, ledger.playerBalance(player), "tylko nagroda dnia, bez bonusa");
+    }
+
+    @Test
+    void adminStreakSetMovesClaimDayBackSoNextClaimContinuesTheSeries() {
+        UUID player = UUID.randomUUID();
+        claim(player, DAY_1);
+
+        service.adminSetStreak(player, 27, DAY_1.plusDays(1)).join();
+
+        DailyRewardService.Row row = service.find(player).join().orElseThrow();
+        assertEquals(27, row.streak());
+        assertEquals(DAY_1.toString(), row.lastClaimDay(), "dzień odbioru cofnięty na wczoraj");
+
+        DailyRewardService.Claim next = claim(player, DAY_1.plusDays(1));
+        assertEquals(28, next.streak(), "seria po ustawieniu + 1");
+        assertTrue(next.greatSeries(), "ustawienie 27 + odbiór = wielka seria do weryfikacji na żywo");
+    }
 }

@@ -133,15 +133,27 @@ public class ForgeMenu {
         /*
          * F17: ta sama metoda, którą płaci ForgeService — inaczej menu i kasa
          * rozjechałyby się dokładnie u tych graczy, którym na tym zależy.
+         * ECO-12: priceFor uwzględnia też okazję dnia, więc plakietka −20 %
+         * i pobrana kwota nie mogą się rozjechać.
          */
         int discount = forge.config().discountPercent(player);
-        long price = forge.config().costFor(player, recipe);
+        boolean deal = forge.isDealToday(recipe);
+        long price = forge.priceFor(player, recipe);
+        if (deal) {
+            long beforeDeal = forge.config().costFor(player, recipe);
+            lore.add("<gold><bold>OKAZJA DNIA: -" + ForgeDailyDeals.DEAL_PERCENT + " %</bold></gold>"
+                    + " <gray>(" + Ui.price(price) + " zamiast " + Ui.price(beforeDeal) + ")</gray>");
+        }
         if (discount > 0) {
             lore.add("<gray>Koszt wykucia:</gray> " + Ui.price(price)
                     + " <dark_gray><st>" + Ui.price(recipe.costMoney()) + "</st></dark_gray>");
             lore.add("<green>Zniżka rangowa: -" + discount + " %</green>");
         } else {
             lore.add("<gray>Koszt wykucia:</gray> " + Ui.price(price));
+        }
+        if (recipe.leaseDays() > 0) {
+            lore.add("<light_purple>Wypożyczenie na " + recipe.leaseDays()
+                    + " dni — po tym czasie przedmiot znika.</light_purple>");
         }
         if (recipe.resultAmount() > 1) {
             lore.add("<gray>Otrzymujesz:</gray> <white>" + recipe.resultAmount() + " szt.</white>");

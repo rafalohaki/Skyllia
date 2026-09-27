@@ -33,16 +33,32 @@ public final class DailyRewardListener implements Listener {
     private final CustomItemService customItems;
     private final MiniMessage miniMessage;
     private final String lotusItem;
+    /** ECO-14: identyfikator Złotego Lotosa za wielką serię. */
+    private final String greatItem;
 
     public DailyRewardListener(@NotNull Plugin plugin, @NotNull DailyRewardService service,
                                @NotNull InventoryOutbox outbox, @NotNull CustomItemService customItems,
                                @NotNull MiniMessage miniMessage, @NotNull String lotusItem) {
+        this(plugin, service, outbox, customItems, miniMessage, lotusItem,
+                "skyblock:token/gold_lotus");
+    }
+
+    public DailyRewardListener(@NotNull Plugin plugin, @NotNull DailyRewardService service,
+                               @NotNull InventoryOutbox outbox, @NotNull CustomItemService customItems,
+                               @NotNull MiniMessage miniMessage, @NotNull String lotusItem,
+                               @NotNull String greatItem) {
         this.plugin = plugin;
         this.service = service;
         this.outbox = outbox;
         this.customItems = customItems;
         this.miniMessage = miniMessage;
         this.lotusItem = lotusItem;
+        this.greatItem = greatItem;
+    }
+
+    /** ECO-14 hook operatorski ({@code /sezon admin seria}) — dostęp do serwisu. */
+    public @NotNull DailyRewardService service() {
+        return service;
     }
 
     @EventHandler
@@ -87,6 +103,9 @@ public final class DailyRewardListener implements Listener {
                          @NotNull LocalDate today) {
         player.sendMessage(Ui.component(miniMessage, "<green>Codzienna nagroda: <white>+"
                 + Ui.money(claim.coins()) + "</white> (seria " + claim.streak() + " dni)</green>"));
+        if (claim.greatSeries()) {
+            deliverGreatSeries(player, claim, today);
+        }
         if (!claim.lotus()) {
             return;
         }
@@ -109,16 +128,59 @@ public final class DailyRewardListener implements Listener {
                 });
     }
 
+    /**
+     * ECO-14: wielka seria — co {@code great-every}. dni serii gracz dostaje
+     * Złotego Lotosa (outbox, deterministyczny operationId jak lotos) i dodatkowe
+     * monety, które wpłacił już serwis (księga). Komunikat ma być NIE do
+     * przegapienia: retencja zależy od tego, żeby gracz wiedział, że seria
+     * coś znaczy.
+     */
+    private void deliverGreatSeries(@NotNull Player player,
+                                    @NotNull DailyRewardService.Claim claim,
+                                    @NotNull LocalDate today) {
+        player.sendMessage(Ui.component(miniMessage,
+                "<gold><bold>★ WIELKA SERIA: " + claim.streak() + " DNI! ★</bold></gold>"));
+        if (claim.greatCoins() > 0L) {
+            player.sendMessage(Ui.component(miniMessage, "<green>Bonus wielkiej serii: <white>+"
+                    + Ui.money(claim.greatCoins()) + "</white> monet.</green>"));
+        }
+        ItemStack great = customItems.create(greatItem).orElse(null);
+        if (great == null) {
+            plugin.getLogger().warning("Daily reward great-series item missing: " + greatItem);
+            return;
+        }
+        outbox.beginGrant(player, 0L,
+                "daily:" + player.getUniqueId() + ":" + today + ":great-series",
+                "daily-reward-great-series", great, outcome -> {
+                    if (outcome == InventoryOutbox.Outcome.SUCCESS
+                            || outcome == InventoryOutbox.Outcome.DEFERRED) {
+                        player.sendMessage(Ui.component(miniMessage,
+                                "<gold>Dostajesz <white>Złoty Lotos</white>!"
+                                + " Nie przerywaj serii — następna czeka za "
+                                + service.daysToNextGreat(claim.streak()) + " dni.</gold>"));
+                    } else {
+                        plugin.getLogger().warning("Daily reward great-series grant " + outcome
+                                + " for " + player.getUniqueId());
+                    }
+                });
+    }
+
     private void status(@NotNull Player player, @NotNull LocalDate today, int bonus) {
         service.find(player.getUniqueId()).whenComplete((row, failure) ->
                 player.getScheduler().run(plugin, task -> {
                     DailyRewardService.Row current = failure != null || row == null ? null : row.orElse(null);
                     boolean claimedToday = current != null && today.toString().equals(current.lastClaimDay());
                     int next = DailyRewardService.nextStreak(current, claimedToday ? today.plusDays(1) : today);
+                    int streak = current == null ? 0 : current.streak();
                     player.sendMessage(Ui.component(miniMessage, "<gold>Codzienna nagroda</gold> <gray>—</gray> seria: <white>"
-                            + (current == null ? 0 : current.streak()) + " dni</white>, następna: <white>+"
+                            + streak + " dni</white>, następna: <white>+"
                             + Ui.money(service.coinsFor(next, bonus)) + "</white>"
                             + (next % DailyRewardService.LOTUS_EVERY == 0 ? " <white>+ Srebrny Lotos</white>" : "")
+                            + (service.isGreatSeries(next)
+                                    ? " <gold><bold>+ WIELKA SERIA</bold></gold>"
+                                    : (service.daysToNextGreat(streak) > 0
+                                            ? " <dark_gray>(wielka seria za " + service.daysToNextGreat(streak) + ")</dark_gray>"
+                                            : ""))
                             + (claimedToday ? " <gray>(odebrano dziś)</gray>" : "")));
                 }, null));
     }

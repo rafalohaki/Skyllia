@@ -293,6 +293,13 @@ public final class IslandCreationMenus {
                 "<gold><bold>Po co:</bold></gold> <gray>to, co wykopiesz, sprzedajesz w"
                         + " <yellow>/sklep</yellow>, a za monety kupujesz lepszy sprzęt"
                         + " i maszyny na wyspę.</gray>"));
+        // GPY-05/GPY-11: /ah i /kopacz były niewidoczne w onboardingu — handel
+        // z graczami i sekretne żyletki to dwie ścieżki, o których nowy gracz
+        // nie miał prawa się dowiedzieć z gry.
+        player.sendMessage(Ui.component(mm,
+                "<gray>Handel z graczami: <yellow>/ah</yellow> — nadwyżki sprzedasz"
+                        + " innym graczom, nie tylko sklepowi. Sekretne żyletki:"
+                        + " <yellow>/kopacz</yellow>.</gray>"));
         player.sendMessage(Ui.component(mm,
                 "<gray>Po drodze zbierasz zadania dnia (<yellow>/zadania</yellow>) i punkty"
                         + " sezonu (<yellow>/sezon</yellow>) — z nich są nagrody z karnetu"

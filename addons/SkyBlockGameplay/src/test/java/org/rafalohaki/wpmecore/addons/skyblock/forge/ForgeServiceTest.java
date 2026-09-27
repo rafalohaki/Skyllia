@@ -58,6 +58,10 @@ class ForgeServiceTest {
     void setUp() {
         plugin = mock(JavaPlugin.class);
         when(plugin.getLogger()).thenReturn(Logger.getLogger("forge-test"));
+        // ECO-10: konstruktor ForgeService tworzy LeaseExpiry (NamespacedKey),
+        // który czyta Plugin#namespace() — mock bez tego stubu rzuciłby NPE.
+        when(plugin.getName()).thenReturn("forge-test");
+        when(plugin.namespace()).thenReturn("forge-test");
         outbox = mock(InventoryOutbox.class);
         player = mock(Player.class);
         PlayerInventory inventory = mock(PlayerInventory.class);

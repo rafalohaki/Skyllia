@@ -43,10 +43,26 @@ public final class DailyRewardService {
             SET last_claim_day = ?, streak = ?, claimed_total = claimed_total + 1, updated_at = ?
             WHERE player_uuid = ? AND last_claim_day <> ?
             """;
+    /** ECO-14 hook operatorski: nadpisuje serię i cofa dzień odbioru na wczoraj. */
+    private static final String ADMIN_SET_SQL = """
+            INSERT INTO wpme_sb_daily_reward (player_uuid, last_claim_day, streak, claimed_total, updated_at)
+            VALUES (?, ?, ?, 0, ?)
+            ON CONFLICT (player_uuid) DO UPDATE
+            SET last_claim_day = excluded.last_claim_day,
+                streak = excluded.streak,
+                updated_at = excluded.updated_at
+            """;
 
     public record Row(@NotNull String lastClaimDay, int streak, int claimedTotal) { }
 
-    public record Claim(int streak, long coins, boolean lotus) { }
+    /**
+     * @param greatSeries wielka seria (ECO-14): seria osiągnęła wielokrotność
+     *                    {@code great-every}; wiąże się z nią dodatkowa wypłata
+     *                    {@code greatCoins} oraz egzemplarz {@code greatItem}
+     *                    (dopiero po stronie listenera — outbox wymaga gracza).
+     */
+    public record Claim(int streak, long coins, boolean lotus,
+                        boolean greatSeries, long greatCoins) { }
 
     private final SqlService sql;
     private final LedgerService ledger;
@@ -67,7 +83,9 @@ public final class DailyRewardService {
     /**
      * Odbiór nagrody za {@code today}. Najpierw wiersz (idempotentnie), potem
      * monety — gdy wpłata padnie po zapisie wiersza, txId jest deterministyczny,
-     * więc ręczne dosłanie nie podwoi kwoty.
+     * więc ręczne dosłanie nie podwoi kwoty. Wielka seria (ECO-14) dokłada
+     * drugi, osobny depozyt o własnym txId {@code daily:<uuid>:<dzień>:great} —
+     * powtórka po awarii między dwoma wpłatami nie dubluje żadnej z nich.
      *
      * @return pusty, gdy dziś już odebrano (także gdy równoległy odbiór wygrał)
      */
@@ -82,11 +100,57 @@ public final class DailyRewardService {
                     }
                     int reached = streak.getAsInt();
                     long coins = coinsFor(reached, bonusPercent);
-                    return ledger.depositPlayer(player, coins, "daily:" + player + ":" + today,
+                    boolean great = isGreatSeries(reached);
+                    long greatCoins = great ? settings.greatCoins() : 0L;
+                    CompletableFuture<Void> paid = ledger
+                            .depositPlayer(player, coins, "daily:" + player + ":" + today,
                                     "Codzienna nagroda")
-                            .thenApply(ignored -> Optional.of(
-                                    new Claim(reached, coins, reached % LOTUS_EVERY == 0)));
+                            .thenApply(ignored -> null);
+                    CompletableFuture<Void> settled = great
+                            ? paid.thenCompose(ignored -> greatCoins <= 0L
+                                    ? CompletableFuture.completedFuture(null)
+                                    : ledger.depositPlayer(player, greatCoins,
+                                            "daily:" + player + ":" + today + ":great",
+                                            "Wielka seria codziennej nagrody")
+                                            .thenApply(deposit -> null))
+                            : paid;
+                    return settled.thenApply(ignored -> Optional.of(
+                            new Claim(reached, coins, reached % LOTUS_EVERY == 0,
+                                    great, greatCoins)));
                 });
+    }
+
+    /** Wielka seria ECO-14: wielokrotność {@code great-every}; 0 wyłącza. */
+    public boolean isGreatSeries(int streak) {
+        int every = settings.greatEvery();
+        return every > 0 && streak > 0 && streak % every == 0;
+    }
+
+    /** Dni serii do następnej wielkiej serii; 0, gdy wielka seria wyłączona. */
+    public int daysToNextGreat(int streak) {
+        int every = settings.greatEvery();
+        return every <= 0 ? 0 : every - (streak % every);
+    }
+
+    /**
+     * ECO-14 hook operatorski ({@code /sezon admin seria}): stawia serię na
+     * zadaną wartość i cofa {@code last_claim_day} na wczoraj, żeby następny
+     * odbiór dał dokładnie {@code streak + 1}. Gracz musi być online po stronie
+     * wołającego (wzorzec {@code /sezon admin punkty}); sama operacja jest
+     * zwykłym upsertem — powtórzona, stawia to samo.
+     */
+    public @NotNull CompletableFuture<Void> adminSetStreak(@NotNull UUID player, int streak,
+                                                           @NotNull LocalDate today) {
+        return sql.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(ADMIN_SET_SQL)) {
+                statement.setString(1, player.toString());
+                statement.setString(2, today.minusDays(1).toString());
+                statement.setInt(3, streak);
+                statement.setLong(4, System.currentTimeMillis());
+                statement.executeUpdate();
+                return null;
+            }
+        });
     }
 
     /** Seria po odbiorze w dniu {@code day}: wczoraj odebrane → +1, inaczej od nowa. */

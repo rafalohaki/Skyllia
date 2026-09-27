@@ -45,12 +45,10 @@ permissions:
     default: true
   skyblockgameplay.wands.use:
     default: true
-  skyblockgameplay.qol.craft:
-    description: Wirtualny stol rzemieślniczy (/craft, /workbench).
-    default: true
-  skyblockgameplay.qol.enderchest:
-    description: Skrzynia kresu komenda (/enderchest, /ec).
-    default: true
+  # KOD-03 (r49): wezly skyblockgameplay.qol.craft/.enderchest usuniete razem
+  # z rejestracja /craft i /enderchest w SBG — na de964636 oba wezly i tak
+  # wygrywaly rejestracje WpmeEssentials (/craft, /ec) i AdminTools
+  # (/enderchest), a domyslny gracz nie mial admintools.enderchest.
   # F17: znizka rangowa w Kuzni Mistrzowskiej. Procenty siedza w forge.yml
   # (sekcja `discounts`), tutaj tylko deklaracja wezlow. Nadawane z kontekstem
   # server=skyblock (docs/ranks.yml), wiec na anarchii i w lobby sa niewidoczne.

@@ -132,6 +132,31 @@ final class SkyBlockCommands {
     SkyBlockCommands(@NotNull SkyBlockGameplay plugin) {
         this.plugin = plugin;
     }
+
+    /** ECO-13: leniwa komenda zakładu (outbox i CustomItems są gotowe po boot). */
+    private org.rafalohaki.wpmecore.addons.skyblock.wager.LotusWagerCommand lotusWager() {
+        return new org.rafalohaki.wpmecore.addons.skyblock.wager.LotusWagerCommand(plugin,
+                plugin.miniMessage(), plugin.outbox(), plugin.lotusWager(),
+                plugin.shop().getCustomItemService());
+    }
+
+    /**
+     * ECO-13: {@code /sezon admin zaklad-reset <gracz>} — zdejmuje blokadę doby
+     * zakładu (PDC gracza). Do weryfikacji na żywo: drugi zakład tego samego
+     * dnia bez czekania do północy UTC.
+     */
+    int executeWagerReset(CommandSender sender, String name) {
+        Player target = org.bukkit.Bukkit.getPlayerExact(name);
+        if (target == null) {
+            sender.sendMessage(Component.text("Gracz " + name + " nie jest online.",
+                    NamedTextColor.RED));
+            return 0;
+        }
+        plugin.lotusWager().resetDay(target.getPersistentDataContainer());
+        sender.sendMessage(Component.text("Zdjęto blokadę doby zakładu dla " + name
+                + " — może zagrać ponownie.", NamedTextColor.GREEN));
+        return Command.SINGLE_SUCCESS;
+    }
     void register() {
         AddonBootstrap.registerCommands(plugin, registrar -> {
             registrar.register(Commands.literal("spawn")
@@ -186,20 +211,25 @@ final class SkyBlockCommands {
                                 }
                             })).build(),
                     "Codzienna nagroda i seria logowań", List.of("daily"));
-            // QoL: wirtualny stół i enderchest — czysta wygoda, brak perku.
-            // Uprawnienia w paper-plugin.yml; łatwe do zawężenia dla rang LP.
-            registrar.register(Commands.literal("craft")
+            // ECO-13: Zakład Lotosowy — 3 SL wpłaty, 50/50 na 5 SL; capy anty-tilt
+            // (1 próba/dobę, zakaz gry ponad 20 SL przy sobie) siedzą w LotusWager.
+            registrar.register(Commands.literal("zaklad")
                     .requires(source -> source.getSender() instanceof Player player
-                            && player.hasPermission("skyblockgameplay.qol.craft"))
+                            && player.hasPermission("skyblockgameplay.use"))
                     .executes(context -> execute(context.getSource().getSender(),
-                            player -> player.openWorkbench(null, true))).build(),
-                    "Wirtualny stół rzemieślniczy", List.of("workbench", "warsztat"));
-            registrar.register(Commands.literal("enderchest")
-                    .requires(source -> source.getSender() instanceof Player player
-                            && player.hasPermission("skyblockgameplay.qol.enderchest"))
-                    .executes(context -> execute(context.getSource().getSender(),
-                            player -> player.openInventory(player.getEnderChest()))).build(),
-                    "Otwiera skrzynię kresu", List.of("ec", "ender"));
+                            player -> lotusWager().info(player)))
+                    .then(Commands.literal("potwierdz")
+                            .executes(context -> execute(context.getSource().getSender(),
+                                    player -> lotusWager().confirm(player))).build())
+                    .build(),
+                    "Zakład Lotosowy: postaw 3 Srebrne Lotosy, 50/50 na 5", List.of());
+            // KOD-03 (r49): SBG przestaje rejestrować /craft i /enderchest —
+            // na tym backendzie oba węzły i tak wygrywały innymi rejestracjami
+            // (WpmeEssentials convenience /craft + /ec, AdminTools /enderchest),
+            // a dwie rejestracje jednego węzła powodowały, że "kto ostatni,
+            // ten wygrywa" i domyślny gracz nie miał /enderchest wcale.
+            // Jedno źródło prawdy: /craft + /ec = WpmeEssentials,
+            // /enderchest = AdminTools (admintools.enderchest).
             registrar.register(Commands.literal("sezon")
                     // Gracz: wymaga skyblockgameplay.use; konsola/RCON przechodzi
                     // (ma wszystkie uprawnienia) — dziecko „zamknij” ma własną
@@ -285,6 +315,32 @@ final class SkyBlockCommands {
                                                                     .build())
                                                             .build())
                                                     .build())
+                                            .build())
+                                    .build())
+                            // ECO-14: hook operatorski do weryfikacji wielkiej serii.
+                            // Ustawia serię i cofa dzień odbioru na wczoraj (UTC), więc
+                            // /nagroda gracza da dokładnie <seria> + 1. Gracz musi być
+                            // online (wzorzec `punkty`).
+                            .then(Commands.literal("seria")
+                                    .then(Commands.argument("gracz",
+                                                    com.mojang.brigadier.arguments.StringArgumentType.word())
+                                            .then(Commands.argument("seria",
+                                                            com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 365))
+                                                    .executes(context -> executeDailyStreakSet(
+                                                            context.getSource().getSender(),
+                                                            com.mojang.brigadier.arguments.StringArgumentType.getString(context, "gracz"),
+                                                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "seria")))
+                                                    .build())
+                                            .build())
+                                    .build())
+                            // ECO-13: hook operatorski — zdejmuje blokadę doby zakładu
+                            // (PDC gracza), żeby na żywo dało się przetestować drugą próbę.
+                            .then(Commands.literal("zaklad-reset")
+                                    .then(Commands.argument("gracz",
+                                                    com.mojang.brigadier.arguments.StringArgumentType.word())
+                                            .executes(context -> executeWagerReset(
+                                                    context.getSource().getSender(),
+                                                    com.mojang.brigadier.arguments.StringArgumentType.getString(context, "gracz")))
                                             .build())
                                     .build())
                             .build())
@@ -749,9 +805,45 @@ final class SkyBlockCommands {
         return Command.SINGLE_SUCCESS;
     }
 
+    /**
+     * ECO-14: {@code /sezon admin seria <gracz> <liczba>} — stawia serię
+     * codziennej nagrody i cofa dzień odbioru na wczoraj, więc najbliższy
+     * odbiór gracza da dokładnie <liczba> + 1 (do weryfikacji wielkiej serii:
+     * ustaw 27, odbiór da 28). Gracz musi być online.
+     */
+    int executeDailyStreakSet(CommandSender sender, String name, int streak) {
+        var listener = plugin.dailyReward();
+        if (listener == null) {
+            sender.sendMessage(Component.text("Codzienna nagroda jest wyłączona.",
+                    NamedTextColor.RED));
+            return 0;
+        }
+        Player target = org.bukkit.Bukkit.getPlayerExact(name);
+        if (target == null) {
+            sender.sendMessage(Component.text("Gracz " + name + " nie jest online.",
+                    NamedTextColor.RED));
+            return 0;
+        }
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneOffset.UTC);
+        listener.service().adminSetStreak(target.getUniqueId(), streak, today)
+                .whenComplete((ignored, failure) -> {
+                    if (failure != null) {
+                        plugin.getLogger().log(Level.WARNING,
+                                "sezon admin seria " + name + " " + streak + " nie powiodło się",
+                                failure);
+                        sender.sendMessage(Component.text("Nie udało się ustawić serii: "
+                                + failure.getMessage(), NamedTextColor.RED));
+                        return;
+                    }
+                    sender.sendMessage(Component.text("Seria " + name + " ustawiona na " + streak
+                            + " (dzień odbioru cofnięty na wczoraj UTC) — /nagroda da "
+                            + (streak + 1) + ".", NamedTextColor.GREEN));
+                });
+        return Command.SINGLE_SUCCESS;
+    }
+
     /** Karnet: przy migracji Eco GUI EcoBattlepass, inaczej nasze menu przepustki. */
-    private void openPass(@NotNull Player player) {
-        if (plugin.ecoMigration()) {
+    private void openPass(@NotNull Player player) {        if (plugin.ecoMigration()) {
             player.performCommand("battlepass");
             return;
         }

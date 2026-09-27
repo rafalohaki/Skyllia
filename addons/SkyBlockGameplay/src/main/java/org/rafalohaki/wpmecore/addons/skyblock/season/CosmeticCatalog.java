@@ -95,8 +95,9 @@ public record CosmeticCatalog(boolean enabled,
         return parse(YamlConfiguration.loadConfiguration(file), customItems);
     }
 
-    static @NotNull CosmeticCatalog parse(@NotNull ConfigurationSection root,
-                                          @Nullable CustomItemService customItems) {
+    /** Publiczny dla kontraktów wysyłanych plików (kontrakt forge.yml ↔ cosmetics.yml). */
+    public static @NotNull CosmeticCatalog parse(@NotNull ConfigurationSection root,
+                                                 @Nullable CustomItemService customItems) {
         int schema = root.getInt("schema-version", -1);
         if (schema != 1) {
             throw SCHEMA.fail("schema-version", "oczekiwano 1, było " + schema);

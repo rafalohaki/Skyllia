@@ -106,20 +106,47 @@ final class SkyBlockMenus {
                                 "<red>Ta część gry jest chwilowo wyłączona.</red>"));
                     }
                 });
-        menu.set(13, Ui.item(Material.WRITABLE_BOOK, miniMessage,
-                        "<aqua><bold>Dzienne zadania wyspy</bold></aqua>",
-                        List.of("<gray>Trzy cele na dziś, wspólne dla całej wyspy.</gray>",
-                                "<gray>Nagroda trafia do banku wyspy.</gray>",
-                                "<gray>Dzień przerwy niczego nie kasuje.</gray>",
-                                // F24: 15 zadań w tygodniu = Złoty Lotos = tor
-                                // premium karnetu. Ten łańcuch istniał w kodzie
-                                // (DailyQuestService.WEEKLY_MILESTONE_GOAL), ale
-                                // nigdzie nie było o nim słowa przed kliknięciem.
-                                "<gray>15 zadań w tygodniu to Złoty Lotos —</gray>",
-                                "<gray>klucz do toru premium karnetu sezonowego.</gray>",
-                                "<dark_gray> </dark_gray>",
-                                "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
-                (viewer, click) -> quests.open(viewer));
+        if (ecoMigration()) {
+            // ECO-04: przy eco-migration DailyQuestService nie jest rejestrowany
+            // (SkyBlockGameplay: rejestracja i start tylko przy !ecoMigration),
+            // więc jego menu byłoby martwe — postęp 0 na zawsze. Kafel otwiera
+            // Księgę Zadań (EcoQuests), tym samym torem co /zadania
+            // (SkyBlockCommands: performCommand("quests")). Wzorzec obsługi
+            // nieudanego performCommand jak przy kafelku Sklep wyżej.
+            menu.set(13, Ui.item(Material.WRITABLE_BOOK, miniMessage,
+                            "<aqua><bold>Księga zadań</bold></aqua>",
+                            List.of("<gray>Codzienne zadania i sezonowe misje</gray>",
+                                    "<gray>w jednej księdze — wykonuj je na wyspie,</gray>",
+                                    "<gray>zbieraj punkty sezonu i postęp karnetu.</gray>",
+                                    // F24 (kontynuacja): kamień milowy 15 zadań
+                                    // żyje też w eco — WeeklyMilestoneService
+                                    // liczy kanał „quest”, który karmi EcoQuests.
+                                    "<gray>15 zadań w tygodniu to Złoty Lotos —</gray>",
+                                    "<gray>klucz do toru premium karnetu sezonowego.</gray>",
+                                    "<dark_gray> </dark_gray>",
+                                    "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
+                    (viewer, click) -> {
+                        if (!viewer.performCommand("quests")) {
+                            viewer.sendMessage(Ui.component(miniMessage,
+                                    "<red>Ta część gry jest chwilowo wyłączona.</red>"));
+                        }
+                    });
+        } else {
+            menu.set(13, Ui.item(Material.WRITABLE_BOOK, miniMessage,
+                            "<aqua><bold>Dzienne zadania wyspy</bold></aqua>",
+                            List.of("<gray>Trzy cele na dziś, wspólne dla całej wyspy.</gray>",
+                                    "<gray>Nagroda trafia do banku wyspy.</gray>",
+                                    "<gray>Dzień przerwy niczego nie kasuje.</gray>",
+                                    // F24: 15 zadań w tygodniu = Złoty Lotos = tor
+                                    // premium karnetu. Ten łańcuch istniał w kodzie
+                                    // (DailyQuestService.WEEKLY_MILESTONE_GOAL), ale
+                                    // nigdzie nie było o nim słowa przed kliknięciem.
+                                    "<gray>15 zadań w tygodniu to Złoty Lotos —</gray>",
+                                    "<gray>klucz do toru premium karnetu sezonowego.</gray>",
+                                    "<dark_gray> </dark_gray>",
+                                    "<yellow>Kliknij, aby otworzyć.</yellow>"), true),
+                    (viewer, click) -> quests.open(viewer));
+        }
         menu.set(15, Ui.item(Material.ENDER_CHEST, miniMessage,
                         "<gold><bold>Bank wyspy</bold></gold>",
                         List.of("<gray>Wspólna kasa całej wyspy.</gray>",
@@ -215,6 +242,11 @@ final class SkyBlockMenus {
         if (openMenu) {
             open(player);
         }
+    }
+
+    /** ECO-04: stan eco-migration czytany na bieżąco (nie w konstruktorze menu). */
+    private boolean ecoMigration() {
+        return plugin instanceof SkyBlockGameplay gameplay && gameplay.ecoMigration();
     }
 
     private void addExternalAction(MenuService.Menu menu,

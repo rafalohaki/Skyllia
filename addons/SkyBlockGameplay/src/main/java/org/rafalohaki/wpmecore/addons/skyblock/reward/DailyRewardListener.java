@@ -141,8 +141,10 @@ public final class DailyRewardListener implements Listener {
         player.sendMessage(Ui.component(miniMessage,
                 "<gold><bold>★ WIELKA SERIA: " + claim.streak() + " DNI! ★</bold></gold>"));
         if (claim.greatCoins() > 0L) {
+            // Ui.money zwraca już kwotę z odmienioną jednostką („moneta/monety/monet”)
+            // — szablon nie dokleja własnej.
             player.sendMessage(Ui.component(miniMessage, "<green>Bonus wielkiej serii: <white>+"
-                    + Ui.money(claim.greatCoins()) + "</white> monet.</green>"));
+                    + Ui.money(claim.greatCoins()) + "</white>.</green>"));
         }
         ItemStack great = customItems.create(greatItem).orElse(null);
         if (great == null) {

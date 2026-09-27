@@ -174,7 +174,7 @@ public final class LotusWagerCommand {
                     if (grantOutcome == InventoryOutbox.Outcome.SUCCESS
                             || grantOutcome == InventoryOutbox.Outcome.DEFERRED) {
                         send(player, "<gold><bold>WYGRANA!</bold></gold> <green>Dostajesz <white>"
-                                + LotusWager.PAYOUT + " Srebrne Lotosy</white>.</green>");
+                                + LotusWager.PAYOUT + " Srebrnych Lotosów</white>.</green>");
                     } else {
                         plugin.getLogger().warning("Zakład: wygrana " + grantOutcome + " dla "
                                 + player.getUniqueId() + " — do ręcznego wydania (operationId "

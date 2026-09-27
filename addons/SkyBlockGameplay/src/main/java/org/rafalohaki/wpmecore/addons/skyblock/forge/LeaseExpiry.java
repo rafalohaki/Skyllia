@@ -86,6 +86,34 @@ public final class LeaseExpiry {
         return removed;
     }
 
+    /**
+     * Hook operatorski ({@code /sezon admin dzierzawa}): przesuwa wygaśnięcie
+     * WSZYSTKICH dzierżaw w ekwipunku gracza na {@code now + seconds}.
+     * Do weryfikacji na żywo — sweep przy wejściu albo w oknie 5 minut zdejmie
+     * przedmiot bez czekania pełnych 7 dni. Zwraca liczbę dotkniętych stosów.
+     */
+    public int forceExpiryIn(@NotNull Player player, long seconds) {
+        long expiry = System.currentTimeMillis() + seconds * 1000L;
+        PlayerInventory inventory = player.getInventory();
+        int touched = 0;
+        for (ItemStack stack : inventory.getStorageContents()) {
+            touched += reStamp(stack, expiry);
+        }
+        for (ItemStack stack : inventory.getArmorContents()) {
+            touched += reStamp(stack, expiry);
+        }
+        touched += reStamp(inventory.getItemInOffHand(), expiry);
+        return touched;
+    }
+
+    private int reStamp(ItemStack stack, long expiry) {
+        if (stack == null || stack.getType().isAir() || expiryOf(stack) <= 0L) {
+            return 0;
+        }
+        stamp(stack, expiry);
+        return 1;
+    }
+
     private boolean expireIfDue(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
             return false;

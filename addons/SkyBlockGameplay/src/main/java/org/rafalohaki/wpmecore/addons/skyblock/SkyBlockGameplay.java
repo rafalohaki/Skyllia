@@ -1203,6 +1203,11 @@ public final class SkyBlockGameplay extends JavaPlugin implements Listener {
         return forgeMenu;
     }
 
+    /** ECO-10: dostęp do leaseExpiry dla hooków operatorskich. */
+    org.rafalohaki.wpmecore.addons.skyblock.forge.ForgeService forgeService() {
+        return forgeService;
+    }
+
     @org.jetbrains.annotations.Nullable SkyBlockHub hub() {
         // hubModule jest zerowany w onDisable, a komendy bywają jeszcze osiągalne —
         // wołający sprawdza null, więc akcesor musi umieć go zwrócić.

@@ -157,6 +157,33 @@ final class SkyBlockCommands {
                 + " — może zagrać ponownie.", NamedTextColor.GREEN));
         return Command.SINGLE_SUCCESS;
     }
+
+    /**
+     * ECO-10: {@code /sezon admin dzierzawa <gracz> <sekundy>} — przesuwa
+     * wygaśnięcie wszystkich dzierżaw w ekwipunku gracza. 0 = wygasa natychmiast
+     * (sweep przy wejściu/oknie 5 min zdejmie stosy). Ekwipunek dotykamy na
+     * wątku encji gracza (Folia).
+     */
+    int executeLeaseExpirySet(CommandSender sender, String name, int seconds) {
+        Player target = org.bukkit.Bukkit.getPlayerExact(name);
+        if (target == null) {
+            sender.sendMessage(Component.text("Gracz " + name + " nie jest online.",
+                    NamedTextColor.RED));
+            return 0;
+        }
+        try {
+            target.getScheduler().run(plugin, task -> {
+                int touched = plugin.forgeService().leaseExpiry().forceExpiryIn(target, seconds);
+                sender.sendMessage(Component.text("Dzierżawy " + name + ": " + touched
+                        + " stos(y) wygasają za " + seconds + " s — sweep je zdejmie przy wejściu "
+                        + "albo w oknie 5 minut.", NamedTextColor.GREEN));
+            }, null);
+        } catch (RuntimeException rejected) {
+            sender.sendMessage(Component.text("Nie udało się zaplanować zmiany wygaśnięcia: "
+                    + rejected.getMessage(), NamedTextColor.RED));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
     void register() {
         AddonBootstrap.registerCommands(plugin, registrar -> {
             registrar.register(Commands.literal("spawn")
@@ -341,6 +368,21 @@ final class SkyBlockCommands {
                                             .executes(context -> executeWagerReset(
                                                     context.getSource().getSender(),
                                                     com.mojang.brigadier.arguments.StringArgumentType.getString(context, "gracz")))
+                                            .build())
+                                    .build())
+                            // ECO-10: hook operatorski — przesuwa wygaśnięcie
+                            // dzierżaw gracza na teraz+<sekundy>, żeby sweep
+                            // (join albo okno 5 min) dał się zobaczyć na żywo.
+                            .then(Commands.literal("dzierzawa")
+                                    .then(Commands.argument("gracz",
+                                                    com.mojang.brigadier.arguments.StringArgumentType.word())
+                                            .then(Commands.argument("sekundy",
+                                                            com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 604_800))
+                                                    .executes(context -> executeLeaseExpirySet(
+                                                            context.getSource().getSender(),
+                                                            com.mojang.brigadier.arguments.StringArgumentType.getString(context, "gracz"),
+                                                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "sekundy")))
+                                                    .build())
                                             .build())
                                     .build())
                             .build())

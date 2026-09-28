@@ -8,6 +8,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.rafalohaki.wpmecore.addons.skyblock.economy.InventoryOutbox;
 import org.rafalohaki.wpmecore.addons.skyblock.perks.RankPerks;
 import org.rafalohaki.wpmecore.addons.skyblock.shared.Ui;
@@ -16,6 +17,7 @@ import org.rafalohaki.wpmecore.api.item.CustomItemService;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
@@ -26,6 +28,9 @@ import java.util.logging.Level;
 public final class DailyRewardListener implements Listener {
 
     private static final long JOIN_DELAY_TICKS = 40L;
+    /** R50-LOTUS: ponowienia grantu przy BUSY — lease koordynatora bywa zajęty chwilę dłużej. */
+    private static final int GRANT_BUSY_RETRIES = 5;
+    private static final long GRANT_RETRY_DELAY_TICKS = 40L;
 
     private final Plugin plugin;
     private final DailyRewardService service;
@@ -104,28 +109,91 @@ public final class DailyRewardListener implements Listener {
         player.sendMessage(Ui.component(miniMessage, "<green>Codzienna nagroda: <white>+"
                 + Ui.money(claim.coins()) + "</white> (seria " + claim.streak() + " dni)</green>"));
         if (claim.greatSeries()) {
-            deliverGreatSeries(player, claim, today);
-        }
-        if (!claim.lotus()) {
+            // R50-LOTUS: granty outboxu są per gracz sekwencyjne (lease koordynatora) —
+            // dwa beginGranty naraz wyścigują się o lease i przegrywający dostaje BUSY
+            // bez śladu w outboxie (obserwowane 28.09: dzień 28 = wielka seria i
+            // wielokrotność 7 naraz, „Daily reward lotus grant BUSY"). Lotos startuje
+            // więc dopiero po rozliczeniu wielkiej serii (wzorzec „settled" z
+            // DailyRewardService.claim) i sam ma retry na BUSY.
+            deliverGreatSeries(player, claim, today,
+                    claim.lotus() ? () -> runOnPlayerThread(player,
+                            () -> deliverLotus(player, claim, today)) : null);
             return;
         }
+        if (claim.lotus()) {
+            deliverLotus(player, claim, today);
+        }
+    }
+
+    private void deliverLotus(@NotNull Player player, @NotNull DailyRewardService.Claim claim,
+                              @NotNull LocalDate today) {
         ItemStack lotus = customItems.create(lotusItem).orElse(null);
         if (lotus == null) {
             plugin.getLogger().warning("Daily reward lotus item missing: " + lotusItem);
             return;
         }
-        // Deterministyczny operationId: powtórka po restarcie jest no-opem outboxu.
-        outbox.beginGrant(player, 0L, "daily:" + player.getUniqueId() + ":" + today + ":lotus",
-                "daily-reward-lotus", lotus, outcome -> {
-                    if (outcome == InventoryOutbox.Outcome.SUCCESS
-                            || outcome == InventoryOutbox.Outcome.DEFERRED) {
-                        player.sendMessage(Ui.component(miniMessage, "<gold>Seria " + claim.streak()
-                                + " dni — dostajesz <white>Srebrny Lotos</white>!</gold>"));
-                    } else {
-                        plugin.getLogger().warning("Daily reward lotus grant " + outcome
-                                + " for " + player.getUniqueId());
-                    }
-                });
+        beginItemGrant(player, "daily:" + player.getUniqueId() + ":" + today + ":lotus",
+                "daily-reward-lotus", lotus, 0,
+                outcome -> player.sendMessage(Ui.component(miniMessage, "<gold>Seria " + claim.streak()
+                        + " dni — dostajesz <white>Srebrny Lotos</white>!</gold>")),
+                () -> { });
+    }
+
+    /** Powrót na wątek regionu gracza — kontynuacje z callbacków outboxu nie mają gwarancji wątku. */
+    private void runOnPlayerThread(@NotNull Player player, @NotNull Runnable task) {
+        try {
+            player.getScheduler().run(plugin, ignored -> task.run(), null);
+        } catch (RuntimeException rejected) {
+            plugin.getLogger().log(Level.WARNING, "Nie udało się wrócić na wątek gracza "
+                    + player.getUniqueId() + " dla lotosa codziennej nagrody", rejected);
+        }
+    }
+
+    /**
+     * Wspólne nadanie z ponowieniem przy {@link InventoryOutbox.Outcome#BUSY}: BUSY znaczy
+     * „nic nie zapisano" (wiersz outboxu powstaje dopiero po zdobyciu lease), więc powtórka
+     * z tym samym deterministycznym operationId jest bezpieczna — udana mutacja jest no-opem
+     * outboxu, przegrana dostaje drugą szansę. SUCCESS/DEFERRED → komunikat i rozliczenie
+     * łańcucha; REJECTED/ERROR albo wyczerpane ponowienia → warning i też rozliczenie
+     * (następny grant łańcucha ma własny operationId i idzie dalej).
+     */
+    private void beginItemGrant(@NotNull Player player, @NotNull String operationId,
+                                @NotNull String reason, @NotNull ItemStack item, int attempt,
+                                @NotNull Consumer<InventoryOutbox.Outcome> onDelivered,
+                                @NotNull Runnable onSettled) {
+        outbox.beginGrant(player, 0L, operationId, reason, item, outcome -> {
+            if (outcome == InventoryOutbox.Outcome.SUCCESS
+                    || outcome == InventoryOutbox.Outcome.DEFERRED) {
+                onDelivered.accept(outcome);
+                onSettled.run();
+                return;
+            }
+            if (outcome == InventoryOutbox.Outcome.BUSY && attempt < GRANT_BUSY_RETRIES) {
+                if (player.isOnline() && plugin.isEnabled()
+                        && scheduleGrantRetry(player, () -> beginItemGrant(player, operationId,
+                        reason, item, attempt + 1, onDelivered, onSettled))) {
+                    return;
+                }
+                plugin.getLogger().warning("Daily reward grant " + operationId
+                        + " BUSY — ponowienie niemożliwe (gracz offline / plugin wyłączany)");
+                onSettled.run();
+                return;
+            }
+            plugin.getLogger().warning("Daily reward grant " + outcome + " for " + operationId);
+            onSettled.run();
+        });
+    }
+
+    private boolean scheduleGrantRetry(@NotNull Player player, @NotNull Runnable task) {
+        try {
+            player.getScheduler().runDelayed(plugin, ignored -> task.run(), null,
+                    GRANT_RETRY_DELAY_TICKS);
+            return true;
+        } catch (RuntimeException rejected) {
+            plugin.getLogger().log(Level.WARNING, "Nie udało się zaplanować ponowienia nadania "
+                    + "dla " + player.getUniqueId(), rejected);
+            return false;
+        }
     }
 
     /**
@@ -137,11 +205,12 @@ public final class DailyRewardListener implements Listener {
      */
     private void deliverGreatSeries(@NotNull Player player,
                                     @NotNull DailyRewardService.Claim claim,
-                                    @NotNull LocalDate today) {
+                                    @NotNull LocalDate today,
+                                    @Nullable Runnable afterSettled) {
         player.sendMessage(Ui.component(miniMessage,
                 "<gold><bold>★ WIELKA SERIA: " + claim.streak() + " DNI! ★</bold></gold>"));
         if (claim.greatCoins() > 0L) {
-            // Ui.money zwraca już kwotę z odmienioną jednostką („moneta/monety/monet”)
+            // Ui.money zwraca już kwotę z odmienioną jednostką („moneta/monety/monet")
             // — szablon nie dokleja własnej.
             player.sendMessage(Ui.component(miniMessage, "<green>Bonus wielkiej serii: <white>+"
                     + Ui.money(claim.greatCoins()) + "</white>.</green>"));
@@ -149,22 +218,20 @@ public final class DailyRewardListener implements Listener {
         ItemStack great = customItems.create(greatItem).orElse(null);
         if (great == null) {
             plugin.getLogger().warning("Daily reward great-series item missing: " + greatItem);
+            // Brak itemu nie może zablokować lotosa — rozliczamy łańcuch.
+            if (afterSettled != null) {
+                afterSettled.run();
+            }
             return;
         }
-        outbox.beginGrant(player, 0L,
+        beginItemGrant(player,
                 "daily:" + player.getUniqueId() + ":" + today + ":great-series",
-                "daily-reward-great-series", great, outcome -> {
-                    if (outcome == InventoryOutbox.Outcome.SUCCESS
-                            || outcome == InventoryOutbox.Outcome.DEFERRED) {
-                        player.sendMessage(Ui.component(miniMessage,
-                                "<gold>Dostajesz <white>Złoty Lotos</white>!"
+                "daily-reward-great-series", great, 0,
+                outcome -> player.sendMessage(Ui.component(miniMessage,
+                        "<gold>Dostajesz <white>Złoty Lotos</white>!"
                                 + " Nie przerywaj serii — następna czeka za "
-                                + service.daysToNextGreat(claim.streak()) + " dni.</gold>"));
-                    } else {
-                        plugin.getLogger().warning("Daily reward great-series grant " + outcome
-                                + " for " + player.getUniqueId());
-                    }
-                });
+                                + service.daysToNextGreat(claim.streak()) + " dni.</gold>")),
+                afterSettled != null ? afterSettled : () -> { });
     }
 
     private void status(@NotNull Player player, @NotNull LocalDate today, int bonus) {
